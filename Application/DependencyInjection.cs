@@ -1,4 +1,5 @@
 using Application.Common.Behaviors;
+using Application.Profiles;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,6 +27,7 @@ public static class DependencyInjection
 
         // AutoMapper — auto-discovers all Profile implementations
         services.AddAutoMapper(assembly);
+        services.AddAutoMapper(typeof(HotelProfile).Assembly);
 
         return services;
     }

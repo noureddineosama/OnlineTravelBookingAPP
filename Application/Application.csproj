@@ -28,5 +28,8 @@
   <ItemGroup>
     <Compile Remove="Helpers\**" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Features\HotelBooking\Queries\" />
+  </ItemGroup>
 
 </Project>
