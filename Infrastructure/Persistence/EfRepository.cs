@@ -81,6 +81,41 @@ public sealed class EfRepository<T> : IRepository<T> where T : class
         };
     }
 
+    public async Task<List<TResult>> GetListSelectorAsync<TResult>(Expression<Func<T, bool>> predicate,
+                                                     Expression<Func<T, TResult>> selector,
+                                                     CancellationToken cancellationToken = default,
+                                                     params Expression<Func<T, object?>>[]? includes)
+    {
+        var query = _context.Set<T>().AsQueryable();
+        if (!includes.Any() || includes == null)
+        {
+            foreach (var item in includes)
+            {
+                query = query.Include(item);
+            }
+        }
+
+        query = query.Where(predicate);
+
+        if (selector != null)
+        {
+            return await query.AsNoTracking().Select(selector).ToListAsync();
+        }
+
+        //. if the type of the TResult is the same as the type of T then we can return the entity directly without using the selector
+        if (typeof(TResult) == typeof(T))
+        {
+            //. Read Method without tracking
+            var entity = await query.AsNoTracking().ToListAsync();
+
+            return (List<TResult>)(object)entity;
+        }
+
+        throw new InvalidOperationException(
+                        "Selector is required when TResult is not TEntity"
+                    );
+    }
+
     public async Task<TResult> GetSelectorAsync<TResult>(Expression<Func<T, bool>> predicate, 
                                                   Expression<Func<T, TResult>> selector,
                                                   CancellationToken cancellationToken = default,

@@ -2,6 +2,7 @@ using Application;
 using Application.Common.Interfaces;
 using Application.Services;
 using Infrastructure;
+using Infrastructure.Services;
 using Microsoft.OpenApi.Models;
 using OnlineTravelBooking.Middleware;
 
@@ -18,8 +19,15 @@ builder.Services.AddCors(options =>
 
 // ── Controllers ───────────────────────────────────────────────
 builder.Services.AddControllers();
-builder.Services.AddTransient<ICalculateNightPrice, CalculateNightPrice>();
-builder.Services.AddTransient<ICheckAvailabilityRoom, CheckAvailabilityRoom>();
+
+//. Configuration
+builder.Services.AddApplication();
+
+builder.Services.AddInfrastructure(builder.Configuration);
+
+builder.Services.AddTransient<ICurrentIUserService, CurrentUserService>();
+
+builder.Services.AddHttpContextAccessor();
 
 // ── Swagger ───────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();

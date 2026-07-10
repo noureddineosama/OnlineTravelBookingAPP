@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Domain.Common;
+using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Entities;
@@ -27,7 +28,8 @@ public partial class booking : AuditableEntity
     [Required]
     [StringLength(10)]
     [Unicode(false)]
-    public string status { get; set; }
+    public BookingStatus? status { get; set; }
+    public bool? IsCancelled { get; set; } = false;
 
     [Column(TypeName = "decimal(10, 2)")]
     public decimal subtotal { get; set; }

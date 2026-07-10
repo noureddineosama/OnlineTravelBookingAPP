@@ -11,29 +11,29 @@ namespace Application.Features.HotelBooking.Handlers
     {
         public CreateHotelBookingValidator()
         {
-            RuleFor(x => x.RoomId)
+            RuleFor(x => x.rooom_id)
                 .GreaterThan(0)
                 .WithMessage("Room Id must be greater than zero.");
 
-            RuleFor(x => x.CheckInDate)
+            RuleFor(x => x.check_in_date)
                 .GreaterThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today))
                 .WithMessage("Check-in date cannot be in the past.");
 
-            RuleFor(x => x.CheckOutDate)
-                .GreaterThan(x => x.CheckInDate)
+            RuleFor(x => x.check_out_date)
+                .GreaterThan(x => x.check_in_date)
                 .WithMessage("Check-out date must be after check-in date.");
 
-            RuleFor(x => x.Quantity)
+            RuleFor(x => x.quantity)
                 .GreaterThan(0)
-                .WithMessage("Quantity must be greater than zero.");
+                .WithMessage("quantity must be greater than zero.");
 
-            RuleFor(x => x.Adults)
+            RuleFor(x => x.guests_adults)
                 .GreaterThan(0)
                 .WithMessage("At least one adult is required.");
 
-            RuleFor(x => x.Children)
+            RuleFor(x => x.guests_children)
                 .GreaterThanOrEqualTo(0)
-                .WithMessage("Children count cannot be negative.");
+                .WithMessage("guests_children count cannot be negative.");
         }
     }
 }

@@ -1,6 +1,7 @@
 #nullable disable
 using Application.Common.Interfaces;
 using Domain.Entities;
+using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence;
@@ -58,7 +59,7 @@ public partial class AppDbContext : DbContext, IApplicationDbContext
             entity.Property(e => e.created_at).HasDefaultValueSql("(sysutcdatetime())");
             entity.Property(e => e.currency).HasDefaultValue("USD").IsFixedLength();
             entity.Property(e => e.payment_status).HasDefaultValue("unpaid");
-            entity.Property(e => e.status).HasDefaultValue("pending");
+            entity.Property(e => e.status).HasDefaultValue(BookingStatus.pending);
             entity.HasOne(d => d.coupon).WithMany(p => p.bookings)
                 .HasConstraintName("FK_bookings_coupon");
             entity.HasOne(d => d.passenger).WithMany(p => p.bookings)

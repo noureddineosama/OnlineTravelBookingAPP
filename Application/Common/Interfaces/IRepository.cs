@@ -1,4 +1,5 @@
 using Application.Common.Patterns;
+using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -16,6 +17,11 @@ public interface IRepository<T> where T : class
     Task AddAsync(T entity, CancellationToken ct = default);
     void Update(T entity);
     void Remove(T entity);
+
+    Task<List<TResult>> GetListSelectorAsync<TResult>(Expression<Func<T, bool>> predicate,
+                                                     Expression<Func<T, TResult>> selector,
+                                                     CancellationToken cancellationToken = default,
+                                                     params Expression<Func<T, object?>>[] includes);
 
     Task<PaginatedResult<TResult>> GetPaginationAsync<TResult>(
                                        Expression<Func<T, bool>> predicate,
