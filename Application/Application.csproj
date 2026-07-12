@@ -18,6 +18,7 @@
 
     <!-- Only for DbSet<T> abstraction in IApplicationDbContext -->
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.9" />
+    <PackageReference Include="Stripe.net" Version="52.1.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,6 +28,9 @@
   <!-- Exclude old helpers — superseded by Clean Architecture structure -->
   <ItemGroup>
     <Compile Remove="Helpers\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Features\Payments\Commands\HandleStripeWebhook\" />
   </ItemGroup>
 
 </Project>

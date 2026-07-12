@@ -1,6 +1,8 @@
 using Application.Common.Interfaces;
+using Application.Common.Settings;
 using Infrastructure.Persistence;
 using Infrastructure.Security;
+using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +33,15 @@ public static class DependencyInjection
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
+
+
+        //---- Stripe Payment Service-------------------------------
+        services.Configure<StripeSettings>(
+    configuration.GetSection(StripeSettings.SectionName));
+
+        services.AddScoped<IStripeService, StripeService>();
+
+
 
         return services;
     }
