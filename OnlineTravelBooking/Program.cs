@@ -15,7 +15,17 @@ builder.Services.AddCors(options =>
         p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
 
 // ── Controllers ───────────────────────────────────────────────
-builder.Services.AddControllers();
+// JsonStringEnumConverter ensures all enums (e.g. FavoriteCategory) are
+// serialized as their string names ("Tour", "Hotel", "Flight", "Car")
+// rather than integer values. This gives the frontend a stable, readable
+// contract it can use for routing (e.g. /tours/{id}) and conditional logic.
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
+
 
 // ── Swagger ───────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
@@ -27,6 +37,9 @@ builder.Services.AddSwaggerGen(options =>
         Version = "v1",
         Description = "Clean Architecture — Domain / Application / Infrastructure / API"
     });
+
+    // Display enum values as strings in Swagger UI (matches JsonStringEnumConverter)
+    options.UseInlineDefinitionsForEnums();
 });
 
 var app = builder.Build();

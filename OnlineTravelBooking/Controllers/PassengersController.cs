@@ -3,6 +3,7 @@ using Application.Features.Passengers.Commands.DeletePassenger;
 using Application.Features.Passengers.Commands.UpdatePassenger;
 using Application.Features.Passengers.Queries.GetAllPassengers;
 using Application.Features.Passengers.Queries.GetPassengerById;
+using Application.Features.Passengers.Requests;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,9 +17,7 @@ public sealed class PassengersController : ControllerBase
 
     public PassengersController(ISender mediator) => _mediator = mediator;
 
-    /// <summary>
-    /// Get all passengers with pagination, optional status filter and free-text search.
-    /// </summary>
+    /// <summary>Get all passengers with pagination, optional status filter and free-text search.</summary>
     [HttpGet]
     public async Task<IActionResult> GetAll(
         [FromQuery] int     page     = 1,
@@ -41,24 +40,17 @@ public sealed class PassengersController : ControllerBase
     public async Task<IActionResult> GetById(long id)
     {
         var result = await _mediator.Send(new GetPassengerByIdQuery(id));
-        return result.Success ? Ok(result) : NotFound(result);
+        return Ok(result);
     }
 
-    /// <summary>
-    /// Create a new passenger.
-    /// Requires an existing role_id (use GET /api/roles to list available roles).
-    /// </summary>
+    /// <summary>Create a new passenger.</summary>
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreatePassengerRequest request)
     {
         var result = await _mediator.Send(
             new CreatePassengerCommand(request.Name, request.Email, request.Phone, request.RoleId));
 
-        if (!result.Success)
-            return BadRequest(result);
-
-        return CreatedAtAction(nameof(GetById),
-            new { id = result.Data!.Id }, result);
+        return CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, result);
     }
 
     /// <summary>Update a passenger's name, phone, or status.</summary>
@@ -67,7 +59,7 @@ public sealed class PassengersController : ControllerBase
     {
         var result = await _mediator.Send(
             new UpdatePassengerCommand(id, request.Name, request.Phone, request.Status));
-        return result.Success ? Ok(result) : NotFound(result);
+        return Ok(result);
     }
 
     /// <summary>Permanently delete a passenger.</summary>
@@ -75,21 +67,6 @@ public sealed class PassengersController : ControllerBase
     public async Task<IActionResult> Delete(long id)
     {
         var result = await _mediator.Send(new DeletePassengerCommand(id));
-        return result.Success ? Ok(result) : NotFound(result);
+        return Ok(result);
     }
 }
-
-// ── Request DTOs ─────────────────────────────────────────────────────────────
-
-/// <summary>Body for POST /api/passengers</summary>
-public sealed record CreatePassengerRequest(
-    string  Name,
-    string  Email,
-    string? Phone  = null,
-    int     RoleId = 1);
-
-/// <summary>Body for PUT /api/passengers/{id}</summary>
-public sealed record UpdatePassengerRequest(
-    string? Name   = null,
-    string? Phone  = null,
-    string? Status = null);

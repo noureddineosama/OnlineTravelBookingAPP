@@ -1,3 +1,4 @@
+using Application.Common.Exceptions;
 using Application.Common.Interfaces;
 using Application.Common.Models;
 using Application.Features.Passengers.DTOs;
@@ -57,8 +58,7 @@ public sealed class CreatePassengerCommandHandler
             .Any(p => p.email == request.Email);
 
         if (emailExists)
-            return ApiResponse<PassengerResponse>.Fail(
-                $"A passenger with email '{request.Email}' already exists.");
+            throw new ConflictException($"A passenger with email '{request.Email}' already exists.");
 
         var passenger = new passenger
         {

@@ -1,3 +1,4 @@
+using Application.Common.Exceptions;
 using Application.Common.Interfaces;
 using Application.Common.Models;
 using Application.Features.TourBookings.DTOs;
@@ -59,8 +60,7 @@ public sealed class CreateTourBookingCommandHandler
             .FindAsync([request.UserId], cancellationToken);
 
         if (passenger is null)
-            return ApiResponse<TourBookingResponse>.Fail(
-                $"Passenger with ID '{request.UserId}' was not found.");
+            throw new NotFoundException(nameof(passenger), request.UserId);
 
         // 2. Load schedule with price tier and tour
         var schedule = await _context.tour_schedules
@@ -69,29 +69,27 @@ public sealed class CreateTourBookingCommandHandler
             .FirstOrDefaultAsync(s => s.id == request.TourScheduleId, cancellationToken);
 
         if (schedule is null)
-            return ApiResponse<TourBookingResponse>.Fail(
-                $"Tour schedule with ID '{request.TourScheduleId}' was not found.");
+            throw new NotFoundException(nameof(tour_schedule), request.TourScheduleId);
 
         // 3. Validate schedule is in the future
         if (schedule.start_date <= DateTime.UtcNow)
-            return ApiResponse<TourBookingResponse>.Fail(
-                "Cannot book a tour schedule that has already started or passed.");
+            throw new BadRequestException("Cannot book a tour schedule that has already started or passed.");
 
         // 4. Check availability
         var totalGuests = request.AdultsCount + request.ChildrenCount + request.InfantsCount;
 
         if (schedule.available_slots < totalGuests)
-            return ApiResponse<TourBookingResponse>.Fail(
+            throw new BadRequestException(
                 $"Not enough available slots. Requested: {totalGuests}, Available: {schedule.available_slots}.");
 
         // 5. Calculate pricing
         var priceTier = schedule.price_tier;
-        var subtotal =
-            (request.AdultsCount * priceTier.adult_price) +
-            (request.ChildrenCount * (priceTier.child_price ?? 0m)) +
-            (request.InfantsCount * (priceTier.infant_price ?? 0m));
+        var subtotal  =
+            (request.AdultsCount   * priceTier.adult_price) +
+            (request.ChildrenCount * (priceTier.child_price  ?? 0m)) +
+            (request.InfantsCount  * (priceTier.infant_price ?? 0m));
 
-        var totalPrice = subtotal; // No coupon discount initially
+        var totalPrice = subtotal; // no coupon discount at this stage
 
         // 6. Generate booking number
         var bookingNumber = "TOUR-" + Guid.NewGuid().ToString("N")[..8].ToUpper();
@@ -131,7 +129,9 @@ public sealed class CreateTourBookingCommandHandler
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        // 10. Build response
+        // 10. Build response.
+        // Manual construction is intentional — we already hold all the loaded entities in memory;
+        // re-fetching with includes to use AutoMapper would cost an extra DB round-trip with no benefit.
         var response = new TourBookingResponse
         {
             BookingId         = parentBooking.id,
@@ -156,7 +156,6 @@ public sealed class CreateTourBookingCommandHandler
             CreatedAt         = parentBooking.created_at
         };
 
-        return ApiResponse<TourBookingResponse>.Ok(
-            response, "Tour booking created successfully.");
+        return ApiResponse<TourBookingResponse>.Ok(response, "Tour booking created successfully.");
     }
 }

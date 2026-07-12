@@ -1,8 +1,10 @@
 using System.Net;
 using System.Text.Json;
 using Application.Common.Models;
-using ValidationException = Application.Common.Exceptions.ValidationException;
-using NotFoundException = Application.Common.Exceptions.NotFoundException;
+using ValidationException  = Application.Common.Exceptions.ValidationException;
+using NotFoundException    = Application.Common.Exceptions.NotFoundException;
+using ConflictException    = Application.Common.Exceptions.ConflictException;
+using BadRequestException  = Application.Common.Exceptions.BadRequestException;
 
 namespace OnlineTravelBooking.Middleware;
 
@@ -37,19 +39,29 @@ public sealed class GlobalExceptionHandlerMiddleware
     {
         var (statusCode, response) = exception switch
         {
-            ValidationException validationEx => (
+            ValidationException ve => (
                 HttpStatusCode.BadRequest,
-                ApiResponse<object>.Fail("Validation failed.", validationEx.Errors.ToList())
+                ApiResponse<object>.Fail("Validation failed.", (int)HttpStatusCode.BadRequest, ve.Errors.ToList())
             ),
 
-            NotFoundException notFoundEx => (
+            NotFoundException ne => (
                 HttpStatusCode.NotFound,
-                ApiResponse<object>.Fail(notFoundEx.Message)
+                ApiResponse<object>.Fail(ne.Message, (int)HttpStatusCode.NotFound)
+            ),
+
+            ConflictException ce => (
+                HttpStatusCode.Conflict,
+                ApiResponse<object>.Fail(ce.Message, (int)HttpStatusCode.Conflict)
+            ),
+
+            BadRequestException be => (
+                HttpStatusCode.BadRequest,
+                ApiResponse<object>.Fail(be.Message, (int)HttpStatusCode.BadRequest)
             ),
 
             _ => (
                 HttpStatusCode.InternalServerError,
-                ApiResponse<object>.Fail("An unexpected error occurred.")
+                ApiResponse<object>.Fail("An unexpected error occurred.", (int)HttpStatusCode.InternalServerError)
             )
         };
 
@@ -63,3 +75,4 @@ public sealed class GlobalExceptionHandlerMiddleware
         await context.Response.WriteAsync(JsonSerializer.Serialize(response, options));
     }
 }
+
