@@ -38,7 +38,7 @@ public sealed class RegisterCommandValidator : AbstractValidator<RegisterCommand
             .When(x => x.Phone is not null);
 
         RuleFor(x => x.RoleId)
-            .GreaterThan(0).WithMessage("RoleId must be a valid role.");
+    .GreaterThanOrEqualTo(0).WithMessage("RoleId must be a valid role.");
     }
 }
 
