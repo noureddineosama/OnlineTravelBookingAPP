@@ -1,4 +1,6 @@
 using Application.Common.Interfaces;
+using Application.Services;
+using Infrastructure.Persistence;
 using Application.Common.Settings;
 using Infrastructure.Payments;
 using Infrastructure.Persistence;
@@ -22,6 +24,10 @@ public static class DependencyInjection
 
         services.AddScoped<IApplicationDbContext>(sp =>
             sp.GetRequiredService<AppDbContext>());
+
+        services.AddTransient<ICalculateNightPrice, CalculateNightPrice>();
+        services.AddTransient<ICheckAvailabilityRoom, CheckAvailabilityRoom>();
+        services.AddTransient<ICalculateNumberOfNights, CalculateNumberOfNights>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));

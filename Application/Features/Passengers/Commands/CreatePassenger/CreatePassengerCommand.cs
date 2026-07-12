@@ -20,8 +20,8 @@ public sealed class CreatePassengerCommandValidator : AbstractValidator<CreatePa
     public CreatePassengerCommandValidator()
     {
         RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Name is required.")
-            .MaximumLength(150).WithMessage("Name must not exceed 150 characters.");
+            .NotEmpty().WithMessage("hotel_name is required.")
+            .MaximumLength(150).WithMessage("hotel_name must not exceed 150 characters.");
 
         RuleFor(x => x.Email)
             .NotEmpty().WithMessage("Email is required.")

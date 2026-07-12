@@ -23,7 +23,7 @@ public sealed class UpdatePassengerCommandValidator : AbstractValidator<UpdatePa
             .GreaterThan(0).WithMessage("Passenger ID must be greater than 0.");
 
         RuleFor(x => x.Name)
-            .MaximumLength(150).WithMessage("Name must not exceed 150 characters.")
+            .MaximumLength(150).WithMessage("hotel_name must not exceed 150 characters.")
             .When(x => x.Name is not null);
 
         RuleFor(x => x.Phone)
