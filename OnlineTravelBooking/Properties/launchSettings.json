@@ -5,7 +5,10 @@
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
+<<<<<<< Updated upstream
       "launchUrl": "swagger",
+=======
+>>>>>>> Stashed changes
       "applicationUrl": "http://localhost:5183",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
