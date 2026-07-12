@@ -1,247 +1,339 @@
 {
   "info": {
-    "name": "Favourite Tour Booking",
+    "name": "Online Travel Booking – Favorites & Tour Bookings",
     "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    "description": "Complete test collection for Favourite Tours and Tour Bookings features.\n\nWorkflow:\n1. Add Favourite → Check Favourite → List Favourites → Remove Favourite\n2. Create Booking → Get Booking → List Bookings → Cancel Booking\n\nBase URL: http://localhost:5183",
+    "description": "Complete test collection for the unified Favorites feature and Tour Bookings.\n\nFavorites workflow:\n1. Add Favourite (Tour / Hotel / Flight / Car)\n2. Check Favourite\n3. Get My Favourites (paginated, all categories or filtered)\n4. Remove Favourite\n\nTour Bookings workflow:\n1. Create Booking → Get Booking → List Bookings → Cancel Booking\n\nBase URL: http://localhost:5183\n\nNOTE: category accepts string names: \"Tour\", \"Hotel\", \"Flight\", \"Car\"",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     { "key": "baseUrl",    "value": "http://localhost:5183", "type": "string" },
-    { "key": "userId",     "value": "4",                    "type": "string" },
+    { "key": "userId",     "value": "1",                    "type": "string" },
     { "key": "tourId",     "value": "1",                    "type": "string" },
+    { "key": "hotelId",    "value": "1",                    "type": "string" },
+    { "key": "flightId",   "value": "1",                    "type": "string" },
+    { "key": "carId",      "value": "1",                    "type": "string" },
     { "key": "scheduleId", "value": "1",                    "type": "string" },
     { "key": "bookingId",  "value": "",                     "type": "string" }
   ],
   "item": [
     {
-      "name": "🌟 Favourite Tours",
+      "name": "⭐ Favorites",
       "item": [
+
         {
-          "name": "Add Tour to Favourites",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
-                  "pm.test('Success is true', () => {",
-                  "    const body = pm.response.json();",
-                  "    pm.expect(body.success).to.be.true;",
-                  "});",
-                  "pm.test('Response has tour data', () => {",
-                  "    const data = pm.response.json().data;",
-                  "    pm.expect(data).to.have.property('favouriteId');",
-                  "    pm.expect(data).to.have.property('tourId');",
-                  "    pm.expect(data).to.have.property('title');",
-                  "    pm.expect(data).to.have.property('addedAt');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "Add Tour to Favourites ✅",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
+            "pm.test('Success is true', () => { pm.expect(pm.response.json().success).to.be.true; });",
+            "pm.test('FavoriteId exists', () => { pm.expect(pm.response.json().data.favoriteId).to.be.a('number'); });"
+          ]}}],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": {{userId}},\n  \"tourId\": {{tourId}}\n}"
+              "raw": "{\n  \"userId\": {{userId}},\n  \"category\": \"Tour\",\n  \"itemId\": {{tourId}}\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/favourite-tours", "host": ["{{baseUrl}}"], "path": ["api", "favourite-tours"] },
-            "description": "Add a tour to a user's favourites.\n\n✅ Happy path: valid userId + active tourId\n❌ Test duplicate: run again → expect 400 'Already in favourites'\n❌ Test invalid: userId=0 → expect 400 validation error"
+            "url": { "raw": "{{baseUrl}}/api/favorites", "host": ["{{baseUrl}}"], "path": ["api", "favorites"] },
+            "description": "Add a Tour to favourites. Category accepts: Tour | Hotel | Flight | Car"
           }
         },
+
         {
-          "name": "Add Tour to Favourites – Duplicate (expect 409)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 409 Conflict', () => pm.response.to.have.status(409));",
-                  "pm.test('Success is false', () => {",
-                  "    const body = pm.response.json();",
-                  "    pm.expect(body.success).to.be.false;",
-                  "    pm.expect(body.message).to.include('already');",
-                  "    pm.expect(body.statusCode).to.equal(409);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "Add Hotel to Favourites ✅",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
+            "pm.test('Success is true', () => { pm.expect(pm.response.json().success).to.be.true; });"
+          ]}}],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": {{userId}},\n  \"tourId\": {{tourId}}\n}"
+              "raw": "{\n  \"userId\": {{userId}},\n  \"category\": \"Hotel\",\n  \"itemId\": {{hotelId}}\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/favourite-tours", "host": ["{{baseUrl}}"], "path": ["api", "favourite-tours"] },
-            "description": "Same payload as Add — must return 409 Conflict with 'already in your favourites'."
+            "url": { "raw": "{{baseUrl}}/api/favorites", "host": ["{{baseUrl}}"], "path": ["api", "favorites"] }
           }
         },
+
         {
-          "name": "Add Tour to Favourites – Validation Error (expect 400)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 400 Bad Request', () => pm.response.to.have.status(400));",
-                  "pm.test('Has validation errors', () => {",
-                  "    const body = pm.response.json();",
-                  "    pm.expect(body.success).to.be.false;",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "Add Flight to Favourites ✅",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
+            "pm.test('Success is true', () => { pm.expect(pm.response.json().success).to.be.true; });"
+          ]}}],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": 0,\n  \"tourId\": -1\n}"
+              "raw": "{\n  \"userId\": {{userId}},\n  \"category\": \"Flight\",\n  \"itemId\": {{flightId}}\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/favourite-tours", "host": ["{{baseUrl}}"], "path": ["api", "favourite-tours"] },
-            "description": "Invalid IDs — FluentValidation should reject with 400."
+            "url": { "raw": "{{baseUrl}}/api/favorites", "host": ["{{baseUrl}}"], "path": ["api", "favorites"] }
           }
         },
+
         {
-          "name": "Check Tour is Favourite (expect true)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
-                  "pm.test('Data is true', () => {",
-                  "    const body = pm.response.json();",
-                  "    pm.expect(body.success).to.be.true;",
-                  "    pm.expect(body.data).to.be.true;",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "Add Car to Favourites ✅",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
+            "pm.test('Success is true', () => { pm.expect(pm.response.json().success).to.be.true; });"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{userId}},\n  \"category\": \"Car\",\n  \"itemId\": {{carId}}\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/favorites", "host": ["{{baseUrl}}"], "path": ["api", "favorites"] }
+          }
+        },
+
+        {
+          "name": "Add Favourite – Duplicate (expect 409) ❌",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 409 Conflict', () => pm.response.to.have.status(409));",
+            "pm.test('Success is false', () => { pm.expect(pm.response.json().success).to.be.false; });",
+            "pm.test('already in favourites message', () => { pm.expect(pm.response.json().message).to.include('already'); });"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{userId}},\n  \"category\": \"Tour\",\n  \"itemId\": {{tourId}}\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/favorites", "host": ["{{baseUrl}}"], "path": ["api", "favorites"] },
+            "description": "Same payload as Add Tour — must return 409 Conflict."
+          }
+        },
+
+        {
+          "name": "Add Favourite – Validation Error (expect 400) ❌",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 400 Bad Request', () => pm.response.to.have.status(400));",
+            "pm.test('Success is false', () => { pm.expect(pm.response.json().success).to.be.false; });"
+          ]}}],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 0,\n  \"category\": \"Tour\",\n  \"itemId\": -1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/favorites", "host": ["{{baseUrl}}"], "path": ["api", "favorites"] },
+            "description": "userId=0 and itemId=-1 violate FluentValidation — expect 400."
+          }
+        },
+
+        {
+          "name": "Check Favourite – Tour (expect isFavorited: true) ✅",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+            "pm.test('isFavorited is true', () => { pm.expect(pm.response.json().data.isFavorited).to.be.true; });",
+            "pm.test('favoriteId is a number', () => { pm.expect(pm.response.json().data.favoriteId).to.be.a('number'); });"
+          ]}}],
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/api/favourite-tours/{{userId}}/check/{{tourId}}",
+              "raw": "{{baseUrl}}/api/favorites/{{userId}}/check?category=Tour&itemId={{tourId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "favourite-tours", "{{userId}}", "check", "{{tourId}}"]
-            },
-            "description": "After adding — should return data: true."
-          }
-        },
-        {
-          "name": "Get User Favourite Tours (paginated)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
-                  "pm.test('Paged response structure', () => {",
-                  "    const data = pm.response.json().data;",
-                  "    pm.expect(data).to.have.property('items');",
-                  "    pm.expect(data).to.have.property('totalCount');",
-                  "    pm.expect(data).to.have.property('page');",
-                  "    pm.expect(data).to.have.property('pageSize');",
-                  "    pm.expect(data).to.have.property('totalPages');",
-                  "    pm.expect(data).to.have.property('hasNextPage');",
-                  "    pm.expect(data).to.have.property('hasPreviousPage');",
-                  "    pm.expect(data.items).to.be.an('array');",
-                  "});",
-                  "pm.test('Items have correct shape', () => {",
-                  "    const items = pm.response.json().data.items;",
-                  "    if (items.length > 0) {",
-                  "        pm.expect(items[0]).to.have.property('favouriteId');",
-                  "        pm.expect(items[0]).to.have.property('tourId');",
-                  "        pm.expect(items[0]).to.have.property('title');",
-                  "        pm.expect(items[0]).to.have.property('startingFromPrice');",
-                  "        pm.expect(items[0]).to.have.property('addedAt');",
-                  "    }",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{baseUrl}}/api/favourite-tours/{{userId}}?page=1&pageSize=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "favourite-tours", "{{userId}}"],
+              "path": ["api", "favorites", "{{userId}}", "check"],
               "query": [
-                { "key": "page",     "value": "1"  },
-                { "key": "pageSize", "value": "10" }
+                { "key": "category", "value": "Tour" },
+                { "key": "itemId",   "value": "{{tourId}}" }
               ]
             },
-            "description": "Returns paginated list of user's favourite tours with enriched details."
+            "description": "Check if the Tour is already favourited. Returns isFavorited + favoriteId."
           }
         },
+
         {
-          "name": "Remove Tour from Favourites",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
-                  "pm.test('Success is true', () => {",
-                  "    const body = pm.response.json();",
-                  "    pm.expect(body.success).to.be.true;",
-                  "    pm.expect(body.data).to.equal('Removed.');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
+          "name": "Get My Favourites – All Categories (paginated) ✅",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+            "pm.test('Paged response structure', () => {",
+            "    const data = pm.response.json().data;",
+            "    pm.expect(data).to.have.property('items');",
+            "    pm.expect(data).to.have.property('totalCount');",
+            "    pm.expect(data).to.have.property('page');",
+            "    pm.expect(data).to.have.property('pageSize');",
+            "    pm.expect(data).to.have.property('totalPages');",
+            "    pm.expect(data.items).to.be.an('array');",
+            "});",
+            "pm.test('Items have UI-ready shape', () => {",
+            "    const items = pm.response.json().data.items;",
+            "    if (items.length > 0) {",
+            "        pm.expect(items[0]).to.have.property('favoriteId');",
+            "        pm.expect(items[0]).to.have.property('category');",
+            "        pm.expect(items[0]).to.have.property('categoryLabel');",
+            "        pm.expect(items[0]).to.have.property('itemId');",
+            "        pm.expect(items[0]).to.have.property('title');",
+            "        pm.expect(items[0]).to.have.property('addedAt');",
+            "    }",
+            "});"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/favorites/{{userId}}?page=1&pageSize=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "favorites", "{{userId}}"],
+              "query": [
+                { "key": "page",     "value": "1"  },
+                { "key": "pageSize", "value": "20" }
+              ]
+            },
+            "description": "Returns all favourite types (Tour, Hotel, Flight, Car) in one paginated response with full UI-ready card data."
+          }
+        },
+
+        {
+          "name": "Get My Favourites – Filter by Tour ✅",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+            "pm.test('All items are Tours', () => {",
+            "    const items = pm.response.json().data.items;",
+            "    items.forEach(item => { pm.expect(item.category).to.equal('Tour'); });",
+            "});"
+          ]}}],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/favorites/{{userId}}?category=Tour&page=1&pageSize=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "favorites", "{{userId}}"],
+              "query": [
+                { "key": "category", "value": "Tour" },
+                { "key": "page",     "value": "1"    },
+                { "key": "pageSize", "value": "20"   }
+              ]
             }
-          ],
+          }
+        },
+
+        {
+          "name": "Get My Favourites – Filter by Hotel ✅",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/favorites/{{userId}}?category=Hotel&page=1&pageSize=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "favorites", "{{userId}}"],
+              "query": [
+                { "key": "category", "value": "Hotel" },
+                { "key": "page",     "value": "1"     },
+                { "key": "pageSize", "value": "20"    }
+              ]
+            }
+          }
+        },
+
+        {
+          "name": "Get My Favourites – Filter by Flight ✅",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/favorites/{{userId}}?category=Flight&page=1&pageSize=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "favorites", "{{userId}}"],
+              "query": [
+                { "key": "category", "value": "Flight" },
+                { "key": "page",     "value": "1"      },
+                { "key": "pageSize", "value": "20"     }
+              ]
+            }
+          }
+        },
+
+        {
+          "name": "Get My Favourites – Filter by Car ✅",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/favorites/{{userId}}?category=Car&page=1&pageSize=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "favorites", "{{userId}}"],
+              "query": [
+                { "key": "category", "value": "Car" },
+                { "key": "page",     "value": "1"   },
+                { "key": "pageSize", "value": "20"  }
+              ]
+            }
+          }
+        },
+
+        {
+          "name": "Remove Tour from Favourites ✅",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+            "pm.test('Success is true', () => { pm.expect(pm.response.json().success).to.be.true; });"
+          ]}}],
           "request": {
             "method": "DELETE",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userId\": {{userId}},\n  \"tourId\": {{tourId}}\n}"
+              "raw": "{\n  \"userId\": {{userId}},\n  \"category\": \"Tour\",\n  \"itemId\": {{tourId}}\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/favourite-tours", "host": ["{{baseUrl}}"], "path": ["api", "favourite-tours"] },
-            "description": "Remove the tour from favourites."
+            "url": { "raw": "{{baseUrl}}/api/favorites", "host": ["{{baseUrl}}"], "path": ["api", "favorites"] }
           }
         },
+
         {
-          "name": "Check Tour is Favourite (expect false)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
-                  "pm.test('Data is false after removal', () => {",
-                  "    const body = pm.response.json();",
-                  "    pm.expect(body.success).to.be.true;",
-                  "    pm.expect(body.data).to.be.false;",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "Remove Hotel from Favourites ✅",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{userId}},\n  \"category\": \"Hotel\",\n  \"itemId\": {{hotelId}}\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/favorites", "host": ["{{baseUrl}}"], "path": ["api", "favorites"] }
+          }
+        },
+
+        {
+          "name": "Check Favourite – Tour (expect isFavorited: false after removal) ✅",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+            "pm.test('isFavorited is false', () => { pm.expect(pm.response.json().data.isFavorited).to.be.false; });",
+            "pm.test('favoriteId is null', () => { pm.expect(pm.response.json().data.favoriteId).to.be.null; });"
+          ]}}],
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/api/favourite-tours/{{userId}}/check/{{tourId}}",
+              "raw": "{{baseUrl}}/api/favorites/{{userId}}/check?category=Tour&itemId={{tourId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "favourite-tours", "{{userId}}", "check", "{{tourId}}"]
+              "path": ["api", "favorites", "{{userId}}", "check"],
+              "query": [
+                { "key": "category", "value": "Tour" },
+                { "key": "itemId",   "value": "{{tourId}}" }
+              ]
             },
-            "description": "After removing — should return data: false."
+            "description": "After removal — isFavorited should be false and favoriteId should be null."
+          }
+        },
+
+        {
+          "name": "Remove Favourite – Not Found (expect 404) ❌",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));",
+            "pm.test('Success is false', () => { pm.expect(pm.response.json().success).to.be.false; });"
+          ]}}],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{userId}},\n  \"category\": \"Tour\",\n  \"itemId\": 999999\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/favorites", "host": ["{{baseUrl}}"], "path": ["api", "favorites"] },
+            "description": "Non-existent itemId — NotFoundException → 404."
           }
         }
+
       ]
     },
     {
@@ -249,38 +341,20 @@
       "item": [
         {
           "name": "Create Tour Booking",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
-                  "pm.test('Success is true', () => {",
-                  "    const body = pm.response.json();",
-                  "    pm.expect(body.success).to.be.true;",
-                  "});",
-                  "pm.test('Booking has correct shape', () => {",
-                  "    const data = pm.response.json().data;",
-                  "    pm.expect(data).to.have.property('bookingId');",
-                  "    pm.expect(data).to.have.property('bookingNumber');",
-                  "    pm.expect(data.bookingNumber).to.match(/^TOUR-/);",
-                  "    pm.expect(data).to.have.property('status');",
-                  "    pm.expect(data.status).to.equal('confirmed');",
-                  "    pm.expect(data).to.have.property('totalPrice');",
-                  "    pm.expect(data).to.have.property('paymentStatus');",
-                  "    pm.expect(data.paymentStatus).to.equal('pending');",
-                  "});",
-                  "// Save bookingId for later requests",
-                  "const bookingId = pm.response.json().data?.bookingId;",
-                  "if (bookingId) { pm.collectionVariables.set('bookingId', bookingId.toString()); }",
-                  "pm.test('bookingId saved to variable', () => {",
-                  "    pm.expect(pm.collectionVariables.get('bookingId')).to.not.equal('');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
+            "pm.test('Success is true', () => { pm.expect(pm.response.json().success).to.be.true; });",
+            "pm.test('Booking has correct shape', () => {",
+            "    const data = pm.response.json().data;",
+            "    pm.expect(data).to.have.property('bookingId');",
+            "    pm.expect(data).to.have.property('bookingNumber');",
+            "    pm.expect(data.bookingNumber).to.match(/^TOUR-/);",
+            "    pm.expect(data.status).to.equal('confirmed');",
+            "    pm.expect(data.paymentStatus).to.equal('pending');",
+            "});",
+            "const bookingId = pm.response.json().data?.bookingId;",
+            "if (bookingId) { pm.collectionVariables.set('bookingId', bookingId.toString()); }"
+          ]}}],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -288,27 +362,15 @@
               "mode": "raw",
               "raw": "{\n  \"userId\": {{userId}},\n  \"tourScheduleId\": {{scheduleId}},\n  \"adultsCount\": 2,\n  \"childrenCount\": 1,\n  \"infantsCount\": 0\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/tour-bookings", "host": ["{{baseUrl}}"], "path": ["api", "tour-bookings"] },
-            "description": "Create a tour booking.\n\n✅ Happy path: valid userId, future scheduleId, adultsCount >= 1\n\nThe bookingId is auto-saved to the {{bookingId}} collection variable for subsequent requests."
+            "url": { "raw": "{{baseUrl}}/api/tour-bookings", "host": ["{{baseUrl}}"], "path": ["api", "tour-bookings"] }
           }
         },
         {
-          "name": "Create Tour Booking – No Adults (expect 400)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 400 Bad Request', () => pm.response.to.have.status(400));",
-                  "pm.test('Validation rejects zero adults', () => {",
-                  "    const body = pm.response.json();",
-                  "    pm.expect(body.success).to.be.false;",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "Create Tour Booking – No Adults (expect 400) ❌",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 400 Bad Request', () => pm.response.to.have.status(400));",
+            "pm.test('Success is false', () => { pm.expect(pm.response.json().success).to.be.false; });"
+          ]}}],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -316,29 +378,15 @@
               "mode": "raw",
               "raw": "{\n  \"userId\": {{userId}},\n  \"tourScheduleId\": {{scheduleId}},\n  \"adultsCount\": 0,\n  \"childrenCount\": 1,\n  \"infantsCount\": 0\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/tour-bookings", "host": ["{{baseUrl}}"], "path": ["api", "tour-bookings"] },
-            "description": "adultsCount=0 violates FluentValidation rule (>= 1 required)."
+            "url": { "raw": "{{baseUrl}}/api/tour-bookings", "host": ["{{baseUrl}}"], "path": ["api", "tour-bookings"] }
           }
         },
         {
-          "name": "Create Tour Booking – Invalid User (expect 404)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));",
-                  "pm.test('User not found', () => {",
-                  "    const body = pm.response.json();",
-                  "    pm.expect(body.success).to.be.false;",
-                  "    pm.expect(body.message).to.include('not found');",
-                  "    pm.expect(body.statusCode).to.equal(404);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "Create Tour Booking – Invalid User (expect 404) ❌",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));",
+            "pm.test('User not found', () => { pm.expect(pm.response.json().message).to.include('not found'); });"
+          ]}}],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -346,98 +394,54 @@
               "mode": "raw",
               "raw": "{\n  \"userId\": 999999,\n  \"tourScheduleId\": {{scheduleId}},\n  \"adultsCount\": 1,\n  \"childrenCount\": 0,\n  \"infantsCount\": 0\n}"
             },
-            "url": { "raw": "{{baseUrl}}/api/tour-bookings", "host": ["{{baseUrl}}"], "path": ["api", "tour-bookings"] },
-            "description": "Non-existent userId — NotFoundException → 404."
+            "url": { "raw": "{{baseUrl}}/api/tour-bookings", "host": ["{{baseUrl}}"], "path": ["api", "tour-bookings"] }
           }
         },
         {
           "name": "Get Tour Booking by ID",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
-                  "pm.test('Response has full booking details', () => {",
-                  "    const data = pm.response.json().data;",
-                  "    pm.expect(data).to.have.property('bookingId');",
-                  "    pm.expect(data).to.have.property('bookingNumber');",
-                  "    pm.expect(data).to.have.property('tourTitle');",
-                  "    pm.expect(data).to.have.property('scheduleStartDate');",
-                  "    pm.expect(data).to.have.property('adultsCount');",
-                  "    pm.expect(data).to.have.property('priceTierName');",
-                  "    pm.expect(data).to.have.property('subtotal');",
-                  "    pm.expect(data).to.have.property('totalPrice');",
-                  "    pm.expect(data).to.have.property('currency');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+            "pm.test('Has full booking details', () => {",
+            "    const data = pm.response.json().data;",
+            "    pm.expect(data).to.have.property('bookingId');",
+            "    pm.expect(data).to.have.property('tourTitle');",
+            "    pm.expect(data).to.have.property('totalPrice');",
+            "});"
+          ]}}],
           "request": {
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/api/tour-bookings/{{bookingId}}",
               "host": ["{{baseUrl}}"],
               "path": ["api", "tour-bookings", "{{bookingId}}"]
-            },
-            "description": "Fetch a single booking by ID. Uses {{bookingId}} saved from Create request."
+            }
           }
         },
         {
-          "name": "Get Tour Booking by ID – Not Found (expect 404)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "Get Tour Booking by ID – Not Found (expect 404) ❌",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));"
+          ]}}],
           "request": {
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/api/tour-bookings/999999",
               "host": ["{{baseUrl}}"],
               "path": ["api", "tour-bookings", "999999"]
-            },
-            "description": "Non-existent bookingId — NotFoundException → 404."
+            }
           }
         },
         {
           "name": "Get User Tour Bookings (paginated)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
-                  "pm.test('Paged response structure', () => {",
-                  "    const data = pm.response.json().data;",
-                  "    pm.expect(data).to.have.property('items');",
-                  "    pm.expect(data).to.have.property('totalCount');",
-                  "    pm.expect(data).to.have.property('page');",
-                  "    pm.expect(data).to.have.property('pageSize');",
-                  "    pm.expect(data.items).to.be.an('array');",
-                  "});",
-                  "pm.test('Items have booking shape', () => {",
-                  "    const items = pm.response.json().data.items;",
-                  "    if (items.length > 0) {",
-                  "        pm.expect(items[0]).to.have.property('bookingId');",
-                  "        pm.expect(items[0]).to.have.property('bookingNumber');",
-                  "        pm.expect(items[0]).to.have.property('status');",
-                  "        pm.expect(items[0]).to.have.property('tourTitle');",
-                  "    }",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+            "pm.test('Paged response structure', () => {",
+            "    const data = pm.response.json().data;",
+            "    pm.expect(data).to.have.property('items');",
+            "    pm.expect(data).to.have.property('totalCount');",
+            "    pm.expect(data.items).to.be.an('array');",
+            "});"
+          ]}}],
           "request": {
             "method": "GET",
             "url": {
@@ -448,29 +452,11 @@
                 { "key": "page",     "value": "1"  },
                 { "key": "pageSize", "value": "10" }
               ]
-            },
-            "description": "List all tour bookings for a user, paginated."
+            }
           }
         },
         {
-          "name": "Get User Tour Bookings – Filter by Status",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
-                  "pm.test('All items have confirmed status', () => {",
-                  "    const items = pm.response.json().data.items;",
-                  "    items.forEach(item => {",
-                  "        pm.expect(item.status).to.equal('confirmed');",
-                  "    });",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "Get User Tour Bookings – Filter by Status confirmed",
           "request": {
             "method": "GET",
             "url": {
@@ -482,76 +468,41 @@
                 { "key": "pageSize", "value": "10"        },
                 { "key": "status",   "value": "confirmed" }
               ]
-            },
-            "description": "Filter bookings by status=confirmed."
+            }
           }
         },
         {
           "name": "Cancel Tour Booking",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
-                  "pm.test('Booking cancelled successfully', () => {",
-                  "    const body = pm.response.json();",
-                  "    pm.expect(body.success).to.be.true;",
-                  "    pm.expect(body.data).to.equal('Cancelled.');",
-                  "    pm.expect(body.message).to.include('cancelled');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+            "pm.test('Cancelled successfully', () => { pm.expect(pm.response.json().success).to.be.true; });"
+          ]}}],
           "request": {
             "method": "PUT",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"userId\": {{userId}}\n}"
-            },
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": {{userId}}\n}" },
             "url": {
               "raw": "{{baseUrl}}/api/tour-bookings/{{bookingId}}/cancel",
               "host": ["{{baseUrl}}"],
               "path": ["api", "tour-bookings", "{{bookingId}}", "cancel"]
-            },
-            "description": "Cancel the booking. Available slots are restored on the schedule."
+            }
           }
         },
         {
-          "name": "Cancel Tour Booking – Already Cancelled (expect 409)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 409 Conflict', () => pm.response.to.have.status(409));",
-                  "pm.test('Already cancelled message', () => {",
-                  "    const body = pm.response.json();",
-                  "    pm.expect(body.success).to.be.false;",
-                  "    pm.expect(body.message).to.include('already cancelled');",
-                  "    pm.expect(body.statusCode).to.equal(409);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "Cancel Tour Booking – Already Cancelled (expect 409) ❌",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status 409 Conflict', () => pm.response.to.have.status(409));",
+            "pm.test('Already cancelled message', () => { pm.expect(pm.response.json().message).to.include('already cancelled'); });"
+          ]}}],
           "request": {
             "method": "PUT",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"userId\": {{userId}}\n}"
-            },
+            "body": { "mode": "raw", "raw": "{\n  \"userId\": {{userId}}\n}" },
             "url": {
               "raw": "{{baseUrl}}/api/tour-bookings/{{bookingId}}/cancel",
               "host": ["{{baseUrl}}"],
               "path": ["api", "tour-bookings", "{{bookingId}}", "cancel"]
-            },
-            "description": "Cancel again — must return 409 Conflict 'already cancelled'."
+            }
           }
         }
       ]
