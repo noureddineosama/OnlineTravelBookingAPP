@@ -1007,6 +1007,20 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("roles");
+
+                    b.HasData(
+                        new
+                        {
+                            id = 1,
+                            created_at = new DateTime(2026, 7, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                            name = "Passenger"
+                        },
+                        new
+                        {
+                            id = 2,
+                            created_at = new DateTime(2026, 7, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                            name = "Admin"
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.room", b =>
