@@ -13,9 +13,11 @@ public sealed class AuthController : ControllerBase
 
     public AuthController(ISender mediator) => _mediator = mediator;
 
+    // OnlineTravelBooking\Controllers\AuthController.cs
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
+        
         var result = await _mediator.Send(new RegisterCommand(
             request.Name,
             request.Email,

@@ -261,7 +261,11 @@ public partial class AppDbContext : DbContext, IApplicationDbContext
         {
             entity.HasKey(e => e.id).HasName("PK__roles__3213E83F247A45DA");
             entity.Property(e => e.created_at).HasDefaultValueSql("(sysutcdatetime())");
-        });
+            entity.HasData(
+                new role { id = 1, name = "Passenger", created_at = new System.DateTime(2026, 7, 7, 0, 0, 0, System.DateTimeKind.Utc) },
+                new role { id = 2, name = "Admin", created_at = new System.DateTime(2026, 7, 7, 0, 0, 0, System.DateTimeKind.Utc) }
+            );
+        }); 
 
         // ── room ──────────────────────────────────────────────
         modelBuilder.Entity<room>(entity =>
