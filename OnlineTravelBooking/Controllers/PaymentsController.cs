@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Application.Common.Interfaces;
 using Application.Common.Settings;
 using Application.Features.Payments.Commands.CreatePaymentIntent;
@@ -37,19 +37,11 @@ public sealed class PaymentsController : ControllerBase
     {
         var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-<<<<<<< Updated upstream
-       if (!long.TryParse(userIdValue, out var userId))
-           return Unauthorized("Invalid user token.");
-
-        var result = await _mediator.Send(
-            new CreatePaymentIntentCommand(request.BookingId, 1),
-=======
         if (!long.TryParse(userIdValue, out var userId))
             return Unauthorized("Invalid user token.");
 
         var result = await _mediator.Send(
             new CreatePaymentIntentCommand(request.BookingId, userId),
->>>>>>> Stashed changes
             cancellationToken);
 
         return result.Success ? Ok(result) : BadRequest(result);

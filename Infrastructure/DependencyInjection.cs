@@ -1,12 +1,8 @@
 using Application.Common.Interfaces;
 using Application.Common.Settings;
-<<<<<<< Updated upstream
-using Infrastructure.Persistence;
-using Infrastructure.Security;
-=======
 using Infrastructure.Payments;
 using Infrastructure.Persistence;
->>>>>>> Stashed changes
+using Infrastructure.Security;
 using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -30,28 +26,18 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
 
-<<<<<<< Updated upstream
         // ── Security & JWT ───────────────────────────────────
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
 
-
         //---- Stripe Payment Service-------------------------------
-        services.Configure<StripeSettings>(
-    configuration.GetSection(StripeSettings.SectionName));
-
-        services.AddScoped<IStripeService, StripeService>();
-
-
-=======
         services.Configure<StripeSettings>(
             configuration.GetSection(StripeSettings.SectionName));
 
         services.AddScoped<IStripeService, StripeService>();
 
         services.AddScoped<IPaymentGatewayService, StripePaymentGatewayService>();
->>>>>>> Stashed changes
 
         return services;
     }
