@@ -1,3 +1,4 @@
+using Application.Common.Interfaces;
 using Application.Common.Models;
 using Application.Common.Pagination;
 using Application.Features.Favorites.Commands.AddFavorite;
@@ -8,6 +9,7 @@ using Application.Features.Favorites.Queries.GetMyFavorites;
 using Application.Features.Favorites.Requests;
 using Domain.Enums;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace OnlineTravelBooking.Controllers;
@@ -17,11 +19,17 @@ namespace OnlineTravelBooking.Controllers;
 /// </summary>
 [Route("api/favorites")]
 [ApiController]
+[Authorize]
 public sealed class FavoritesController : ControllerBase
 {
     private readonly ISender _mediator;
+    private readonly ICurrentIUserService _currentUserService;
 
-    public FavoritesController(ISender mediator) => _mediator = mediator;
+    public FavoritesController(ISender mediator, ICurrentIUserService currentUserService)
+    {
+        _mediator = mediator;
+        _currentUserService = currentUserService;
+    }
 
     /// <summary>
     /// Add any item to a user's favourites.
@@ -39,9 +47,9 @@ public sealed class FavoritesController : ControllerBase
     public async Task<IActionResult> Add([FromBody] AddFavoriteRequest request)
     {
         var result = await _mediator.Send(
-            new AddFavoriteCommand(request.UserId, request.Category, request.ItemId));
+            new AddFavoriteCommand(_currentUserService.UserId, request.Category, request.ItemId));
 
-        return CreatedAtAction(nameof(GetMyFavorites), new { userId = request.UserId }, result);
+        return CreatedAtAction(nameof(GetMyFavorites), null, result);
     }
 
     /// <summary>
@@ -53,11 +61,10 @@ public sealed class FavoritesController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<object>),               StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>),               StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Remove(
-        [FromQuery] long             userId,
         [FromQuery] FavoriteCategory category,
         [FromQuery] long             itemId)
     {
-        await _mediator.Send(new RemoveFavoriteCommand(userId, category, itemId));
+        await _mediator.Send(new RemoveFavoriteCommand(_currentUserService.UserId, category, itemId));
         return NoContent();
     }
 
@@ -69,18 +76,17 @@ public sealed class FavoritesController : ControllerBase
     /// <param name="category">Optional filter: Tour | Hotel | Flight | Car</param>
     /// <param name="page">Page number (default: 1).</param>
     /// <param name="pageSize">Items per page, 1–100 (default: 20).</param>
-    [HttpGet("{userId:long}")]
+    [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<FavoriteDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>),                   StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetMyFavorites(
-        long                    userId,
         [FromQuery] FavoriteCategory? category = null,
         [FromQuery] int         page     = 1,
         [FromQuery] int         pageSize = 20)
     {
         var result = await _mediator.Send(new GetMyFavoritesQuery
         {
-            UserId   = userId,
+            UserId   = _currentUserService.UserId,
             Category = category,
             Page     = page,
             PageSize = pageSize
@@ -94,16 +100,15 @@ public sealed class FavoritesController : ControllerBase
     /// Returns <c>isFavorited</c> (bool) and <c>favoriteId</c> so the
     /// frontend can call DELETE immediately without an extra lookup.
     /// </summary>
-    [HttpGet("{userId:long}/check")]
+    [HttpGet("check")]
     [ProducesResponseType(typeof(ApiResponse<CheckFavoriteDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>),           StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Check(
-        long                    userId,
         [FromQuery] FavoriteCategory category,
         [FromQuery] long         itemId)
     {
         var result = await _mediator.Send(
-            new CheckFavoriteQuery(userId, category, itemId));
+            new CheckFavoriteQuery(_currentUserService.UserId, category, itemId));
 
         return Ok(result);
     }

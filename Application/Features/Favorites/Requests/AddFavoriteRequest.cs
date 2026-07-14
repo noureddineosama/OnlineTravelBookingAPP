@@ -5,7 +5,6 @@ namespace Application.Features.Favorites.Requests;
 /// <summary>HTTP request body for POST /api/favorites</summary>
 public sealed class AddFavoriteRequest
 {
-    public long             UserId   { get; init; }
     public FavoriteCategory Category { get; init; }
     public long             ItemId   { get; init; }
 }
