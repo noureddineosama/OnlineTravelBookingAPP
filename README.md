@@ -99,16 +99,6 @@ dotnet run --project OnlineTravelBooking
 ```
 Once running, navigate to `http://localhost:5183/swagger` to explore the interactive OpenAPI documentation.
 
----
-
-## 🧪 Testing with Postman
-
-We have included a fully configured Postman collection to instantly test the API without writing any client code.
-
-1. **Import:** Open Postman and import the `FavouriteTourBooking.postman_collection.json` file located in the root directory.
-2. **Register & Login:** Open the `🔐 Authentication` folder. Run **Register User** first, then **Login**. 
-3. **Automated Tokens:** The Login request has a built-in Postman script that automatically captures your JWT token and injects it into all other requests.
-4. **Test:** You can now instantly run `Add Tour to Favourites` or `Create Tour Booking` and receive `201 Created` responses!
 
 ---
 
