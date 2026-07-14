@@ -1,20 +1,28 @@
+using Application.Common.Interfaces;
 using Application.Features.TourBookings.Commands.CancelTourBooking;
 using Application.Features.TourBookings.Commands.CreateTourBooking;
 using Application.Features.TourBookings.Queries.GetTourBookingById;
 using Application.Features.TourBookings.Queries.GetUserTourBookings;
 using Application.Features.TourBookings.Requests;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace OnlineTravelBooking.Controllers;
 
 [Route("api/tour-bookings")]
 [ApiController]
+[Authorize]
 public sealed class TourBookingsController : ControllerBase
 {
     private readonly ISender _mediator;
+    private readonly ICurrentIUserService _currentUserService;
 
-    public TourBookingsController(ISender mediator) => _mediator = mediator;
+    public TourBookingsController(ISender mediator, ICurrentIUserService currentUserService)
+    {
+        _mediator = mediator;
+        _currentUserService = currentUserService;
+    }
 
     /// <summary>Create a new tour booking for a given schedule.</summary>
     [HttpPost]
@@ -22,7 +30,7 @@ public sealed class TourBookingsController : ControllerBase
     {
         var result = await _mediator.Send(
             new CreateTourBookingCommand(
-                request.UserId,
+                _currentUserService.UserId,
                 request.TourScheduleId,
                 request.AdultsCount,
                 request.ChildrenCount,
@@ -35,21 +43,20 @@ public sealed class TourBookingsController : ControllerBase
     [HttpPut("{bookingId:long}/cancel")]
     public async Task<IActionResult> Cancel(long bookingId, [FromBody] CancelTourBookingRequest request)
     {
-        var result = await _mediator.Send(new CancelTourBookingCommand(bookingId, request.UserId));
+        var result = await _mediator.Send(new CancelTourBookingCommand(bookingId, _currentUserService.UserId));
         return Ok(result);
     }
 
     /// <summary>Get a user's tour bookings with pagination and optional status filter.</summary>
-    [HttpGet("user/{userId:long}")]
+    [HttpGet("my-bookings")]
     public async Task<IActionResult> GetUserBookings(
-        long userId,
         [FromQuery] int     page     = 1,
         [FromQuery] int     pageSize = 20,
         [FromQuery] string? status   = null)
     {
         var result = await _mediator.Send(new GetUserTourBookingsQuery
         {
-            UserId   = userId,
+            UserId   = _currentUserService.UserId,
             Page     = page,
             PageSize = pageSize,
             Status   = status
