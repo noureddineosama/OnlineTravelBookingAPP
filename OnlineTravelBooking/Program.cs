@@ -1,27 +1,25 @@
 using Application;
 using Application.Common.Interfaces;
-using Application.Services;
 using Infrastructure;
-using Infrastructure.Services;
 using Infrastructure.Security;
+using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using OnlineTravelBooking.Middleware;
+using OnlineTravelBooking.Swagger;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ── Clean Architecture DI ────────────────────────────────────
+// ── Clean Architecture DI ─────────────────────────────────────────────────────
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// ── JWT Authentication ───────────────────────────────────────
+// ── JWT Authentication ────────────────────────────────────────────────────────
 var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>();
-if (jwtSettings == null)
-{
+if (jwtSettings is null)
     throw new InvalidOperationException("JWT Settings are not configured in appsettings.json.");
-}
 
 builder.Services.AddAuthentication(options =>
 {
@@ -44,34 +42,46 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// ── CORS ──────────────────────────────────────────────────────
+// ── CORS ──────────────────────────────────────────────────────────────────────
 builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", p =>
         p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
 
-// ── Controllers ───────────────────────────────────────────────
-builder.Services.AddControllers();
-
-//. Configuration
-builder.Services.AddApplication();
-
-builder.Services.AddInfrastructure(builder.Configuration);
+// ── Controllers ───────────────────────────────────────────────────────────────
+// JsonStringEnumConverter ensures all enums (e.g. FavoriteCategory) are
+// serialized as their string names ("Tour", "Hotel", "Flight", "Car")
+// rather than integer values — gives the frontend a stable, readable contract.
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 
 builder.Services.AddTransient<ICurrentIUserService, CurrentUserService>();
-
 builder.Services.AddHttpContextAccessor();
 
-// ── Swagger ───────────────────────────────────────────────────
+// ── Swagger ───────────────────────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title   = "Online Travel Booking API",
-        Version = "v1",
+        Title       = "Online Travel Booking API",
+        Version     = "v1",
         Description = "Clean Architecture — Domain / Application / Infrastructure / API"
     });
 
+    // Enum values appear as strings ("Tour", "Hotel") instead of integers.
+    options.SchemaFilter<StringEnumSchemaFilter>();
+
+    // Surface all XML <summary> comments as Swagger descriptions.
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+        options.IncludeXmlComments(xmlPath);
+
+    // JWT Bearer auth in Swagger UI
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name         = "Authorization",
@@ -79,7 +89,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme       = "Bearer",
         BearerFormat = "JWT",
         In           = ParameterLocation.Header,
-        Description  = "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: \"Bearer 12345abcdef\""
+        Description  = "Enter 'Bearer' [space] and then your token.\r\n\r\nExample: \"Bearer eyJhbGci...\""
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -100,7 +110,7 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-// ── Middleware Pipeline ───────────────────────────────────────
+// ── Middleware Pipeline ───────────────────────────────────────────────────────
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 if (app.Environment.IsDevelopment())

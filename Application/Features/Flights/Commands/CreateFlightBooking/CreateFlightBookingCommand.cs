@@ -1,8 +1,9 @@
-﻿using Application.Common.Interfaces;
+using Application.Common.Interfaces;
 using Application.Common.Models;
 using Application.Features.FlightBookings.DTOs;
 using AutoMapper;
 using Domain.Entities;
+using Domain.Enums;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -96,7 +97,7 @@ public sealed class CreateFlightBookingCommandHandler
 
         // If the passenger does not exist, return a failure response
         if (!passengerExists)
-            return ApiResponse<FlightBookingResponse>.Fail("Passenger account not found.");
+            return ApiResponse<FlightBookingResponse>.Fail("Passenger account not found.", 404);
 
         // Retrieve the flight from the database based on the provided FlightId
         var flight = await _context.flights
@@ -104,18 +105,18 @@ public sealed class CreateFlightBookingCommandHandler
 
         // If the flight does not exist, return a failure response
         if (flight is null)
-            return ApiResponse<FlightBookingResponse>.Fail("Flight not found.");
+            return ApiResponse<FlightBookingResponse>.Fail("Flight not found.", 404);
 
         // Check if the flight is scheduled and available for booking
         if (flight.status != "scheduled")
-            return ApiResponse<FlightBookingResponse>.Fail("Flight is not available for booking.");
+            return ApiResponse<FlightBookingResponse>.Fail("Flight is not available for booking.", 409);
 
         // Get the number of passengers in the booking request
         var passengerCount = request.Passengers.Count;
 
         // Check if there are enough seats available on the flight for the requested number of passengers
         if (flight.seats_available < passengerCount)
-            return ApiResponse<FlightBookingResponse>.Fail("Not enough seats available.");
+            return ApiResponse<FlightBookingResponse>.Fail("Not enough seats available.", 409);
 
         // If the trip type is round trip, retrieve the return flight and perform similar checks
         flight? returnFlight = null;
@@ -129,13 +130,13 @@ public sealed class CreateFlightBookingCommandHandler
                     cancellationToken);
 
             if (returnFlight is null)
-                return ApiResponse<FlightBookingResponse>.Fail("Return flight not found.");
+                return ApiResponse<FlightBookingResponse>.Fail("Return flight not found.", 404);
 
             if (returnFlight.status != "scheduled")
-                return ApiResponse<FlightBookingResponse>.Fail("Return flight is not available for booking.");
+                return ApiResponse<FlightBookingResponse>.Fail("Return flight is not available for booking.", 409);
 
             if (returnFlight.seats_available < passengerCount)
-                return ApiResponse<FlightBookingResponse>.Fail("Not enough seats available on return flight.");
+                return ApiResponse<FlightBookingResponse>.Fail("Not enough seats available on return flight.", 409);
         }
 
         // Calculate the subtotal for the booking based on the base price of the flight(s) and the number of passengers
@@ -151,7 +152,7 @@ public sealed class CreateFlightBookingCommandHandler
             booking_number = GenerateBookingNumber(),
             user_id = request.UserId,
             category = "flight",
-            status = "pending",
+            status = BookingStatus.pending,
             subtotal = subtotal,
             discount_amount = 0,
             total_price = subtotal,

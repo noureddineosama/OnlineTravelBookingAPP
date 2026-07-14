@@ -49,19 +49,19 @@ public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, ApiRespo
 
         if (user is null)
         {
-            return ApiResponse<AuthResponse>.Fail("Invalid credentials.");
+            return ApiResponse<AuthResponse>.Fail("Invalid credentials.", 401);
         }
 
         if (string.IsNullOrEmpty(user.password_hash))
         {
-            return ApiResponse<AuthResponse>.Fail("Authentication method not supported for this account (no password set).");
+            return ApiResponse<AuthResponse>.Fail("Authentication method not supported for this account (no password set).", 400);
         }
 
         var isPasswordValid = _passwordHasher.VerifyPassword(request.Password, user.password_hash);
 
         if (!isPasswordValid)
         {
-            return ApiResponse<AuthResponse>.Fail("Invalid credentials.");
+            return ApiResponse<AuthResponse>.Fail("Invalid credentials.", 401);
         }
 
         var token = _jwtTokenGenerator.GenerateToken(user);

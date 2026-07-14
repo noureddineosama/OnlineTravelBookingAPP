@@ -1,5 +1,6 @@
-﻿using Application.Common.Interfaces;
+using Application.Common.Interfaces;
 using Application.Common.Models;
+using Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -48,14 +49,14 @@ public sealed class HandleStripeWebhookCommandHandler
         if (payment is null)
         {
             return ApiResponse<string>.Fail(
-                $"Payment with transaction id '{webhook.PaymentIntentId}' was not found.");
+                $"Payment with transaction id '{webhook.PaymentIntentId}' was not found.", 404);
         }
 
         if (webhook.Status == "succeeded")
         {
             payment.status = "succeeded";
             payment.booking.payment_status = "paid";
-            payment.booking.status = "confirmed";
+            payment.booking.status = BookingStatus.Confirmed;
             payment.booking.updated_at = DateTime.UtcNow;
         }
         else if (webhook.Status == "failed")

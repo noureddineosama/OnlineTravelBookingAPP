@@ -65,7 +65,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Ap
 
         if (emailExists)
         {
-            return ApiResponse<AuthResponse>.Fail($"A user with email '{request.Email}' already exists.");
+            return ApiResponse<AuthResponse>.Fail($"A user with email '{request.Email}' already exists.", 409);
         }
 
         // Verify role exists
@@ -74,7 +74,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Ap
 
         if (!roleExists)
         {
-            return ApiResponse<AuthResponse>.Fail($"Role with ID {request.RoleId} does not exist.");
+            return ApiResponse<AuthResponse>.Fail($"Role with ID {request.RoleId} does not exist.", 400);
         }
 
         var hashedPassword = _passwordHasher.HashPassword(request.Password);

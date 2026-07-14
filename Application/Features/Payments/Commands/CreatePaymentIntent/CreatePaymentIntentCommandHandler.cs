@@ -1,8 +1,9 @@
-﻿using Application.Common.Interfaces;
+using Application.Common.Interfaces;
 using Application.Common.Models;
 using Application.Common.Settings;
 using Application.Features.Payments.DTOs;
 using Domain.Entities;
+using Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -37,16 +38,16 @@ public sealed class CreatePaymentIntentCommandHandler
                 cancellationToken);
 
         if (booking is null)
-            return ApiResponse<PaymentIntentResponse>.Fail("Booking not found.");
+            return ApiResponse<PaymentIntentResponse>.Fail("Booking not found.", 404);
 
-        if (!string.Equals(booking.status, "pending", StringComparison.OrdinalIgnoreCase))
-            return ApiResponse<PaymentIntentResponse>.Fail("Only pending bookings can be paid.");
+        if (booking.status != BookingStatus.pending)
+            return ApiResponse<PaymentIntentResponse>.Fail("Only pending bookings can be paid.", 409);
 
         if (string.Equals(booking.payment_status, "paid", StringComparison.OrdinalIgnoreCase))
-            return ApiResponse<PaymentIntentResponse>.Fail("Booking is already paid.");
+            return ApiResponse<PaymentIntentResponse>.Fail("Booking is already paid.", 409);
 
         if (booking.total_price <= 0)
-            return ApiResponse<PaymentIntentResponse>.Fail("Invalid booking amount.");
+            return ApiResponse<PaymentIntentResponse>.Fail("Invalid booking amount.", 400);
 
         var stripeIntent = await _stripeService.CreatePaymentIntentAsync(
             booking.total_price,

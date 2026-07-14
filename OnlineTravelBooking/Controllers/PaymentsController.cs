@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Application.Common.Interfaces;
 using Application.Common.Settings;
 using Application.Features.Payments.Commands.CreatePaymentIntent;
+using Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -106,7 +107,7 @@ public sealed class PaymentsController : ControllerBase
         payment.status = "paid";
 
         payment.booking.payment_status = "paid";
-        payment.booking.status = "confirmed";
+        payment.booking.status = BookingStatus.Confirmed;
 
         await _context.SaveChangesAsync(cancellationToken);
     }
@@ -132,7 +133,7 @@ public sealed class PaymentsController : ControllerBase
         payment.status = "failed";
 
         payment.booking.payment_status = "failed";
-        payment.booking.status = "cancelled";
+        payment.booking.status = BookingStatus.Cancelled;
 
         await _context.SaveChangesAsync(cancellationToken);
     }

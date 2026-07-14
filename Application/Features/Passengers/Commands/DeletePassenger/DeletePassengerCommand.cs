@@ -1,11 +1,21 @@
 using Application.Common.Exceptions;
 using Application.Common.Interfaces;
 using Application.Common.Models;
+using FluentValidation;
 using MediatR;
 
 namespace Application.Features.Passengers.Commands.DeletePassenger;
 
 public sealed record DeletePassengerCommand(long Id) : IRequest<ApiResponse<string>>;
+
+public sealed class DeletePassengerCommandValidator : AbstractValidator<DeletePassengerCommand>
+{
+    public DeletePassengerCommandValidator()
+    {
+        RuleFor(x => x.Id)
+            .GreaterThan(0).WithMessage("Passenger ID must be greater than 0.");
+    }
+}
 
 public sealed class DeletePassengerCommandHandler
     : IRequestHandler<DeletePassengerCommand, ApiResponse<string>>
@@ -31,3 +41,4 @@ public sealed class DeletePassengerCommandHandler
         return ApiResponse<string>.Ok("Deleted.", "Passenger deleted successfully.");
     }
 }
+
