@@ -19,7 +19,7 @@ public sealed class GlobalExceptionHandlerMiddleware
 
     public GlobalExceptionHandlerMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandlerMiddleware> logger)
     {
-        _next   = next;
+        _next = next;
         _logger = logger;
     }
 
@@ -59,7 +59,8 @@ public sealed class GlobalExceptionHandlerMiddleware
                 ApiResponse<object>.Fail(be.Message, (int)HttpStatusCode.BadRequest)
             ),
 
-            _ => (
+            _ => 
+                (
                 HttpStatusCode.InternalServerError,
                 ApiResponse<object>.Fail("An unexpected error occurred.", (int)HttpStatusCode.InternalServerError)
             )
@@ -69,7 +70,7 @@ public sealed class GlobalExceptionHandlerMiddleware
             _logger.LogError(exception, "Unhandled exception: {Message}", exception.Message);
 
         context.Response.ContentType = "application/json";
-        context.Response.StatusCode  = (int)statusCode;
+        context.Response.StatusCode = (int)statusCode;
 
         var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
         await context.Response.WriteAsync(JsonSerializer.Serialize(response, options));

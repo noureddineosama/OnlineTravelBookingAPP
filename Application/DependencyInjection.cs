@@ -1,4 +1,6 @@
 using Application.Common.Behaviors;
+using Application.Common.Interfaces;
+using Application.Profiles;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,9 +25,11 @@ public static class DependencyInjection
 
         // Validation pipeline — runs validators before every handler
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-
+        
+        
         // AutoMapper — auto-discovers all Profile implementations
         services.AddAutoMapper(assembly);
+        services.AddAutoMapper(typeof(HotelProfile).Assembly);
 
         return services;
     }

@@ -5,12 +5,14 @@ using Application.Features.Passengers.Queries.GetAllPassengers;
 using Application.Features.Passengers.Queries.GetPassengerById;
 using Application.Features.Passengers.Requests;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace OnlineTravelBooking.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public sealed class PassengersController : ControllerBase
 {
     private readonly ISender _mediator;

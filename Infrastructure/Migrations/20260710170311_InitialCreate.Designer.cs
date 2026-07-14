@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260707131926_InitialCreate")]
+    [Migration("20260710170311_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -32,6 +32,9 @@ namespace Infrastructure.Migrations
                         .HasColumnType("bigint");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("id"));
+
+                    b.Property<bool?>("IsCancelled")
+                        .HasColumnType("bit");
 
                     b.Property<string>("booking_number")
                         .IsRequired()
@@ -72,13 +75,12 @@ namespace Infrastructure.Migrations
                         .HasColumnType("varchar(15)")
                         .HasDefaultValue("unpaid");
 
-                    b.Property<string>("status")
-                        .IsRequired()
+                    b.Property<int>("status")
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(10)
                         .IsUnicode(false)
-                        .HasColumnType("varchar(10)")
-                        .HasDefaultValue("pending");
+                        .HasColumnType("int")
+                        .HasDefaultValue(2);
 
                     b.Property<decimal>("subtotal")
                         .HasColumnType("decimal(10, 2)");

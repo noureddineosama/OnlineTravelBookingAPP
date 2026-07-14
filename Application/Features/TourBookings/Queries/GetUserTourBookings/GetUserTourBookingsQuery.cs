@@ -3,6 +3,7 @@ using Application.Common.Models;
 using Application.Common.Pagination;
 using Application.Features.TourBookings.DTOs;
 using AutoMapper;
+using Domain.Enums;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -71,8 +72,9 @@ public sealed class GetUserTourBookingsQueryHandler
             .OrderByDescending(b => b.created_at)
             .AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(request.Status))
-            query = query.Where(b => b.status == request.Status);
+        if (!string.IsNullOrWhiteSpace(request.Status) &&
+            Enum.TryParse<BookingStatus>(request.Status, ignoreCase: true, out var statusEnum))
+            query = query.Where(b => b.status == statusEnum);
 
         var paged = await query.ToPagedResultAsync(request, cancellationToken);
 

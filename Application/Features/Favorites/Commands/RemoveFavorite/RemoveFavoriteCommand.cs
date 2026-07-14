@@ -1,6 +1,5 @@
 using Application.Common.Exceptions;
 using Application.Common.Interfaces;
-using Application.Common.Models;
 using Domain.Enums;
 using FluentValidation;
 using MediatR;
@@ -14,7 +13,7 @@ public sealed record RemoveFavoriteCommand(
     long             UserId,
     FavoriteCategory Category,
     long             ItemId
-) : IRequest<ApiResponse<string>>;
+) : IRequest<Unit>;
 
 // ── Validator ─────────────────────────────────────────────────────────────────
 
@@ -36,17 +35,17 @@ public sealed class RemoveFavoriteCommandValidator : AbstractValidator<RemoveFav
 // ── Handler ───────────────────────────────────────────────────────────────────
 
 public sealed class RemoveFavoriteCommandHandler
-    : IRequestHandler<RemoveFavoriteCommand, ApiResponse<string>>
+    : IRequestHandler<RemoveFavoriteCommand, Unit>
 {
     private readonly IApplicationDbContext _context;
 
     public RemoveFavoriteCommandHandler(IApplicationDbContext context)
         => _context = context;
 
-    public async Task<ApiResponse<string>> Handle(
+    public async Task<Unit> Handle(
         RemoveFavoriteCommand request, CancellationToken cancellationToken)
     {
-        var categoryStr = request.Category.ToString().ToLower();
+        var categoryStr = request.Category.ToDbString();
 
         // Lookup by composite business key (same columns as the UQ index)
         var entity = await _context.favorites
@@ -63,7 +62,6 @@ public sealed class RemoveFavoriteCommandHandler
         _context.favorites.Remove(entity);
         await _context.SaveChangesAsync(cancellationToken);
 
-        var msg = $"{request.Category} removed from favourites successfully.";
-        return ApiResponse<string>.Ok(msg, msg);
+        return Unit.Value;
     }
 }

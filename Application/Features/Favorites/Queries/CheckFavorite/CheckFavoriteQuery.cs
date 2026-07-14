@@ -46,7 +46,7 @@ public sealed class CheckFavoriteQueryHandler
     public async Task<ApiResponse<CheckFavoriteDto>> Handle(
         CheckFavoriteQuery request, CancellationToken cancellationToken)
     {
-        var categoryStr = request.Category.ToString().ToLower();
+        var categoryStr = request.Category.ToDbString();
 
         // Project only the id — one lightweight SQL query, no entity tracking
         var favoriteId = await _context.favorites

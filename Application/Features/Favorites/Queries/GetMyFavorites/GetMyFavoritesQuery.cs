@@ -83,7 +83,7 @@ public sealed class GetMyFavoritesQueryHandler
 
         if (request.Category.HasValue)
         {
-            var categoryStr = request.Category.Value.ToString().ToLower();
+            var categoryStr = request.Category.Value.ToDbString();
             favQuery = favQuery.Where(f => f.category == categoryStr);
         }
 

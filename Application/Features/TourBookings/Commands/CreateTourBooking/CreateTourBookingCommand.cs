@@ -3,6 +3,7 @@ using Application.Common.Interfaces;
 using Application.Common.Models;
 using Application.Features.TourBookings.DTOs;
 using Domain.Entities;
+using Domain.Enums;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -100,7 +101,7 @@ public sealed class CreateTourBookingCommandHandler
             booking_number  = bookingNumber,
             user_id         = request.UserId,
             category        = "tour",
-            status          = "confirmed",
+            status          = BookingStatus.Confirmed,
             subtotal        = subtotal,
             discount_amount = 0m,
             total_price     = totalPrice,
@@ -136,7 +137,7 @@ public sealed class CreateTourBookingCommandHandler
         {
             BookingId         = parentBooking.id,
             BookingNumber     = parentBooking.booking_number,
-            Status            = parentBooking.status,
+            Status            = parentBooking.status?.ToString(),
             TourTitle         = schedule.tour.title,
             TourSlug          = schedule.tour.slug,
             TourMainImageUrl  = schedule.tour.main_image_url,
