@@ -72,7 +72,6 @@ public sealed class FavoritesController : ControllerBase
     /// Get all favourites for a user, newest first, paginated.
     /// Optionally filter by category.
     /// </summary>
-    /// <param name="userId">The user's ID.</param>
     /// <param name="category">Optional filter: Tour | Hotel | Flight | Car</param>
     /// <param name="page">Page number (default: 1).</param>
     /// <param name="pageSize">Items per page, 1–100 (default: 20).</param>

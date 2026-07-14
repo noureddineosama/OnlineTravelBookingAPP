@@ -4,6 +4,9 @@ using Domain.Enums;
 using Application.Features.Favorites.DTOs;
 using Application.Features.Passengers.DTOs;
 using Application.Features.TourBookings.DTOs;
+using Application.Features.HotelAvailability.DTOs;
+using Application.Features.HotelBooking.DTOs;
+using Application.Features.Hotels.DTOs;
 
 namespace Application.Common.Mappings;
 
@@ -110,5 +113,9 @@ public sealed class MappingProfile : Profile
             .ForMember(d => d.Rating,   opt => opt.Ignore())
             .ForMember(d => d.Location, opt => opt.Ignore())
             .ForMember(d => d.BadgeText,opt => opt.Ignore());
+
+        // ── Hotel & HotelBooking ─────────────────────────────────────────────
+        CreateMap<CreateHotelBookingRequestDTO, CheckRoomAvailabilityRequestDTO>();
+        CreateMap<CreateHotelBookingRequestDTO, hotel_booking>();
     }
 }
