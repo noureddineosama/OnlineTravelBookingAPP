@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -16,8 +16,7 @@ namespace Application.Common.Patterns
                     throw new ArgumentOutOfRangeException(nameof(PageSize), "PageSize must be greater than zero.");
                 else if (value > 50)
                     throw new ArgumentOutOfRangeException(nameof(PageSize), "PageSize must be lower than 50 items.");
-
-                PageSize = value;
+                field = value;
             }
         }
         public int TotalItems { get; set; }

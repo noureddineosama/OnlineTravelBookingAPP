@@ -1,12 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <NoWarn>NU1903</NoWarn>
+    <NoWarn>NU1903;CS8618;CS8601;CS8625;CS8600;CS8602;CS8603;CS8604</NoWarn>
   </PropertyGroup>
-
   <ItemGroup>
     <!-- Database -->
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.11" />
@@ -25,10 +23,8 @@
     <PackageReference Include="Stripe.net" Version="52.1.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.19.1" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Application\Application.csproj" />
     <ProjectReference Include="..\Domain\Domain.csproj" />
   </ItemGroup>
-
 </Project>

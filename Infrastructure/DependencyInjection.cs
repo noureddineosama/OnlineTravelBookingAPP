@@ -3,7 +3,6 @@ using Application.Services;
 using Infrastructure.Persistence;
 using Application.Common.Settings;
 using Infrastructure.Payments;
-using Infrastructure.Persistence;
 using Infrastructure.Security;
 using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
