@@ -33,6 +33,8 @@ public partial class passenger : AuditableEntity
 
     public bool is_email_verified { get; set; }
 
+    public string refreshToken { get; set; }
+
     [Required]
     [StringLength(20)]
     [Unicode(false)]
