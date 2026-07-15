@@ -33,15 +33,15 @@ public sealed class LogoutCommandHandler : IRequestHandler<LogoutCommand, ApiRes
     public async Task<ApiResponse<string>> Handle(LogoutCommand request, CancellationToken cancellationToken)
     {
         var user = await _context.passengers
-            .FirstOrDefaultAsync(p => p.refresh_token == request.RefreshToken, cancellationToken);
+            .FirstOrDefaultAsync(p => p.refreshToken == request.RefreshToken, cancellationToken);
 
         if (user is null)
         {
-            return ApiResponse<string>.Fail("Invalid refresh token or already logged out.");
+            return ApiResponse<string>.Fail("Invalid refresh token or already logged out.",400);
         }
 
         // Invalidate the refresh token
-        user.refresh_token = null;
+        user.refreshToken = null;
         user.refresh_token_expiry = null;
 
         await _context.SaveChangesAsync(cancellationToken);
