@@ -1,21 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <!-- Entity names are lowercase (DB-scaffolded). Suppress reserved-keyword warning. -->
-    <NoWarn>CS8981</NoWarn>
+    <NoWarn>CS8981;CS8618;CS8601;CS8625;CS8600;CS8602;CS8603;CS8604</NoWarn>
   </PropertyGroup>
-
-  <!-- [Index] and [Unicode] attributes are from EF Core — minimal reference needed -->
+  <!-- [Index] and [Unicode] attributes are from EF Core â€” minimal reference needed -->
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.9" />
   </ItemGroup>
-
-  <!-- Exclude the old scaffolded Models folder — entities now live in Entities/ -->
+  <!-- Exclude the old scaffolded Models folder â€” entities now live in Entities/ -->
   <ItemGroup>
     <Compile Remove="Models\**" />
   </ItemGroup>
-
 </Project>

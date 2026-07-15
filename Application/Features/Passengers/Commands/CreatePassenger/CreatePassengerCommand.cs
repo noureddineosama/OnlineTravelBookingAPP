@@ -1,3 +1,4 @@
+using Application.Common.Exceptions;
 using Application.Common.Interfaces;
 using Application.Common.Models;
 using Application.Features.Passengers.DTOs;
@@ -20,8 +21,8 @@ public sealed class CreatePassengerCommandValidator : AbstractValidator<CreatePa
     public CreatePassengerCommandValidator()
     {
         RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Name is required.")
-            .MaximumLength(150).WithMessage("Name must not exceed 150 characters.");
+            .NotEmpty().WithMessage("hotel_name is required.")
+            .MaximumLength(150).WithMessage("hotel_name must not exceed 150 characters.");
 
         RuleFor(x => x.Email)
             .NotEmpty().WithMessage("Email is required.")
@@ -57,8 +58,7 @@ public sealed class CreatePassengerCommandHandler
             .Any(p => p.email == request.Email);
 
         if (emailExists)
-            return ApiResponse<PassengerResponse>.Fail(
-                $"A passenger with email '{request.Email}' already exists.");
+            throw new ConflictException($"A passenger with email '{request.Email}' already exists.");
 
         var passenger = new passenger
         {

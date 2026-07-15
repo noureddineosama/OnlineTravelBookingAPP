@@ -1,193 +1,116 @@
-# Online Travel Booking App API
+<div align="center">
+  <h1>🌍 Online Travel Booking API</h1>
+  <p>
+    <strong>A robust, scalable backend for an Online Travel Booking platform built with .NET 10, Clean Architecture, and CQRS.</strong>
+  </p>
 
-A robust, scalable backend for an Online Travel Booking application built with **.NET 10** using a **Modular Monolith** and **Clean Architecture**.
+  ![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?style=for-the-badge&logo=dotnet)
+  ![C#](https://img.shields.io/badge/C%23-239120?style=for-the-badge&logo=c-sharp&logoColor=white)
+  ![EF Core](https://img.shields.io/badge/EF_Core-10.0-388E3C?style=for-the-badge&logo=nuget&logoColor=white)
+  ![Clean Architecture](https://img.shields.io/badge/Clean_Architecture-Solid-FF9800?style=for-the-badge)
+</div>
+
+<br />
+
+## 📖 Overview
+
+The Online Travel Booking API is a comprehensive backend system designed to handle the core operations of a modern travel agency. It provides secure, high-performance endpoints for managing users (passengers), booking tours, and curating personal favorites across various travel categories (Tours, Hotels, Flights, and Cars).
+
+Built on top of a **Modular Monolith** design, the application strictly adheres to **Clean Architecture** and **Vertical Slice** principles, ensuring that the codebase is highly testable, maintainable, and ready to scale into microservices if needed.
 
 ---
 
-## 🏗️ Architecture & Technologies
+## 🏗️ Architecture & Core Patterns
 
-This project strictly adheres to Clean Architecture and Vertical Slice Architecture within the Application layer to ensure separation of concerns, testability, and long-term maintainability.
+This project relies on industry-standard enterprise patterns to ensure long-term stability and separation of concerns.
+
+### 1. Clean Architecture Layers
 
 | Layer | Responsibility |
 |---|---|
-| **Domain** | Core business entities, base models, no external dependencies |
-| **Application** | Use cases (CQRS), DTOs, FluentValidation, AutoMapper, MediatR pipeline |
-| **Infrastructure** | EF Core DbContext, Generic Repository, Unit of Work |
-| **API** | ASP.NET Core Controllers, Middleware, Swagger |
+| **Domain** | Core business entities (`BaseEntity`, `AuditableEntity`), Enums, and domain exceptions. Zero external dependencies. |
+| **Application** | Use cases implemented via **CQRS**, MediatR pipelines, DTOs, FluentValidation, and AutoMapper. |
+| **Infrastructure** | Database access via `AppDbContext`, Generic Repository pattern, Unit of Work, and JWT/Security implementations. |
+| **API** | ASP.NET Core Web API, Controllers, Global Exception Middleware, and Swagger documentation. |
 
-- **Framework**: .NET 10.0 (ASP.NET Core Web API)
-- **Database**: SQL Server (LocalDB for development) & Entity Framework Core 10
-- **Patterns**: Clean Architecture · Vertical Slice Architecture · CQRS with MediatR · Generic Repository & Unit of Work
-- **Validation**: FluentValidation (auto-pipeline via `ValidationBehavior`)
-- **Mapping**: AutoMapper
-- **API Documentation**: Swagger / OpenAPI
+### 2. CQRS with MediatR
+Every single API request follows a strict pipeline:
+`Controller → MediatR → ValidationBehavior (FluentValidation) → Command/Query Handler → DbContext`
 
----
-
-## 📁 Project Structure
-
-```text
-OnlineTravelBookingAPP.slnx
-├── Domain/                        # 32 Entities, BaseEntity hierarchy, AuditableEntity
-├── Application/
-│   ├── Common/                    # ApiResponse<T>, PagedResult<T>, Exceptions, Interfaces
-│   └── Features/
-│       ├── Passengers/            # Full CRUD — Create, Update, Delete, GetById, GetAll
-│       ├── FavouriteTours/        # Add, Remove, List, Check
-│       └── TourBookings/          # Create, Cancel, GetById, GetUserBookings
-├── Infrastructure/                # AppDbContext, EfRepository, UnitOfWork
-└── OnlineTravelBooking/           # Controllers, Middleware, Program.cs
-```
-
----
-
-## ✨ Implemented Features
-
-### 👤 Passengers
-Full CRUD management for passengers (users).
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/passengers` | List all passengers (paginated, filterable) |
-| `GET` | `/api/passengers/{id}` | Get passenger by ID |
-| `POST` | `/api/passengers` | Create a new passenger |
-| `PUT` | `/api/passengers/{id}` | Update passenger details |
-| `DELETE` | `/api/passengers/{id}` | Delete a passenger |
-
----
-
-### 🌟 Favourite Tours
-Allow passengers to save and manage their favourite tours.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/favourite-tours` | Add a tour to favourites |
-| `DELETE` | `/api/favourite-tours` | Remove a tour from favourites |
-| `GET` | `/api/favourite-tours/{userId}` | List user's favourite tours (paginated) |
-| `GET` | `/api/favourite-tours/{userId}/check/{tourId}` | Check if a tour is favourited |
-
-**Business Rules:**
-- Tour must be `active` status to be favourited
-- Duplicate favourites are rejected
-- Returns enriched tour details (title, image, location, starting price)
-
----
-
-### 🗓️ Tour Bookings
-Full tour booking lifecycle — create, view, and cancel.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/tour-bookings` | Create a new tour booking |
-| `PUT` | `/api/tour-bookings/{bookingId}/cancel` | Cancel a booking |
-| `GET` | `/api/tour-bookings/{bookingId}` | Get booking details |
-| `GET` | `/api/tour-bookings/user/{userId}` | List user's bookings (paginated, filterable by status) |
-
-**Business Rules:**
-- Schedule must be in the future
-- `available_slots` checked before booking — decremented on create, restored on cancel
-- Tiered pricing: `(adults × adult_price) + (children × child_price) + (infants × infant_price)`
-- Booking number format: `TOUR-{8-char-GUID}` (e.g. `TOUR-A3B7C9D1`)
-- Initial status: `confirmed`, payment status: `pending`
-
----
-
-## 🏛️ Core Architectural Patterns
-
-### Standardized Response Envelope
-Every endpoint returns the same `ApiResponse<T>` structure:
+### 3. Unified Response Wrapper
+To ensure frontend clients always receive a predictable response, every endpoint is wrapped in an `ApiResponse<T>`:
 ```json
 {
   "success": true,
-  "message": "Success",
-  "data": { },
+  "message": "Tour booking created successfully.",
+  "data": { "bookingId": "TOUR-A3B7C9D1", "status": "Confirmed" },
   "errors": null
 }
 ```
 
-### Pagination
-All list endpoints use `PagedResult<T>`:
-```json
-{
-  "items": [],
-  "totalCount": 100,
-  "page": 1,
-  "pageSize": 20,
-  "totalPages": 5,
-  "hasNextPage": true,
-  "hasPreviousPage": false
-}
-```
+---
 
-### Entity Hierarchy
-```
-BaseEntity (long id)
-  └── CreatedAtEntity (+ created_at)
-        └── AuditableEntity (+ updated_at)   ← booking, passenger, tour
-BaseIntEntity (int id)
-  └── AuditableIntEntity (+ created_at)      ← role
-```
+## 🔐 Security & Authentication
 
-### CQRS Pipeline (per request)
-```
-Controller → MediatR → ValidationBehavior (FluentValidation) → Handler → DbContext
-```
+The API uses **Stateless JWT Bearer Authentication**. 
+
+- **Secure by Default:** Endpoints are protected via the `[Authorize]` attribute.
+- **Identity Resolution:** The API never trusts client-provided User IDs. Instead, the `ICurrentIUserService` safely extracts the `UserId` directly from the validated JWT token claims, completely eliminating ID spoofing vulnerabilities.
+- **Role-Based Access:** Built-in support for `Passenger` and `Admin` roles.
+
+---
+
+## ✨ Key Features & Endpoints
+
+### 🌟 Universal Favorites (`/api/favorites`)
+A highly optimized, multi-category favorites system. Users can favorite Tours, Hotels, Flights, and Cars.
+*   **Batch Fetching:** Eliminates N+1 queries by instantly projecting relational data into read-ready DTOs.
+*   **Validation:** Automatically verifies that the requested item exists and is in an `active` state before saving.
+
+### 🗓️ Tour Bookings (`/api/tour-bookings`)
+Complete lifecycle management for booking travel tours.
+*   **Inventory Management:** Safely decrements `available_slots` upon booking and restores them upon cancellation.
+*   **Dynamic Pricing:** Automatically calculates total prices based on tiered schedules `(adults × price) + (children × price)`.
+*   **Secure Tracking:** Retrieve a paginated list of bookings tied exclusively to the logged-in user via `/api/tour-bookings/my-bookings`.
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
-- SQL Server or SQL Server Express LocalDB
+*   [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+*   SQL Server LocalDB (comes pre-installed with Visual Studio) or SQL Server Developer Edition.
 
-### Setup & Run
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/BolesGamel123/OnlineTravelBookingAPP.git
-   cd OnlineTravelBookingAPP
-   ```
-
-2. **Verify the connection string** in `OnlineTravelBooking/appsettings.json`:
-   ```json
-   "DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=TravelDB;Trusted_Connection=True;"
-   ```
-
-3. **Apply migrations:**
-   ```bash
-   dotnet ef database update -p Infrastructure -s OnlineTravelBooking
-   ```
-
-4. **Run the API:**
-   ```bash
-   dotnet run --project OnlineTravelBooking
-   ```
-
-5. **Explore the API:**
-   Open `http://localhost:5183/swagger` for interactive Swagger documentation.
-
----
-
-## 🌿 Branch Strategy
-
-| Branch | Purpose |
-|---|---|
-| `initial-setup` | Base architecture — Clean Architecture scaffold, Passengers CRUD |
-| `feature/favourite-tour-booking` | Favourite Tours + Tour Bookings features |
-
----
-
-## 🤝 Contribution Guidelines
-
-All new features must follow the **Vertical Slice** pattern:
+### 1. Clone & Setup
+```bash
+git clone https://github.com/BolesGamel123/OnlineTravelBookingAPP.git
+cd OnlineTravelBookingAPP
 ```
+
+### 2. Database Migration
+The application uses `(localdb)\MSSQLLocalDB` for seamless local development. Apply the EF Core migrations to build the schema:
+```bash
+dotnet ef database update -p Infrastructure -s OnlineTravelBooking
+```
+
+### 3. Run the Application
+```bash
+dotnet run --project OnlineTravelBooking
+```
+Once running, navigate to `http://localhost:5183/swagger` to explore the interactive OpenAPI documentation.
+
+
+---
+
+## 🤝 Contributing
+When adding new features, please adhere to the **Vertical Slice Architecture** within the `Application` layer:
+```text
 Application/Features/{FeatureName}/
-  ├── DTOs/           ← Output DTOs only
-  ├── Commands/       ← Command + Validator + Handler per operation
-  └── Queries/        ← Query + Handler per operation
+  ├── DTOs/           ← Data Transfer Objects
+  ├── Commands/       ← Command, Validator, and Handler per write operation
+  └── Queries/        ← Query and Handler per read operation
 ```
 
----
-
-*Built with modern .NET 10 best practices — Clean Architecture · CQRS · MediatR · FluentValidation.*
+<div align="center">
+  <sub>Built with modern .NET 10 best practices.</sub>
+</div>

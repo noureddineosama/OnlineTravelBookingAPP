@@ -68,3 +68,6 @@ package-lock.json
 # Rider
 .idea/
 
+
+# Postman collections
+*.postman_collection.json

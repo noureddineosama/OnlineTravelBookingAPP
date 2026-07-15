@@ -1,5 +1,7 @@
+using Application.Common.Exceptions;
 using Application.Common.Interfaces;
 using Application.Common.Models;
+using Domain.Enums;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -43,19 +45,17 @@ public sealed class CancelTourBookingCommandHandler
         // 1. Find the booking and verify ownership
         var parentBooking = await _context.bookings
             .FirstOrDefaultAsync(b =>
-                b.id == request.BookingId &&
-                b.user_id == request.UserId &&
+                b.id       == request.BookingId &&
+                b.user_id  == request.UserId    &&
                 b.category == "tour",
                 cancellationToken);
 
         if (parentBooking is null)
-            return ApiResponse<string>.Fail(
-                $"Tour booking with ID '{request.BookingId}' was not found for this user.");
+            throw new NotFoundException("Tour booking", request.BookingId);
 
         // 2. Check if already cancelled
-        if (parentBooking.status == "cancelled")
-            return ApiResponse<string>.Fail(
-                "This booking is already cancelled.");
+        if (parentBooking.status == BookingStatus.Cancelled)
+            throw new ConflictException("This booking is already cancelled.");
 
         // 3. Load the associated tour_booking with schedule
         var tourBooking = await _context.tour_bookings
@@ -63,11 +63,10 @@ public sealed class CancelTourBookingCommandHandler
             .FirstOrDefaultAsync(tb => tb.booking_id == request.BookingId, cancellationToken);
 
         if (tourBooking is null)
-            return ApiResponse<string>.Fail(
-                "Tour booking details could not be found.");
+            throw new NotFoundException("Tour booking details", request.BookingId);
 
         // 4. Cancel the booking
-        parentBooking.status     = "cancelled";
+        parentBooking.status     = BookingStatus.Cancelled;
         parentBooking.updated_at = DateTime.UtcNow;
 
         // 5. Restore available slots
@@ -76,7 +75,6 @@ public sealed class CancelTourBookingCommandHandler
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        return ApiResponse<string>.Ok(
-            "Cancelled.", "Tour booking cancelled successfully. Slots have been restored.");
+        return ApiResponse<string>.Ok("Cancelled.", "Tour booking cancelled successfully. Slots have been restored.");
     }
 }

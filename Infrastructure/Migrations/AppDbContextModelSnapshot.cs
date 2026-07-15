@@ -99,7 +99,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex(new[] { "booking_number" }, "UQ_bookings_number")
                         .IsUnique();
 
-                    b.ToTable("bookings");
+                    b.ToTable("bookings", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.car", b =>
@@ -170,7 +170,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("pickup_location_id");
 
-                    b.ToTable("cars");
+                    b.ToTable("cars", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.car_booking", b =>
@@ -215,7 +215,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex(new[] { "booking_id" }, "UQ_car_bookings_booking")
                         .IsUnique();
 
-                    b.ToTable("car_bookings");
+                    b.ToTable("car_bookings", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.car_booking_extra", b =>
@@ -247,7 +247,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("car_extra_id");
 
-                    b.ToTable("car_booking_extras");
+                    b.ToTable("car_booking_extras", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.car_brand", b =>
@@ -269,7 +269,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex(new[] { "name" }, "UQ_car_brands_name")
                         .IsUnique();
 
-                    b.ToTable("car_brands");
+                    b.ToTable("car_brands", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.car_category", b =>
@@ -291,7 +291,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex(new[] { "name" }, "UQ_car_categories_name")
                         .IsUnique();
 
-                    b.ToTable("car_categories");
+                    b.ToTable("car_categories", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.car_extra", b =>
@@ -319,7 +319,7 @@ namespace Infrastructure.Migrations
                     b.HasKey("id")
                         .HasName("PK__car_extr__3213E83F91415630");
 
-                    b.ToTable("car_extras");
+                    b.ToTable("car_extras", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.car_image", b =>
@@ -346,7 +346,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("car_id");
 
-                    b.ToTable("car_images");
+                    b.ToTable("car_images", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.car_pricing_tier", b =>
@@ -374,7 +374,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("car_id");
 
-                    b.ToTable("car_pricing_tiers");
+                    b.ToTable("car_pricing_tiers", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.coupon", b =>
@@ -422,7 +422,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex(new[] { "code" }, "UQ_coupons_code")
                         .IsUnique();
 
-                    b.ToTable("coupons");
+                    b.ToTable("coupons", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.favorite", b =>
@@ -456,7 +456,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex(new[] { "user_id", "category", "item_id" }, "UQ_favorites")
                         .IsUnique();
 
-                    b.ToTable("favorites");
+                    b.ToTable("favorites", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.flight", b =>
@@ -551,7 +551,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex(new[] { "origin_airport_code", "destination_airport_code", "departure_at_utc" }, "IX_flights_route_departure");
 
-                    b.ToTable("flights");
+                    b.ToTable("flights", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.flight_booking", b =>
@@ -590,7 +590,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex(new[] { "booking_id" }, "UQ_flight_bookings_booking")
                         .IsUnique();
 
-                    b.ToTable("flight_bookings");
+                    b.ToTable("flight_bookings", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.flight_booking_passenger", b =>
@@ -628,7 +628,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("flight_booking_id");
 
-                    b.ToTable("flight_booking_passengers");
+                    b.ToTable("flight_booking_passengers", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.hotel", b =>
@@ -689,7 +689,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex(new[] { "slug" }, "UQ_hotels_slug")
                         .IsUnique();
 
-                    b.ToTable("hotels");
+                    b.ToTable("hotels", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.hotel_booking", b =>
@@ -736,7 +736,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex(new[] { "booking_id" }, "UQ_hotel_bookings_booking")
                         .IsUnique();
 
-                    b.ToTable("hotel_bookings");
+                    b.ToTable("hotel_bookings", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.hotel_image", b =>
@@ -763,7 +763,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("hotel_id");
 
-                    b.ToTable("hotel_images");
+                    b.ToTable("hotel_images", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.location", b =>
@@ -797,7 +797,7 @@ namespace Infrastructure.Migrations
                     b.HasKey("id")
                         .HasName("PK__location__3213E83F32EDE253");
 
-                    b.ToTable("locations");
+                    b.ToTable("locations", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.passenger", b =>
@@ -863,7 +863,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex(new[] { "email" }, "UQ_users_email")
                         .IsUnique();
 
-                    b.ToTable("passengers");
+                    b.ToTable("passengers", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.payment", b =>
@@ -919,7 +919,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex(new[] { "transaction_id" }, "IX_payments_transaction");
 
-                    b.ToTable("payments");
+                    b.ToTable("payments", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.review", b =>
@@ -977,7 +977,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex(new[] { "user_id" }, "IX_reviews_user");
 
-                    b.ToTable("reviews");
+                    b.ToTable("reviews", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.role", b =>
@@ -1004,7 +1004,21 @@ namespace Infrastructure.Migrations
                     b.HasIndex(new[] { "name" }, "UQ_roles_name")
                         .IsUnique();
 
-                    b.ToTable("roles");
+                    b.ToTable("roles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            id = 1,
+                            created_at = new DateTime(2026, 7, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                            name = "Passenger"
+                        },
+                        new
+                        {
+                            id = 2,
+                            created_at = new DateTime(2026, 7, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                            name = "Admin"
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.room", b =>
@@ -1057,7 +1071,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("hotel_id");
 
-                    b.ToTable("rooms");
+                    b.ToTable("rooms", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.room_availability", b =>
@@ -1086,7 +1100,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex(new[] { "room_id", "date" }, "UQ_room_availability")
                         .IsUnique();
 
-                    b.ToTable("room_availability");
+                    b.ToTable("room_availability", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.room_extra", b =>
@@ -1113,7 +1127,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("room_id");
 
-                    b.ToTable("room_extras");
+                    b.ToTable("room_extras", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.room_image", b =>
@@ -1140,7 +1154,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("room_id");
 
-                    b.ToTable("room_images");
+                    b.ToTable("room_images", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.tour", b =>
@@ -1207,7 +1221,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex(new[] { "slug" }, "UQ_tours_slug")
                         .IsUnique();
 
-                    b.ToTable("tours");
+                    b.ToTable("tours", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.tour_booking", b =>
@@ -1243,7 +1257,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex(new[] { "booking_id" }, "UQ_tour_bookings_booking")
                         .IsUnique();
 
-                    b.ToTable("tour_bookings");
+                    b.ToTable("tour_bookings", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.tour_image", b =>
@@ -1270,7 +1284,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("tour_id");
 
-                    b.ToTable("tour_images");
+                    b.ToTable("tour_images", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.tour_inclusion", b =>
@@ -1297,7 +1311,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("tour_id");
 
-                    b.ToTable("tour_inclusions");
+                    b.ToTable("tour_inclusions", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.tour_price_tier", b =>
@@ -1339,7 +1353,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("tour_id");
 
-                    b.ToTable("tour_price_tiers");
+                    b.ToTable("tour_price_tiers", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.tour_schedule", b =>
@@ -1375,7 +1389,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex(new[] { "tour_id", "start_date" }, "IX_tour_schedules_tour_start");
 
-                    b.ToTable("tour_schedules");
+                    b.ToTable("tour_schedules", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.booking", b =>
