@@ -17,9 +17,9 @@ public partial class hotel_booking
 
     public long room_id { get; set; }
 
-    public DateOnly check_in_date { get; set; }
+    public DateOnly check_in_time { get; set; }
 
-    public DateOnly check_out_date { get; set; }
+    public DateOnly check_out_time { get; set; }
 
     public int quantity { get; set; }
 

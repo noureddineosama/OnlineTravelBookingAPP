@@ -10,6 +10,7 @@ namespace OnlineTravelBooking.Controllers
 {
     [ApiController]
     [Route("api/hotel-bookings")]
+    [Authorize]
     public class HotelBookingController : ControllerBase
     {
         private readonly IMediator mediator;

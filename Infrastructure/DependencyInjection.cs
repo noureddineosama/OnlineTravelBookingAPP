@@ -28,6 +28,7 @@ public static class DependencyInjection
         services.AddTransient<ICalculateNightPrice, CalculateNightPrice>();
         services.AddTransient<ICheckAvailabilityRoom, CheckAvailabilityRoom>();
         services.AddTransient<ICalculateNumberOfNights, CalculateNumberOfNights>();
+        services.AddTransient<IGenerateSlug, GenerateSlug>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));

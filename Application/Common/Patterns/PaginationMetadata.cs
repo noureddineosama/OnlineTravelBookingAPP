@@ -7,9 +7,10 @@ namespace Application.Common.Patterns
     public class PaginationMetadata
     {
         public int CurrentPage { get; set; }
+        private int _pageSize; //. good tips 
         public int PageSize
         {
-            get;
+            get => _pageSize;
             set
             {
                 if (value <= 0)
@@ -17,7 +18,7 @@ namespace Application.Common.Patterns
                 else if (value > 50)
                     throw new ArgumentOutOfRangeException(nameof(PageSize), "PageSize must be lower than 50 items.");
 
-                PageSize = value;
+                _pageSize = value;
             }
         }
         public int TotalItems { get; set; }

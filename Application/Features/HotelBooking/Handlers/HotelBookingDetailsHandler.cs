@@ -31,8 +31,8 @@ namespace Application.Features.HotelBooking.Handlers
             return await Result.SuccessAsync<HotelBookingDetailsResponseDTO>(new HotelBookingDetailsResponseDTO
             {
                 Adults = existing_booking.guests_adults,
-                CheckInDate = existing_booking.check_in_date,
-                CheckOutDate = existing_booking.check_out_date,
+                CheckInDate = existing_booking.check_in_time,
+                CheckOutDate = existing_booking.check_out_time,
                 BookingId = existing_booking.booking_id,
                 Children = existing_booking.guests_children,
                 HotelName = existing_booking.room.hotel.name,

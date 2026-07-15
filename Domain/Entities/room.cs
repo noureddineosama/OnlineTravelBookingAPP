@@ -3,11 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Domain.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Entities;
 
-public partial class room
+public partial class room : CreatedAtEntity
 {
     [Key]
     public long id { get; set; }
@@ -34,7 +35,7 @@ public partial class room
     [Required]
     [StringLength(10)]
     [Unicode(false)]
-    public string status { get; set; }
+    public string status { get; set; } = "Active";
 
     [ForeignKey("hotel_id")]
     [InverseProperty("rooms")]

@@ -32,8 +32,8 @@ namespace Application.Features.HotelBooking.Handlers
                                 predicate: op => op.booking.user_id == currentIUser.UserId,
                                 selector: op => new MyBookingsResponseDTO
                                 {
-                                    CheckInDate = op.check_in_date,
-                                    CheckOutDate = op.check_out_date,
+                                    CheckInDate = op.check_in_time,
+                                    CheckOutDate = op.check_out_time,
                                     BookingId = op.booking_id,
                                     HotelName = op.room.hotel.name,
                                     MainImage = op.room.hotel.main_image_url,

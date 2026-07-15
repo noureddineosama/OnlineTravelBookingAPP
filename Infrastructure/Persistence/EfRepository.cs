@@ -1,3 +1,4 @@
+
 using Application.Common.Interfaces;
 using Application.Common.Patterns;
 using MediatR.NotificationPublishers;
@@ -33,6 +34,10 @@ public sealed class EfRepository<T> : IRepository<T> where T : class
 
     public void Remove(T entity)
         => _context.Set<T>().Remove(entity);
+
+    public async Task<List<T>> GetListOfEntityAsync(Expression<Func<T, bool>> predicate,
+                                       CancellationToken cancellationToken)
+        => await _context.Set<T>().AsNoTracking().Where(predicate).ToListAsync();
 
     public async Task<PaginatedResult<TResult>> GetPaginationAsync<TResult>(
                                                     Expression<Func<T, bool>> predicate,
@@ -116,8 +121,14 @@ public sealed class EfRepository<T> : IRepository<T> where T : class
                     );
     }
 
+    public async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken)
+    {
+        //. Tracking is existing in this process 
+        return await _context.Set<T>().AsNoTracking().AnyAsync(predicate);
+    }
+
     public async Task<TResult> GetSelectorAsync<TResult>(Expression<Func<T, bool>> predicate, 
-                                                  Expression<Func<T, TResult>> selector,
+                                                  Expression<Func<T, TResult>>? selector,
                                                   CancellationToken cancellationToken = default,
                                                  params Expression<Func<T, object?>>[]? includes)
     {
@@ -155,7 +166,7 @@ public sealed class EfRepository<T> : IRepository<T> where T : class
     //           you can use this method to get the entity by its id and then validate it using the provided predicate
     public async Task<T> GetByIdAsync(Expression<Func<T, bool>> predicate, 
                                       CancellationToken cancellationToken = default) =>
-        await _context.Set<T>().AsQueryable().FirstOrDefaultAsync(predicate);
+        await _context.Set<T>().AsQueryable().FirstOrDefaultAsync(predicate); //. tracked 
 
     public async Task<int> CountAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken)
     {

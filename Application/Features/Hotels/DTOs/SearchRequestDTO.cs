@@ -13,6 +13,7 @@ namespace Application.Features.Hotels.DTOs
         public TimeOnly? CheckInDate { get; set; }
 
         public TimeOnly? CheckOutDate { get; set; }
+        public long? location_id { get; set; }
 
         public int Adults { get; set; }
 

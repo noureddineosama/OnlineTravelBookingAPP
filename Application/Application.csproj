@@ -28,5 +28,10 @@
   <ItemGroup>
     <Compile Remove="Helpers\**" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Features\HotelImages\Commands\" />
+    <Folder Include="Features\HotelImages\Handlers\" />
+    <Folder Include="Features\HotelImages\Queries\" />
+  </ItemGroup>
 
 </Project>

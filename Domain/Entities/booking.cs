@@ -32,10 +32,10 @@ public partial class booking : AuditableEntity
     public bool? IsCancelled { get; set; } = false;
 
     [Column(TypeName = "decimal(10, 2)")]
-    public decimal subtotal { get; set; }
+    public decimal subtotal { get; set; } //. is the same like totalPrice 
 
     [Column(TypeName = "decimal(10, 2)")]
-    public decimal discount_amount { get; set; }
+    public decimal discount_amount { get; set; } //. not important 
 
     [Column(TypeName = "decimal(10, 2)")]
     public decimal total_price { get; set; }

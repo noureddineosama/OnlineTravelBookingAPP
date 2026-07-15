@@ -91,8 +91,8 @@ namespace Application.Features.HotelBooking.Handlers
             return await Result.SuccessAsync<CreateHotelBookingResponseDTO>(new CreateHotelBookingResponseDTO
             {
                 BookingId = new_hotel_booking.booking_id,
-                CheckInDate = new_hotel_booking.check_in_date,
-                CheckOutDate = new_hotel_booking.check_out_date,
+                CheckInDate = new_hotel_booking.check_in_time,
+                CheckOutDate = new_hotel_booking.check_out_time,
                 HotelBookingId= new_hotel_booking.id,
                 HotelName = new_hotel_booking.room.hotel.name,
                 Status= new_hotel_booking.room.hotel.status,

@@ -708,10 +708,10 @@ namespace Infrastructure.Migrations
                     b.Property<long>("booking_id")
                         .HasColumnType("bigint");
 
-                    b.Property<DateOnly>("check_in_date")
+                    b.Property<DateOnly>("check_in_time")
                         .HasColumnType("date");
 
-                    b.Property<DateOnly>("check_out_date")
+                    b.Property<DateOnly>("check_out_time")
                         .HasColumnType("date");
 
                     b.Property<int>("guests_adults")

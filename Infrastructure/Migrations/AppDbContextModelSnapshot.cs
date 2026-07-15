@@ -30,8 +30,20 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("id"));
 
+                    b.Property<long>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<bool?>("IsCancelled")
                         .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("UpdatedBy")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("booking_number")
                         .IsRequired()
@@ -112,6 +124,18 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("id"));
 
+                    b.Property<long>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("UpdatedBy")
+                        .HasColumnType("bigint");
+
                     b.Property<int>("brand_id")
                         .HasColumnType("int");
 
@@ -157,6 +181,9 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(10)
                         .IsUnicode(false)
                         .HasColumnType("varchar(10)");
+
+                    b.Property<DateTime>("updated_at")
+                        .HasColumnType("datetime2");
 
                     b.Property<int?>("year")
                         .HasColumnType("int");
@@ -469,6 +496,18 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("id"));
 
+                    b.Property<long>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("UpdatedBy")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTime>("arrival_at_utc")
                         .HasColumnType("datetime2");
 
@@ -547,6 +586,9 @@ namespace Infrastructure.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(15)")
                         .HasDefaultValue("scheduled");
+
+                    b.Property<DateTime>("updated_at")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("id")
                         .HasName("PK__flights__3213E83F33D7A2D7");
@@ -641,6 +683,18 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("id"));
 
+                    b.Property<long>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("UpdatedBy")
+                        .HasColumnType("bigint");
+
                     b.Property<TimeOnly?>("check_in_time")
                         .HasColumnType("time");
 
@@ -683,6 +737,9 @@ namespace Infrastructure.Migrations
                         .HasColumnType("varchar(10)")
                         .HasDefaultValue("draft");
 
+                    b.Property<DateTime>("updated_at")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("id")
                         .HasName("PK__hotels__3213E83F0A769D6A");
 
@@ -705,10 +762,10 @@ namespace Infrastructure.Migrations
                     b.Property<long>("booking_id")
                         .HasColumnType("bigint");
 
-                    b.Property<DateOnly>("check_in_date")
+                    b.Property<DateOnly>("check_in_time")
                         .HasColumnType("date");
 
-                    b.Property<DateOnly>("check_out_date")
+                    b.Property<DateOnly>("check_out_time")
                         .HasColumnType("date");
 
                     b.Property<int>("guests_adults")
@@ -809,6 +866,18 @@ namespace Infrastructure.Migrations
                         .HasColumnType("bigint");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("id"));
+
+                    b.Property<long>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("UpdatedBy")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
@@ -1017,10 +1086,25 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("id"));
 
+                    b.Property<long>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("UpdatedBy")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("bed_type")
                         .HasMaxLength(10)
                         .IsUnicode(false)
                         .HasColumnType("varchar(10)");
+
+                    b.Property<DateTime>("created_at")
+                        .HasColumnType("datetime2");
 
                     b.Property<long>("hotel_id")
                         .HasColumnType("bigint");
@@ -1053,6 +1137,9 @@ namespace Infrastructure.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(10)")
                         .HasDefaultValue("draft");
+
+                    b.Property<DateTime>("updated_at")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("id")
                         .HasName("PK__rooms__3213E83FA2911DD9");
@@ -1152,6 +1239,18 @@ namespace Infrastructure.Migrations
                         .HasColumnType("bigint");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("id"));
+
+                    b.Property<long>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("UpdatedBy")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()

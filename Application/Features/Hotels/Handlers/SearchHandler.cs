@@ -35,6 +35,7 @@ namespace Application.Features.Hotels.Handlers
             }
 
             var result = await instance.GetPaginationAsync(predicate: op => op.location.city == request.requestdTO.City &&
+                                                                        op.location_id == request.requestdTO.location_id && 
                                                                         op.check_in_time == request.requestdTO.CheckInDate &&
                                                                         op.check_out_time == request.requestdTO.CheckOutDate &&
                                                                         op.star_rating == request.requestdTO.StarRating,
