@@ -33,7 +33,7 @@ namespace Application.Features.Hotels.Handlers
             //. checking if there are bookings in the same time of today (if there we will not allow the remove process ) 
             if (await hotel_booking_instance
                 .AnyAsync(predicate: op => op.room.hotel.id == request.id &&
-                                          op.check_out_time >= DateOnly.FromDateTime(DateTime.Now), cancellationToken))
+                                          op.check_out_date >= DateOnly.FromDateTime(DateTime.Now), cancellationToken))
                 return await Result.FailureAsync<DeleteHotelResponseDTO>("Can't remove the hotel. ");
 
             existing_hotel.status = hotel_Status.InActive.ToString();

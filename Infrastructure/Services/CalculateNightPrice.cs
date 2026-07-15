@@ -11,7 +11,7 @@ namespace Application.Services
         public async Task<decimal> TotalBookingPrice(hotel_booking booking,
                                                            CancellationToken cancellationToken)  
         { 
-            int nights = (booking.check_out_time.DayNumber - booking.check_in_time.DayNumber);
+            int nights = (booking.check_out_date.DayNumber - booking.check_in_date.DayNumber);
             if (nights == 0)
                 throw new InvalidOperationException("Invalid booking dates.");
 

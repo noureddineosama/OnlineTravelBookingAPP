@@ -10,11 +10,11 @@ namespace Application.Features.Hotels.DTOs
 
         public string Description { get; set; }
 
-        public int LocationId { get; set; }
+        public LocationHotelRequestDTO location { get; set; }
 
         public byte? StarRating { get; set; }
 
-        public TimeOnly? CheckInTime { get; set; }
+        public TimeOnly? CheckInTime { get; set; } //. This for the When open and close 
 
         public TimeOnly? CheckOutTime { get; set; }
 

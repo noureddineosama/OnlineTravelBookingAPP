@@ -13,7 +13,7 @@ namespace Infrastructure.Services
         public int NumberOfNights(hotel_booking requestDTO,
                                        CancellationToken cancellationToken)
         {
-            var number_Of_nights = requestDTO.check_out_time.DayNumber - requestDTO.check_out_time.DayNumber;
+            var number_Of_nights = requestDTO.check_out_date.DayNumber - requestDTO.check_out_date.DayNumber;
             return number_Of_nights;
         }
     }

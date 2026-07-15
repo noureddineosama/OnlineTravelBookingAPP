@@ -762,10 +762,10 @@ namespace Infrastructure.Migrations
                     b.Property<long>("booking_id")
                         .HasColumnType("bigint");
 
-                    b.Property<DateOnly>("check_in_time")
+                    b.Property<DateOnly>("check_in_date")
                         .HasColumnType("date");
 
-                    b.Property<DateOnly>("check_out_time")
+                    b.Property<DateOnly>("check_out_date")
                         .HasColumnType("date");
 
                     b.Property<int>("guests_adults")

@@ -26,9 +26,9 @@ namespace Application.Services
                                                    CancellationToken cancellationToken)
         {
             //. Validating if the new checking in less than the existing check out 
-            if (requestDTO.CheckInDate > booking.check_in_time  && requestDTO.CheckInDate != requestDTO.CheckOutDate)
+            if (requestDTO.CheckInDate > booking.check_in_date  && requestDTO.CheckInDate != requestDTO.CheckOutDate)
             {
-                if (requestDTO.CheckInDate < booking.check_out_time)
+                if (requestDTO.CheckInDate < booking.check_out_date)
                     return false;
             }
             return true; 

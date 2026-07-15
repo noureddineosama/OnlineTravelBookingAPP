@@ -30,25 +30,31 @@ namespace Application.Features.Hotels.Handlers
             if (hotel_instance == null)
                 throw new ArgumentNullException(nameof(hotel_instance));
 
-            //. checking the location in the locations table 
-            var existing_location = await hotel_instance.GetByIdAsync(op => op.location_id == request.requestDTO.LocationId);
-            if (existing_location == null)
-                return await Result.FailureAsync<CreateHotelResponseDTO>("Location not found !!");
+            var location_instance = unitOfWork.Repository<location>();
+            if (location_instance == null)
+                throw new ArgumentNullException(nameof(location_instance));
 
+            await location_instance.AddAsync(new location
+            {
+                address_line = request.requestDTO.location.address_line,
+                city = request.requestDTO.location.city,
+                country = request.requestDTO.location.country,
+                latitude = request.requestDTO.location.latitude,
+                longitude = request.requestDTO.location.longitude,
+            });
             var hotel = new hotel
             {
                 check_in_time = request.requestDTO.CheckInTime,
                 check_out_time = request.requestDTO.CheckOutTime,
                 description = request.requestDTO.Description,
                 created_at = DateTime.UtcNow,
-                location_id = request.requestDTO.LocationId,
                 name = request.requestDTO.Name,
                 star_rating = request.requestDTO.StarRating,
                 main_image_url = default,
                 status = request.requestDTO.Status.ToString(),
             };
-
             hotel.slug = generateSlug.generateSlug(hotel);
+            
 
             if (!await hotel_instance.AnyAsync(op => op.slug == hotel.slug, cancellationToken))
                 return await Result.FailureAsync<CreateHotelResponseDTO>("Slug is already exist. ");

@@ -163,7 +163,6 @@ namespace OnlineTravelBooking.Controllers
         }
 
 
-
         [HttpDelete("{id}")]
         [ProducesResponseType(typeof(GenericResult<DeleteRoomResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

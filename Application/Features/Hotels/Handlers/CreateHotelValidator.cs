@@ -4,6 +4,7 @@ using FluentValidation;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Xml;
 
 namespace Application.Features.Hotels.Handlers
 {
@@ -18,8 +19,14 @@ namespace Application.Features.Hotels.Handlers
             RuleFor(x => x.requestDTO.Description)
                 .MaximumLength(2000);
 
-            RuleFor(x => x.requestDTO.LocationId)
-                .GreaterThan(0);
+            RuleFor(x => x.requestDTO.location.country)
+                .NotEmpty();
+
+            RuleFor(x => x.requestDTO.location.city)
+                .NotEmpty();
+
+            RuleFor(x => x.requestDTO.location.address_line)
+                .NotEmpty();
 
             RuleFor(x => x.requestDTO.StarRating)
                 .InclusiveBetween((byte)1, (byte)5)

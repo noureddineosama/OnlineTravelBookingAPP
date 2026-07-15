@@ -12,7 +12,33 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// ── CORS ──────────────────────────────────────────────────────
+// ── JWT Authentication ────────────────────────────────────────────────────────
+var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>();
+if (jwtSettings is null)
+    throw new InvalidOperationException("JWT Settings are not configured in appsettings.json.");
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JWtBearer.AuthenticationScheme;
+    options.DefaultChallengeScheme    = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer           = true,
+        ValidateAudience         = true,
+        ValidateLifetime         = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer              = jwtSettings.Issuer,
+        ValidAudience            = jwtSettings.Audience,
+        IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKEY))
+    };
+});
+
+builder.Services.AddAuthorization();
+
+// ── CORS ──────────────────────────────────────────────────────────────────────
 builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", p =>
         p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));

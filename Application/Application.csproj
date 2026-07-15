@@ -26,12 +26,10 @@
 
   <!-- Exclude old helpers — superseded by Clean Architecture structure -->
   <ItemGroup>
+    <Compile Remove="Features\HotelImages\**" />
     <Compile Remove="Helpers\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Features\HotelImages\Commands\" />
-    <Folder Include="Features\HotelImages\Handlers\" />
-    <Folder Include="Features\HotelImages\Queries\" />
+    <EmbeddedResource Remove="Features\HotelImages\**" />
+    <None Remove="Features\HotelImages\**" />
   </ItemGroup>
 
 </Project>

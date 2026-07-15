@@ -43,8 +43,8 @@ namespace Application.Features.HotelBooking.Handlers
             {
                 Adults = hotel_booking_mapped.guests_adults,
                 Children = hotel_booking_mapped.guests_children,
-                CheckInDate = hotel_booking_mapped.check_in_time,
-                CheckOutDate = hotel_booking_mapped.check_out_time,
+                CheckInDate = hotel_booking_mapped.check_in_date,
+                CheckOutDate = hotel_booking_mapped.check_out_date,
                 BookingStatus = hotel_booking_mapped.booking.status.ToString(),
                 HotelBookingId = hotel_booking_mapped.id,
                 NumberOfNights = nights.NumberOfNights(hotel_booking_mapped, cancellationToken),
