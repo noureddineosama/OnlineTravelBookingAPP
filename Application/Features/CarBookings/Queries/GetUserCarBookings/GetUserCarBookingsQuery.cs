@@ -48,8 +48,9 @@ public sealed class GetUserCarBookingsQueryHandler
             .AsQueryable();
 
         // Optional status filter
-        if (!string.IsNullOrWhiteSpace(request.Status))
-            query = query.Where(b => b.status == request.Status);
+        if (!string.IsNullOrWhiteSpace(request.Status) &&
+            Enum.TryParse<Domain.Enums.BookingStatus>(request.Status, true, out var statusEnum))
+            query = query.Where(b => b.status == statusEnum);
 
         // Get total count
         var totalCount = await query.CountAsync(cancellationToken);
@@ -82,7 +83,7 @@ public sealed class GetUserCarBookingsQueryHandler
             {
                 BookingId       = b.id,
                 BookingNumber   = b.booking_number,
-                Status          = b.status,
+                Status          = b.status?.ToString() ?? string.Empty,
                 CarId           = car?.id ?? 0,
                 CarModel        = car?.model ?? string.Empty,
                 CarYear         = car?.year,

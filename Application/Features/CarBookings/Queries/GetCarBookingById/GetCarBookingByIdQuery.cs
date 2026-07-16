@@ -41,7 +41,7 @@ public sealed class GetCarBookingByIdQueryHandler
 
         if (parentBooking is null)
             return ApiResponse<CarBookingResponse>.Fail(
-                $"Car booking with ID '{request.BookingId}' was not found.");
+                $"Car booking with ID '{request.BookingId}' was not found.", 404);
 
         var cb = parentBooking.car_booking;
         var car = cb?.car;
@@ -61,7 +61,7 @@ public sealed class GetCarBookingByIdQueryHandler
         {
             BookingId       = parentBooking.id,
             BookingNumber   = parentBooking.booking_number,
-            Status          = parentBooking.status,
+            Status          = parentBooking.status?.ToString() ?? string.Empty,
             CarId           = car?.id ?? 0,
             CarModel        = car?.model ?? string.Empty,
             CarYear         = car?.year,
