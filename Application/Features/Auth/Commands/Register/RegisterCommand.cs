@@ -101,8 +101,14 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Ap
 
         var token = _jwtTokenGenerator.GenerateToken(savedUser);
 
+        // Issue a refresh token immediately so the user is auto-logged-in
+        var refreshToken = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
+        savedUser.refreshToken = refreshToken;
+        savedUser.refresh_token_expiry = DateTime.UtcNow.AddDays(7).ToString("o");
+        await _context.SaveChangesAsync(cancellationToken);
+
         return ApiResponse<AuthResponse>.Ok(
-            new AuthResponse(token, savedUser.email, savedUser.name),
+            new AuthResponse(token, refreshToken, savedUser.email, savedUser.name),
             "Registration successful."
         );
     }
