@@ -21,7 +21,10 @@
   </ItemGroup>
   <!-- Exclude old helpers â€” superseded by Clean Architecture structure -->
   <ItemGroup>
+    <Compile Remove="Features\HotelImages\**" />
     <Compile Remove="Helpers\**" />
+    <EmbeddedResource Remove="Features\HotelImages\**" />
+    <None Remove="Features\HotelImages\**" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Features\Payments\Commands\HandleStripeWebhook\" />

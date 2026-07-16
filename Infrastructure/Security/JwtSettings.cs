@@ -1,4 +1,4 @@
-namespace Infrastructure.Security;
+﻿namespace Infrastructure.Security;
 
 public sealed class JwtSettings
 {

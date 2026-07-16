@@ -29,5 +29,10 @@ public abstract class BaseIntEntity
 public abstract class CreatedAtEntity : BaseEntity
 {
     /// <summary>UTC timestamp set automatically by the DB on insert.</summary>
-    public DateTime created_at { get; set; }
+    public DateTime created_at { get; set; } 
+    public DateTime updated_at { get; set; }
+    public long CreatedBy { get; set; }
+    public long UpdatedBy { get; set; }
+    public DateTime DeletedAt { get; set; }
+    public bool IsDeleted { get; set; } = false;
 }

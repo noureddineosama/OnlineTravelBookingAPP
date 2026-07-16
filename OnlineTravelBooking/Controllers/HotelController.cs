@@ -1,8 +1,12 @@
 ﻿using Application.Common.Patterns;
 using Application.Features.HotelAvailability.DTOs;
 using Application.Features.HotelAvailability.Queries;
+using Application.Features.Hotels.Commands;
 using Application.Features.Hotels.DTOs;
 using Application.Features.Hotels.Queries;
+using Application.Features.Rooms.Commands;
+using Application.Features.Rooms.DTOs;
+using Application.Features.Rooms.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace OnlineTravelBooking.Controllers
 {
     [ApiController]
-    [Route("api/hotel")]
+    [Route("api/hotels")]
     [Authorize]
     public class HotelController : ControllerBase
     {
@@ -21,10 +25,13 @@ namespace OnlineTravelBooking.Controllers
             this.mediator = mediator;
         }
 
+
         [HttpGet("search")]
         [ProducesResponseType(typeof(PaginatedResult<SearchHotelResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<PaginatedResult<SearchHotelResponseDTO>>> SearchHotelAsync([FromQuery] SearchRequestDTO requestDTO, CancellationToken cancellationToken)
+        [AllowAnonymous]
+        public async Task<ActionResult<PaginatedResult<SearchHotelResponseDTO>>> SearchHotelAsync([FromQuery] SearchRequestDTO requestDTO,
+                                                                                                   CancellationToken cancellationToken)
         {
             var result = await mediator.Send(new SearchQuery(requestDTO), cancellationToken);
             if (result == null)
@@ -32,10 +39,51 @@ namespace OnlineTravelBooking.Controllers
             return Ok(result);
         }
 
+        [HttpGet("all-hotels")]
+        [ProducesResponseType(typeof(PaginatedResult<SearchHotelResponseDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [AllowAnonymous]
+        public async Task<ActionResult<PaginatedResult<SearchHotelResponseDTO>>> GetAllHotelsAsyc([FromQuery] GetHotelsRequestDTO requestDTO,CancellationToken cancellationToken)
+        {
+            var result = await mediator.Send(new GetPagedHotelsQuery(requestDTO), cancellationToken);
+            if (result == null)
+                return BadRequest(result);
+            return Ok(result);
+        }
+
+       
+        [HttpPost]
+        [ProducesResponseType(typeof(GenericResult<CreateHotelResponseDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<GenericResult<CreateHotelResponseDTO>>> CreateHotelAsync(CreateHotelRequestDTO request, 
+                                                                                                CancellationToken cancellationToken)
+        {
+            var result = await mediator.Send(new CreateHotelCommand(request), cancellationToken);
+            if (!result.IsSuccess)
+                return BadRequest(result);
+            return Ok(result);
+        }
+
+
+        [HttpPut("{id}")]
+        [ProducesResponseType(typeof(GenericResult<UpdateHotelResponseDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<GenericResult<UpdateHotelResponseDTO>>> UpdateHotelAsync(long id,UpdateHotelRequestDTO request, 
+                                                                                               CancellationToken cancellationToken)
+        {
+            var result = await mediator.Send(new UpdateHotelCommand(id, request), cancellationToken);
+            if (!result.IsSuccess)
+                return BadRequest(result);
+            return Ok(result);
+        }
+
         [HttpGet("details/{id}")]
         [ProducesResponseType(typeof(GenericResult<HotelDetailsResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<GenericResult<HotelDetailsResponseDTO>>> GetByIdAsync(long id, CancellationToken cancellationToken)
+        public async Task<ActionResult<GenericResult<HotelDetailsResponseDTO>>> GetByIdAsync(long id,
+                                                                                             CancellationToken cancellationToken)
         {
             var calling = await mediator.Send(new HotelDetailsQuery(id), cancellationToken);
             if (calling == null)
@@ -53,6 +101,32 @@ namespace OnlineTravelBooking.Controllers
             if (calling == null)
                 return BadRequest(calling);
             return Ok(calling);
+        }
+
+        [HttpPatch("delete-hotel/{id}")]
+        [ProducesResponseType(typeof(GenericResult<DeleteHotelResponseDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<GenericResult<DeleteHotelResponseDTO>>> RemoveHotelAsync(long id, 
+                                                                                  CancellationToken cancellationToken)
+        {
+            var result = await mediator.Send(new DeleteHotelCommand(id), cancellationToken);
+            if(result ==null )
+                return BadRequest(result);
+            return Ok(result);
+        }
+
+        [HttpPatch("change-status/{id}")]
+        [ProducesResponseType(typeof(GenericResult<ChangeHotelStatusResponseDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<GenericResult<ChangeHotelStatusResponseDTO>>> ChangeStatus(ChangeHotelStatusRequestDTO request, 
+                                                                                  CancellationToken cancellationToken)
+        {
+            var result = await mediator.Send(new ChangeHotelStatusCommand(request), cancellationToken);
+            if(result ==null )
+                return BadRequest(result);
+            return Ok(result);
         }
     }
 }

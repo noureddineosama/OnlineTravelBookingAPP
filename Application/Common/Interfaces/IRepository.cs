@@ -1,4 +1,5 @@
 using Application.Common.Patterns;
+using Application.Features.Hotels.DTOs;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -17,6 +18,9 @@ public interface IRepository<T> where T : class
     Task AddAsync(T entity, CancellationToken ct = default);
     void Update(T entity);
     void Remove(T entity);
+    Task<bool> AnyAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken);
+    Task<List<T>> GetListOfEntityAsync(Expression<Func<T, bool>> predicate,
+                                       CancellationToken cancellationToken);
 
     Task<List<TResult>> GetListSelectorAsync<TResult>(Expression<Func<T, bool>> predicate,
                                                      Expression<Func<T, TResult>> selector,

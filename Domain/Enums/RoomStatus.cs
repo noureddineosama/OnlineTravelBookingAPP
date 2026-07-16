@@ -4,7 +4,11 @@ using System.Text;
 
 namespace Domain.Enums
 {
-    internal class RoomStatus
+    public enum RoomStatus
     {
+        Active = 1,
+        Inactive = 2,
+        Maintenance = 3,
+        Archived = 4
     }
 }
