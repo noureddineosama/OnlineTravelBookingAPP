@@ -28,7 +28,7 @@ public partial class booking : AuditableEntity
     [Required]
     [StringLength(10)]
     [Unicode(false)]
-    public BookingStatus? status { get; set; }
+    public string? status { get; set; }
     public bool? IsCancelled { get; set; } = false;
 
     [Column(TypeName = "decimal(10, 2)")]

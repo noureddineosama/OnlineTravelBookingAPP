@@ -31,7 +31,7 @@ namespace Application.Features.HotelBooking.Handlers
             if (existing_hotel_booking == null)
                 return await Result.FailureAsync<CancelHotelBookingResponseDTO>("Booking not found.");
 
-            existing_hotel_booking.booking.status = BookingStatus.Cancelled;
+            existing_hotel_booking.booking.status = BookingStatus.Cancelled.ToString();
             existing_hotel_booking.booking.IsCancelled = true;
 
             await unitOfWork.SaveChangesAsync();

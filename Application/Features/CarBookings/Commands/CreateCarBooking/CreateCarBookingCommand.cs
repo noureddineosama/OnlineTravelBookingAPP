@@ -85,7 +85,7 @@ public sealed class CreateCarBookingCommandHandler
 
         if (passenger is null)
             return ApiResponse<CarBookingResponse>.Fail(
-                $"Passenger with ID '{request.UserId}' was not found.");
+                $"Passenger with ID '{request.UserId}' was not found.",404);
 
         // Load car with brand, category, and pricing tiers
         var car = await _context.cars
@@ -96,18 +96,18 @@ public sealed class CreateCarBookingCommandHandler
 
         if (car is null)
             return ApiResponse<CarBookingResponse>.Fail(
-                $"Car with ID '{request.CarId}' was not found.");
+                $"Car with ID '{request.CarId}' was not found.",404);
 
         // Validate car status is active
         if (car.status != "active")
             return ApiResponse<CarBookingResponse>.Fail(
-                "This car is not available for booking.");
+                "This car is not available for booking.", 400 );
 
         //  Calculate rental hours
         var rentalHours = (int)(request.DropoffAt - request.PickupAt).TotalHours;
         if (rentalHours <= 0)
             return ApiResponse<CarBookingResponse>.Fail(
-                "Dropoff time must be after pickup time.");
+                "Dropoff time must be after pickup time.", 400);
 
         // Select appropriate pricing tier
         var pricingTier = car.car_pricing_tiers
@@ -117,7 +117,7 @@ public sealed class CreateCarBookingCommandHandler
 
         if (pricingTier is null)
             return ApiResponse<CarBookingResponse>.Fail(
-                $"No pricing tier found for {rentalHours} hours rental.");
+                $"No pricing tier found for {rentalHours} hours rental.", 404);
 
         //  Calculate subtotal
         var subtotal = rentalHours * pricingTier.price_per_hour;
@@ -150,7 +150,7 @@ public sealed class CreateCarBookingCommandHandler
             booking_number = BookingNumber.GeneratBookingNumber(),
             user_id = request.UserId,
             category = "car",
-            status = "confirmed",
+            status = Domain.Enums.BookingStatus.Confirmed.ToString(),
             subtotal = subtotal,
             discount_amount = 0m,
             total_price = totalPrice,
@@ -215,7 +215,7 @@ public sealed class CreateCarBookingCommandHandler
         {
             BookingId         = parentBooking.id,
             BookingNumber     = parentBooking.booking_number,
-            Status            = parentBooking.status,
+            Status            = parentBooking.status.ToString(),
             CarId             = car.id,
             CarModel          = car.model,
             CarYear           = car.year,

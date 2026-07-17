@@ -15,7 +15,7 @@ namespace OnlineTravelBooking.Controllers
 {
     [ApiController]
     [Route("api/hotels")]
-    [Authorize]
+    //[Authorize]
     public class HotelController : ControllerBase
     {
         private readonly IMediator mediator;
@@ -55,7 +55,7 @@ namespace OnlineTravelBooking.Controllers
         [HttpPost]
         [ProducesResponseType(typeof(GenericResult<CreateHotelResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<ActionResult<GenericResult<CreateHotelResponseDTO>>> CreateHotelAsync(CreateHotelRequestDTO request, 
                                                                                                 CancellationToken cancellationToken)
         {

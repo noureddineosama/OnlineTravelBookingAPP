@@ -1,4 +1,5 @@
 
+
 using Application.Common.Interfaces;
 using Application.Common.Patterns;
 using MediatR.NotificationPublishers;
@@ -124,7 +125,7 @@ public sealed class EfRepository<T> : IRepository<T> where T : class
     public async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken)
     {
         //. Tracking is existing in this process 
-        return await _context.Set<T>().AsNoTracking().AnyAsync(predicate);
+        return await _context.Set<T>().AnyAsync(predicate);
     }
 
     public async Task<TResult> GetSelectorAsync<TResult>(Expression<Func<T, bool>> predicate, 

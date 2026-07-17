@@ -41,34 +41,29 @@ public sealed class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCom
         // 1. Find passenger with matching refresh token
         var user = await _context.passengers
             .Include(p => p.role)
-            .FirstOrDefaultAsync(p => p.refresh_token == request.RefreshToken, cancellationToken);
+            .FirstOrDefaultAsync(p => p.refreshToken == request.RefreshToken, cancellationToken);
 
         if (user is null)
         {
-            return ApiResponse<AuthResponse>.Fail("Invalid refresh token.");
+            return ApiResponse<AuthResponse>.Fail("Invalid refresh token.", 400);
         }
 
-        // 2. Check if token is expired
-        if (user.refresh_token_expiry < DateTime.UtcNow)
-        {
-            // Clear expired token details
-            user.refresh_token = null;
-            user.refresh_token_expiry = null;
-            await _context.SaveChangesAsync(cancellationToken);
+        // Clear expired token details
+        user.refreshToken = null;
+        user.refresh_token_expiry = default;
+        await _context.SaveChangesAsync(cancellationToken);
 
-            return ApiResponse<AuthResponse>.Fail("Refresh token has expired. Please login again.");
-        }
 
         // 3. Generate new JWT token and rotate refresh token
         var newAccessToken = _jwtTokenGenerator.GenerateToken(user);
         var newRefreshToken = Guid.NewGuid().ToString("N");
 
-        user.refresh_token = newRefreshToken;
+        user.refreshToken = newRefreshToken;
         user.refresh_token_expiry = DateTime.UtcNow.AddDays(7);
         await _context.SaveChangesAsync(cancellationToken);
 
         return ApiResponse<AuthResponse>.Ok(
-            new AuthResponse(newAccessToken, newRefreshToken, user.email, user.name),
+            new AuthResponse(newAccessToken,  user.email, user.name),
             "Token refreshed successfully."
         );
     }

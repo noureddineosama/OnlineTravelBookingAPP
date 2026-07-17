@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
@@ -261,6 +263,8 @@ namespace Infrastructure.Migrations
                     phone = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: true),
                     location_id = table.Column<int>(type: "int", nullable: true),
                     is_email_verified = table.Column<bool>(type: "bit", nullable: false),
+                    refreshToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    refresh_token_expiry = table.Column<DateTime>(type: "datetime2", nullable: false),
                     status = table.Column<string>(type: "varchar(20)", unicode: false, maxLength: 20, nullable: false, defaultValue: "unverified"),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "(sysutcdatetime())"),
                     CreatedBy = table.Column<long>(type: "bigint", nullable: false),
@@ -455,7 +459,7 @@ namespace Infrastructure.Migrations
                     booking_number = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
                     user_id = table.Column<long>(type: "bigint", nullable: false),
                     category = table.Column<string>(type: "varchar(10)", unicode: false, maxLength: 10, nullable: false),
-                    status = table.Column<int>(type: "int", unicode: false, maxLength: 10, nullable: false, defaultValue: 2),
+                    status = table.Column<string>(type: "varchar(10)", unicode: false, maxLength: 10, nullable: false, defaultValue: "pending"),
                     IsCancelled = table.Column<bool>(type: "bit", nullable: true),
                     subtotal = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
                     discount_amount = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
@@ -834,6 +838,15 @@ namespace Infrastructure.Migrations
                         principalTable: "flight_bookings",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.InsertData(
+                table: "roles",
+                columns: new[] { "id", "created_at", "name" },
+                values: new object[,]
+                {
+                    { 1, new DateTime(2026, 7, 7, 0, 0, 0, 0, DateTimeKind.Utc), "Passenger" },
+                    { 2, new DateTime(2026, 7, 7, 0, 0, 0, 0, DateTimeKind.Utc), "Admin" }
                 });
 
             migrationBuilder.CreateIndex(
