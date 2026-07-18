@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -261,6 +263,8 @@ namespace Infrastructure.Migrations
                     phone = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: true),
                     location_id = table.Column<int>(type: "int", nullable: true),
                     is_email_verified = table.Column<bool>(type: "bit", nullable: false),
+                    refreshToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    refresh_token_expiry = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     status = table.Column<string>(type: "varchar(20)", unicode: false, maxLength: 20, nullable: false, defaultValue: "unverified"),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "(sysutcdatetime())"),
                     CreatedBy = table.Column<long>(type: "bigint", nullable: false),
@@ -834,6 +838,15 @@ namespace Infrastructure.Migrations
                         principalTable: "flight_bookings",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.InsertData(
+                table: "roles",
+                columns: new[] { "id", "created_at", "name" },
+                values: new object[,]
+                {
+                    { 1, new DateTime(2026, 7, 7, 0, 0, 0, 0, DateTimeKind.Utc), "Passenger" },
+                    { 2, new DateTime(2026, 7, 7, 0, 0, 0, 0, DateTimeKind.Utc), "Admin" }
                 });
 
             migrationBuilder.CreateIndex(
