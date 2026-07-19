@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Domain.Common;
+using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Entities;
@@ -36,10 +37,19 @@ public partial class tour : AuditableEntity
     [Unicode(false)]
     public string difficulty { get; set; }
 
-    [Required]
-    [StringLength(10)]
-    [Unicode(false)]
-    public string status { get; set; }
+    public TourStatus status { get; set; }
+
+    // Soft delete metadata
+    public bool is_deleted { get; set; } = false;
+    public DateTime? deleted_at { get; set; }
+    public long? deleted_by { get; set; }
+
+    // Cancellation metadata
+    public DateTime? cancelled_at { get; set; }
+    public long? cancelled_by { get; set; }
+    public CancellationReasonType? cancellation_reason_type { get; set; }
+    [StringLength(500)]
+    public string cancellation_reason_details { get; set; }
 
     [ForeignKey("location_id")]
     [InverseProperty("tours")]
@@ -56,4 +66,22 @@ public partial class tour : AuditableEntity
 
     [InverseProperty("tour")]
     public virtual ICollection<tour_schedule> tour_schedules { get; set; } = new List<tour_schedule>();
+
+    /// <summary>
+    /// Soft deletes the tour and marks it as cancelled.
+    /// </summary>
+    public void SoftDelete(long adminId, string reasonDetails, CancellationReasonType reasonType = CancellationReasonType.AdminCancelled)
+    {
+        if (is_deleted) return;
+
+        is_deleted = true;
+        deleted_at = DateTime.UtcNow;
+        deleted_by = adminId;
+        
+        status = TourStatus.Cancelled;
+        cancelled_at = DateTime.UtcNow;
+        cancelled_by = adminId;
+        cancellation_reason_type = reasonType;
+        cancellation_reason_details = reasonDetails;
+    }
 }

@@ -10,7 +10,7 @@ public abstract class AuditableEntity : CreatedAtEntity
     /// UTC timestamp updated every time the record is modified.
     /// Null until the entity receives its first update.
     /// </summary>
-    public DateTime? updated_at { get; set; }
+    public new DateTime? updated_at { get; set; }
 }
 
 /// <summary>
