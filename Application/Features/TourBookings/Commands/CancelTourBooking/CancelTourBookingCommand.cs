@@ -1,6 +1,7 @@
 using Application.Common.Exceptions;
 using Application.Common.Interfaces;
 using Application.Common.Models;
+using Domain.Entities;
 using Domain.Enums;
 using FluentValidation;
 using MediatR;
@@ -32,19 +33,19 @@ public sealed class CancelTourBookingCommandValidator : AbstractValidator<Cancel
 public sealed class CancelTourBookingCommandHandler
     : IRequestHandler<CancelTourBookingCommand, ApiResponse<string>>
 {
-    private readonly IApplicationDbContext _context;
+    private readonly IUnitOfWork _uow;
 
-    public CancelTourBookingCommandHandler(IApplicationDbContext context)
+    public CancelTourBookingCommandHandler(IUnitOfWork uow)
     {
-        _context = context;
+        _uow = uow;
     }
 
     public async Task<ApiResponse<string>> Handle(
         CancelTourBookingCommand request, CancellationToken cancellationToken)
     {
         // 1. Find the booking and verify ownership
-        var parentBooking = await _context.bookings
-            .FirstOrDefaultAsync(b =>
+        var parentBooking = await _uow.Repository<Domain.Entities.booking>()
+            .GetByIdAsync(b =>
                 b.id       == request.BookingId &&
                 b.user_id  == request.UserId    &&
                 b.category == "tour",
@@ -58,7 +59,7 @@ public sealed class CancelTourBookingCommandHandler
             throw new ConflictException("This booking is already cancelled.");
 
         // 3. Load the associated tour_booking with schedule
-        var tourBooking = await _context.tour_bookings
+        var tourBooking = await _uow.Repository<tour_booking>().Query()
             .Include(tb => tb.tour_schedule)
             .FirstOrDefaultAsync(tb => tb.booking_id == request.BookingId, cancellationToken);
 
@@ -66,14 +67,17 @@ public sealed class CancelTourBookingCommandHandler
             throw new NotFoundException("Tour booking details", request.BookingId);
 
         // 4. Cancel the booking
-        parentBooking.status     = BookingStatus.Cancelled;
-        parentBooking.updated_at = DateTime.UtcNow;
+        parentBooking.status      = BookingStatus.Cancelled;
+        parentBooking.IsCancelled = true;
+        parentBooking.updated_at  = DateTime.UtcNow;
 
         // 5. Restore available slots
         var totalGuests = tourBooking.adults_count + tourBooking.children_count + tourBooking.infants_count;
         tourBooking.tour_schedule.available_slots += totalGuests;
+        _uow.Repository<tour_schedule>().Update(tourBooking.tour_schedule);
+        _uow.Repository<Domain.Entities.booking>().Update(parentBooking);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _uow.SaveChangesAsync(cancellationToken);
 
         return ApiResponse<string>.Ok("Cancelled.", "Tour booking cancelled successfully. Slots have been restored.");
     }

@@ -12,7 +12,7 @@ namespace OnlineTravelBooking.Controllers;
 
 [Route("api/tour-bookings")]
 [ApiController]
-[Authorize]
+[Authorize(Roles = "Passenger")]
 public sealed class TourBookingsController : ControllerBase
 {
     private readonly ISender _mediator;
@@ -37,6 +37,21 @@ public sealed class TourBookingsController : ControllerBase
                 request.InfantsCount));
 
         return CreatedAtAction(nameof(GetById), new { bookingId = result.Data!.BookingId }, result);
+    }
+
+    /// <summary>Update an existing tour booking (passenger counts only).</summary>
+    [HttpPut("{bookingId:long}")]
+    public async Task<IActionResult> Update(long bookingId, [FromBody] UpdateTourBookingRequest request)
+    {
+        var result = await _mediator.Send(
+            new Application.Features.TourBookings.Commands.UpdateTourBooking.UpdateTourBookingCommand(
+                bookingId,
+                _currentUserService.UserId,
+                request.AdultsCount,
+                request.ChildrenCount,
+                request.InfantsCount));
+
+        return Ok(result);
     }
 
     /// <summary>Cancel an existing tour booking. Restores available slots on the schedule.</summary>
