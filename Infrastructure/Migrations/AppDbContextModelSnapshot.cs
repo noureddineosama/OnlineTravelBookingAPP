@@ -84,13 +84,12 @@ namespace Infrastructure.Migrations
                         .HasColumnType("varchar(15)")
                         .HasDefaultValue("unpaid");
 
-                    b.Property<string>("status")
-                        .IsRequired()
+                    b.Property<int>("status")
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(10)
                         .IsUnicode(false)
-                        .HasColumnType("varchar(10)")
-                        .HasDefaultValue("pending");
+                        .HasColumnType("int")
+                        .HasDefaultValue(2);
 
                     b.Property<decimal>("subtotal")
                         .HasColumnType("decimal(10, 2)");

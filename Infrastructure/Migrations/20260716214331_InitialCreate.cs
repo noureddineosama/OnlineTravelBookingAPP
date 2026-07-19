@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -264,7 +264,11 @@ namespace Infrastructure.Migrations
                     location_id = table.Column<int>(type: "int", nullable: true),
                     is_email_verified = table.Column<bool>(type: "bit", nullable: false),
                     refreshToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
+<<<<<<<< HEAD:Infrastructure/Migrations/20260716214331_InitialCreate.cs
                     refresh_token_expiry = table.Column<DateTime>(type: "datetime2", nullable: false),
+========
+                    refresh_token_expiry = table.Column<string>(type: "nvarchar(max)", nullable: true),
+>>>>>>>> main:Infrastructure/Migrations/20260718153223_Initial.cs
                     status = table.Column<string>(type: "varchar(20)", unicode: false, maxLength: 20, nullable: false, defaultValue: "unverified"),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "(sysutcdatetime())"),
                     CreatedBy = table.Column<long>(type: "bigint", nullable: false),

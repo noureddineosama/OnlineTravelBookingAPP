@@ -1,7 +1,9 @@
 using Application.Features.Auth.Commands.Login;
 using Application.Features.Auth.Commands.Register;
+using Application.Features.Auth.Commands.Logout;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Application.Features.Auth.DTOs;
 
 namespace OnlineTravelBooking.Controllers;
 
@@ -52,19 +54,27 @@ public sealed class AuthController : ControllerBase
 
         return Ok(result);
     }
+
+    /// <summary>
+    /// Log out the user by invalidating their refresh token.
+    /// </summary>
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout([FromBody] LogoutRequest request)
+    {
+        var result = await _mediator.Send(new LogoutCommand(request.RefreshToken));
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
 }
 
-// ── Request DTOs ─────────────────────────────────────────────────────────────
 
-public sealed record RegisterRequest(
-    string Name,
-    string Email,
-    string Password,
-    string? Phone = null,
-    int RoleId = 1
-);
 
-public sealed record LoginRequest(
-    string Email,
-    string Password
-);
+
+
+
+
+

@@ -12,8 +12,13 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
+<<<<<<<< HEAD:Infrastructure/Migrations/20260716214331_InitialCreate.Designer.cs
     [Migration("20260716214331_InitialCreate")]
     partial class InitialCreate
+========
+    [Migration("20260718153223_Initial")]
+    partial class Initial
+>>>>>>>> main:Infrastructure/Migrations/20260718153223_Initial.Designer.cs
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -915,8 +920,13 @@ namespace Infrastructure.Migrations
                     b.Property<string>("refreshToken")
                         .HasColumnType("nvarchar(max)");
 
+<<<<<<<< HEAD:Infrastructure/Migrations/20260716214331_InitialCreate.Designer.cs
                     b.Property<DateTime>("refresh_token_expiry")
                         .HasColumnType("datetime2");
+========
+                    b.Property<string>("refresh_token_expiry")
+                        .HasColumnType("nvarchar(max)");
+>>>>>>>> main:Infrastructure/Migrations/20260718153223_Initial.Designer.cs
 
                     b.Property<int>("role_id")
                         .HasColumnType("int");

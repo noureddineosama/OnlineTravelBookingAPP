@@ -12,6 +12,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Serialization;
 using OnlineTravelBooking.Middleware;
+using OnlineTravelBooking.Swagger;
+using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,20 +27,17 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", p =>
         p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
 
-//. AWS Configurations 
-builder.Services.Configure<AwsSettings>(builder.Configuration.GetSection(AwsSettings.SectionName));
-
-builder.Services.AddSingleton<IAmazonS3>(sp =>
-{
-    return new AmazonS3Client(
-        "ACCESS_KEY",
-        "SECRET_KEY",
-        RegionEndpoint.EUCentral1);
-});
-
-builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
-
-builder.Services.AddAWSService<IAmazonS3>();
+//_______________________________________
+builder.Services.AddAuthentication(options => { 
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; 
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme; })
+    .AddJwtBearer(options => { 
+        options.TokenValidationParameters = new TokenValidationParameters 
+        { ValidateIssuer = true, ValidateAudience = true, ValidateLifetime = true, ValidateIssuerSigningKey = true, ValidIssuer = builder.Configuration["JwtSettings:Issuer"], ValidAudience = builder.Configuration["JwtSettings:Audience"], IssuerSigningKey = 
+    new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKEY"]!)) 
+        }; 
+    }); 
+builder.Services.AddAuthorization();
 
 // ── Controllers ───────────────────────────────────────────────────────────────
 // JsonStringEnumConverter ensures all enums (e.g. FavoriteCategory) are
@@ -122,7 +122,6 @@ var app = builder.Build();
 
 // ── Middleware Pipeline ───────────────────────────────────────────────────────
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
-app.UseMiddleware<MyCustomGlobalExceptionHandlerMiddleware>();
 app.UseMiddleware<MeasuringExecutingTimeMiddleware>();
 
 if (app.Environment.IsDevelopment())
