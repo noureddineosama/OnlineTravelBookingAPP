@@ -44,32 +44,53 @@ Built on a **Modular Monolith** paradigm, the system strictly adheres to **Clean
 ### Clean Architecture Layer Overview
 
 ```mermaid
-%%{init: {'theme': 'default', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'arial'}}}%%
-graph TD
-    subgraph WEB["Web API Layer"]
-        direction LR
-        CTRL{{"     Controllers     "}} ~~~ MIDW(["     Exception Middleware     "]) ~~~ DOCS("     Swagger / OpenAPI     ")
+%%{init: {'theme': 'default', 'themeVariables': {'fontSize': '17px'}}}%%
+graph LR
+    %% Left: Presentation Layer %%
+    subgraph WEB ["🌐 Web API (Presentation)"]
+        direction TB
+        CTRL(["     🎮 Controllers     "])
+        MIDW(["     🛡️ Middleware     "])
+        DOCS(["     📖 Swagger OpenAPI     "])
+        CTRL ~~~ MIDW ~~~ DOCS
     end
 
-    subgraph APP["Application Layer"]
-        direction LR
-        CMD>     CQRS Commands     ] ~~~ QRY>     CQRS Queries     ] ~~~ VAL{{"     FluentValidation     "}} ~~~ MAP[["     AutoMapper + DTOs     "]]
+    %% Center: Application Core %%
+    subgraph CORE ["💎 Application Core (Zero External Dependencies)"]
+        direction TB
+        
+        subgraph APP ["⚙️ Application Layer"]
+            direction LR
+            CQRS{{"     📨 CQRS Handlers     "}}
+            VAL{{"     ✅ Validators     "}}
+            MAP{{"     🗺️ DTO Mappers     "}}
+            CQRS ~~~ VAL ~~~ MAP
+        end
+        
+        subgraph DOM ["🛡️ Domain Layer"]
+            direction LR
+            ENT[("     📦 Entities     ")]
+            ENM>"     🔖 Enums     "]
+            BASE(["     🧱 Base Classes     "])
+            ENT ~~~ ENM ~~~ BASE
+        end
+        
+        APP -->|Uses| DOM
     end
 
-    subgraph INF["Infrastructure Layer"]
-        direction LR
-        DB[("     AppDbContext     ")] ~~~ UOW(["     IUnitOfWork     "]) ~~~ REPO(["     IRepository(T)     "]) ~~~ JWT[["     JWT Service     "]] ~~~ STR[["     Stripe Service     "]]
+    %% Right: Infrastructure Layer %%
+    subgraph INF ["🔌 Infrastructure (Data & Services)"]
+        direction TB
+        DB[("     🗄️ AppDbContext     ")]
+        UOW(["     🔗 IUnitOfWork     "])
+        SVC[["     💳 External Services     "]]
+        DB ~~~ UOW ~~~ SVC
     end
 
-    subgraph DOM["Domain Layer — Zero Dependencies"]
-        direction LR
-        ENT[("     Entities (33 Models)     ")] ~~~ ENM>"     Enums     "] ~~~ BASE("     AuditableEntity     ")
-    end
-
-    WEB --> APP
-    APP --> INF
-    APP --> DOM
-    INF --> DOM
+    %% Dependency Arrows (Clean Architecture Rule: Point Inward) %%
+    WEB ====>|Depends On| APP
+    INF ====>|Implements| APP
+    INF ====>|Persists| DOM
 ```
 
 ### Request Pipeline
