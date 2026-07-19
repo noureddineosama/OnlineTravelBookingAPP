@@ -44,26 +44,26 @@ Built on a **Modular Monolith** paradigm, the system strictly adheres to **Clean
 ### Clean Architecture Layer Overview
 
 ```mermaid
-%%{init: {'theme': 'default', 'themeVariables': {'fontSize': '16px'}}}%%
+%%{init: {'theme': 'default', 'themeVariables': {'fontSize': '18px', 'fontFamily': 'arial'}}}%%
 graph TD
-    subgraph WEB["🌐  Web API Layer"]
+    subgraph WEB["Web API Layer"]
         direction LR
-        CTRL(["     🎮  Controllers     "]) ~~~ MIDW(["     🛡️  Exception Middleware     "]) ~~~ DOCS(["     📖  Swagger / OpenAPI     "])
+        CTRL{{"     Controllers     "}} ~~~ MIDW(["     Exception Middleware     "]) ~~~ DOCS("     Swagger / OpenAPI     ")
     end
 
-    subgraph APP["⚙️  Application Layer"]
+    subgraph APP["Application Layer"]
         direction LR
-        CMD(["     📨  CQRS Commands     "]) ~~~ QRY(["     🔍  CQRS Queries     "]) ~~~ VAL(["     ✅  FluentValidation     "]) ~~~ MAP(["     🗺️  AutoMapper + DTOs     "])
+        CMD>     CQRS Commands     ] ~~~ QRY>     CQRS Queries     ] ~~~ VAL{{"     FluentValidation     "}} ~~~ MAP[["     AutoMapper + DTOs     "]]
     end
 
-    subgraph INF["🔌  Infrastructure Layer"]
+    subgraph INF["Infrastructure Layer"]
         direction LR
-        DB(["     🗄️  AppDbContext     "]) ~~~ UOW(["     🔗  IUnitOfWork     "]) ~~~ REPO(["     📂  IRepository(T)     "]) ~~~ JWT(["     🔐  JWT Service     "]) ~~~ STR(["     💳  Stripe Service     "])
+        DB[("     AppDbContext     ")] ~~~ UOW(["     IUnitOfWork     "]) ~~~ REPO(["     IRepository(T)     "]) ~~~ JWT[["     JWT Service     "]] ~~~ STR[["     Stripe Service     "]]
     end
 
-    subgraph DOM["🛡️  Domain Layer — Zero Dependencies"]
+    subgraph DOM["Domain Layer — Zero Dependencies"]
         direction LR
-        ENT(["     📦  Entities · 33 Models     "]) ~~~ ENM(["     🔖  Enums     "]) ~~~ BASE(["     🧱  AuditableEntity     "])
+        ENT[("     Entities (33 Models)     ")] ~~~ ENM>"     Enums     "] ~~~ BASE("     AuditableEntity     ")
     end
 
     WEB --> APP
