@@ -44,39 +44,31 @@ Built on a **Modular Monolith** paradigm, the system strictly adheres to **Clean
 ### Clean Architecture Layer Overview
 
 ```mermaid
-graph LR
-    subgraph DOM["🛡️ Domain Layer"]
-        direction TB
-        ENT["📦 Entities\n─────────────\ntour · hotel · flight\ncar · booking · passenger\nroom · payment · review"]
-        ENM["🔖 Enums\n─────────────\nBookingStatus\nTourStatus\nFavoriteCategory\nCancellationReasonType"]
-        BASE["🧱 Base Classes\n─────────────\nAuditableEntity\nBaseEntity"]
+graph TD
+    subgraph WEB["🌐  Web API Layer"]
+        direction LR
+        CTRL[Controllers] ~~~ MIDW[Middleware] ~~~ DOCS[Swagger / OpenAPI]
     end
 
-    subgraph INF["🔌 Infrastructure Layer"]
-        direction TB
-        DB["🗄️ Persistence\n─────────────\nAppDbContext\nEF Core Migrations"]
-        REPO["📂 Repository\n─────────────\nIUnitOfWork\nIRepository(T)"]
-        SVCS["⚙️ Services\n─────────────\nCurrentUserService\nJwtTokenGenerator\nStripeService\nSlugService"]
+    subgraph APP["⚙️  Application Layer"]
+        direction LR
+        CMD[Commands] ~~~ QRY[Queries] ~~~ VAL[FluentValidation] ~~~ MAP[AutoMapper + DTOs]
     end
 
-    subgraph APP["⚙️ Application Layer"]
-        direction TB
-        CQRS["📬 CQRS\n─────────────\nCommands\nQueries\nHandlers"]
-        PIPE["🔗 Pipeline\n─────────────\nMediatR\nFluentValidation\nValidationBehavior"]
-        MAPS["🗺️ Mapping\n─────────────\nAutoMapper\nDTOs\nRequest Models"]
+    subgraph INF["🔌  Infrastructure Layer"]
+        direction LR
+        DB[AppDbContext] ~~~ UOW[IUnitOfWork] ~~~ REPO["IRepository(T)"] ~~~ JWT[JWT Service] ~~~ STR[Stripe Service]
     end
 
-    subgraph WEB["🌐 Web API Layer"]
-        direction TB
-        CTRL["🎮 Controllers\n─────────────\n13 Controllers\nApiResponse(T)"]
-        MIDW["🛡️ Middleware\n─────────────\nException Handler\nJWT Bearer Auth"]
-        DOCS["📖 Documentation\n─────────────\nSwagger / OpenAPI\nXML Comments"]
+    subgraph DOM["🛡️  Domain Layer — Zero Dependencies"]
+        direction LR
+        ENT["Entities · 33 Models"] ~~~ ENM[Enums] ~~~ BASE[AuditableEntity]
     end
 
-    DOM --> INF
-    DOM --> APP
-    INF --> APP
-    APP --> WEB
+    WEB --> APP
+    APP --> INF
+    APP --> DOM
+    INF --> DOM
 ```
 
 ### Request Pipeline
