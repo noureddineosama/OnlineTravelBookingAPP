@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Application.Features.Images.DTOs
 {
-    public class UploadImageRequestDTO
+    public class  UploadImageRequestDTO
     {
         public required Stream FileStream { get; init; }
 

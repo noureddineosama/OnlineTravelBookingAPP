@@ -8,17 +8,18 @@ namespace Application.Services
 {
     public class CalculateNightPrice : ICalculateNightPrice
     {
-        public async Task<decimal> TotalBookingPrice(hotel_booking booking,
+        public async Task<decimal> TotalBookingPrice(decimal price_per_night,
+                                                           DateOnly check_in_date,
+                                                           DateOnly check_out_date,
+                                                           int quantity, 
                                                            CancellationToken cancellationToken)  
         { 
-            int nights = (booking.check_out_date.DayNumber - booking.check_in_date.DayNumber);
+            int nights = (check_out_date.DayNumber -check_in_date.DayNumber);
             if (nights == 0)
                 throw new InvalidOperationException("Invalid booking dates.");
 
             //. quantity --> requested_rooms  
-            decimal totalPrice = (booking.quantity * booking.price_per_night * nights);
-
-            totalPrice -= booking.booking.discount_amount;
+            decimal totalPrice = (quantity * price_per_night * nights);
 
             return totalPrice;
         }

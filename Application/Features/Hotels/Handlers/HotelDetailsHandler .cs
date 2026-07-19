@@ -27,7 +27,8 @@ namespace Application.Features.Hotels.Handlers
                 throw new ArgumentNullException(nameof(instance));
             }
 
-            var result = await instance.GetSelectorAsync(predicate: op => op.id == request.Id,
+            var result = await instance.GetSelectorAsync(predicate: op => op.id == request.Id && op.IsDeleted == false &&
+                                                                     op.status == "Active",
                                                          selector: op => new HotelDetailsResponseDTO
                                                          {
                                                              Id = request.Id,
@@ -48,11 +49,15 @@ namespace Application.Features.Hotels.Handlers
                                                              },
                                                              Rooms = op.rooms.Select(op => new RoomResponsedTO
                                                              {
-                                                                 AvailableRooms = op.room_availabilities.Select(op => op.available_units).Count(),
-                                                                 IsAvailable = op.room_availabilities.Select(op => op.available_units).Count() < 1,
+                                                                 IsAvailable = op.room_availabilities.Where(op => op.room_id == op.room_id).Select(op => op.IsAvailable).FirstOrDefault(),
                                                                  MainImageUrl = op.hotel.main_image_url,
-                                                                 MaxAdults = op.hotel_bookings.Max(op => op.guests_adults),
-                                                                 MaxChildren = op.hotel_bookings.Max(op => op.guests_children),
+                                                                 MaxAdults = op.hotel_bookings.Any()
+                                                                                         ? op.hotel_bookings.Max(x => x.guests_adults)
+                                                                                         : op.hotel_bookings.Select(op => op.guests_adults).FirstOrDefault(),
+                                                                 MaxChildren = op.hotel_bookings.Any()
+                                                                                                ? op.hotel_bookings.Max(op => op.guests_children)
+                                                                                                : op.hotel_bookings.Select(op => op.guests_children).FirstOrDefault()
+                                                                 ,
                                                                  PricePerNight = op.price_per_night,
                                                                  RoomId = op.id,
                                                                  RoomName = op.name
@@ -63,10 +68,10 @@ namespace Application.Features.Hotels.Handlers
                                                                  ImageUrl = op.url
                                                              }).ToList(),
 
-                                                         }, cancellationToken, includes: op => op.rooms);
+                                                         }, cancellationToken);
 
             if (result == null)
-                return await Result.FailureAsync<HotelDetailsResponseDTO>("Proccess Failed!!");
+                return await Result.FailureAsync<HotelDetailsResponseDTO>("Validate Failed!!");
 
             return await Result.SuccessAsync(result, "Data Recieved Successfully");
         }

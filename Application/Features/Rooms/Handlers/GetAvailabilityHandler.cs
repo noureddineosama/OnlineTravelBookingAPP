@@ -31,7 +31,7 @@ namespace Application.Features.Rooms.Handlers
                                                                                                     .Select(op => new AvailabilityDayDTO
                                                                                                     {
                                                                                                         Date = op.date,
-                                                                                                        AvailableUnits = op.available_units,
+                                                                                                        IsAvailable = op.IsAvailable,
                                                                                                         PriceOverride = op.price_override
                                                                                                     }).ToList()
                                                                      });

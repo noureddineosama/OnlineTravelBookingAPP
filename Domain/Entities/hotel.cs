@@ -39,12 +39,12 @@ public partial class hotel : CreatedAtEntity
     public string status { get; set; }
 
     [InverseProperty("hotel")]
-    public virtual ICollection<hotel_image> hotel_images { get; set; } = new List<hotel_image>();
+    public virtual ICollection<hotel_image>? hotel_images { get; set; } = new List<hotel_image>();
 
     [ForeignKey("location_id")]
     [InverseProperty("hotels")]
     public virtual location location { get; set; }
 
     [InverseProperty("hotel")]
-    public virtual ICollection<room> rooms { get; set; } = new List<room>();
+    public virtual ICollection<room>? rooms { get; set; } = new List<room>();
 }

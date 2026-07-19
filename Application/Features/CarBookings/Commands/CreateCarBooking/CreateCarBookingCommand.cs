@@ -85,7 +85,7 @@ public sealed class CreateCarBookingCommandHandler
 
         if (passenger is null)
             return ApiResponse<CarBookingResponse>.Fail(
-                $"Passenger with ID '{request.UserId}' was not found.",404);
+                $"Passenger with ID '{request.UserId}' was not found.", 404);
 
         // Load car with brand, category, and pricing tiers
         var car = await _context.cars
@@ -96,7 +96,7 @@ public sealed class CreateCarBookingCommandHandler
 
         if (car is null)
             return ApiResponse<CarBookingResponse>.Fail(
-                $"Car with ID '{request.CarId}' was not found.",404);
+                $"Car with ID '{request.CarId}' was not found.", 404);
 
         // Validate car status is active
         if (car.status != "active")
@@ -117,7 +117,7 @@ public sealed class CreateCarBookingCommandHandler
 
         if (pricingTier is null)
             return ApiResponse<CarBookingResponse>.Fail(
-                $"No pricing tier found for {rentalHours} hours rental.", 404);
+                $"No pricing tier found for {rentalHours} hours rental.", 400);
 
         //  Calculate subtotal
         var subtotal = rentalHours * pricingTier.price_per_hour;

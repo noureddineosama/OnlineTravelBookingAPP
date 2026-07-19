@@ -51,12 +51,12 @@ public sealed class CancelCarBookingCommandHandler
 
         if (parentBooking is null)
             return ApiResponse<string>.Fail(
-                $"Car booking with ID '{request.BookingId}' was not found for this user.", 404);
+                $"Car booking with ID '{request.BookingId}' was not found for this user.", statusCode: 400);
 
         // 2. Check if already cancelled
-        if (parentBooking.status == Domain.Enums.BookingStatus.Cancelled.ToString())
+        if (parentBooking.status == "confirmed")
             return ApiResponse<string>.Fail(
-                "This booking is already cancelled.", 400);
+                "This booking is already cancelled.", statusCode: 400);
 
         // 3. Cancel the booking
         parentBooking.status     = Domain.Enums.BookingStatus.Cancelled.ToString();

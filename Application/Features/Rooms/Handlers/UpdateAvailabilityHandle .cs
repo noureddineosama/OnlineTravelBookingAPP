@@ -31,7 +31,7 @@ namespace Application.Features.Rooms.Handlers
             if (existing_room == null)
                 return await Result.FailureAsync<string>("Room not found. ");
 
-            existing_room.available_units = request.requestDTO.AvailableUnits;
+            existing_room.IsAvailable = request.requestDTO.IsAvailable;
             existing_room.price_override = request.requestDTO.PriceOverride;
             existing_room.date = request.requestDTO.Date;
             await unitOfWork.SaveChangesAsync();

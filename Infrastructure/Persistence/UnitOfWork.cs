@@ -1,4 +1,5 @@
 using Application.Common.Interfaces;
+using Domain.Entities;
 
 namespace Infrastructure.Persistence;
 
@@ -9,10 +10,12 @@ public sealed class UnitOfWork : IUnitOfWork, IDisposable
 {
     private readonly AppDbContext _context;
     private readonly Dictionary<Type, object> _repositories = new();
+    public IHotelBookingRepository hotelBookingRepository { get; }
 
     public UnitOfWork(AppDbContext context)
     {
         _context = context;
+        hotelBookingRepository = new HotelBookingRepository(context);
     }
 
     public IRepository<T> Repository<T>() where T : class

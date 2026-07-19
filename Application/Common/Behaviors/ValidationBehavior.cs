@@ -44,5 +44,5 @@ public sealed class ValidationBehavior<TRequest, TResponse>
             throw new ValidationException(errors);
 
         return await next(cancellationToken);
-    }
+   }
 }

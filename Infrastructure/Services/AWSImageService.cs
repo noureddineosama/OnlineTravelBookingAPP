@@ -3,7 +3,9 @@ using Amazon.S3.Model;
 using Application.Common.Interfaces;
 using Application.Features.Images.DTOs;
 using Infrastructure.AWSSettings;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -83,6 +85,7 @@ namespace Infrastructure.Services
                 validateRequest.ValidateRequestUploadImage(request, cancellationToken);
 
             List<UploadImageResponseDTO> responses = [];
+            //. the current practice that i did 
             foreach(var image in requests)
             {
                 responses.Add(await UploadImageAsync(image, cancellationToken));
@@ -91,10 +94,69 @@ namespace Infrastructure.Services
             return responses;
         }
 
-        //public async Task<UploadImageResponseDTO> DeleteImageAsync(string ObjectKey,
-        //                                                            CancellationToken cancellationToken)
-        //{
+        public async Task DeleteImageAsync(string ObjectKey, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(ObjectKey))
+                throw new ArgumentException("object key is required", nameof(ObjectKey));
 
-        //}
+
+            var DeleteRequest = new DeleteObjectRequest
+            {
+                BucketName = options.Value.BucketName,
+                Key = ObjectKey
+            };
+
+            var response = await amazonS3.DeleteObjectAsync(DeleteRequest, cancellationToken);
+
+            if (response.HttpStatusCode != HttpStatusCode.OK ||
+                response.HttpStatusCode != HttpStatusCode.NoContent)
+                throw new InvalidOperationException("Failed to delete image from AWS. ");
+        }
+
+        public async Task DeleteImagesAsync(IReadOnlyCollection<string> ObjectKeys
+                                          , CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(ObjectKeys);
+
+            if (!ObjectKeys.Any())
+                throw new ArgumentNullException(nameof(ObjectKeys));
+
+            foreach( var item in ObjectKeys)
+            {
+                await DeleteImageAsync(item, cancellationToken);
+            }
+        }
+
+        public async Task<UploadImageResponseDTO> ReplaceImageAsync(
+                                            string OldobjectKey,
+                                            UploadImageRequestDTO requestDTO,
+                                            CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(OldobjectKey))
+                throw new ArgumentException("Old object key is required", nameof(OldobjectKey));
+
+            await DeleteImageAsync(OldobjectKey,
+                                   cancellationToken);
+
+            return await UploadImageAsync(requestDTO , cancellationToken);
+        }
+
+        public async Task<IReadOnlyList<UploadImageResponseDTO>> ReplaceImagesAsync(string ObjectKey
+                                                                                    ,IReadOnlyCollection<UploadImageRequestDTO> requestDtOs, 
+                                                                                    CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(requestDtOs);
+
+            validateRequest.ValidateRequests(requestDtOs, cancellationToken);
+
+            List<UploadImageResponseDTO> responseDTOs = [];
+            foreach(var item in requestDtOs)
+            {
+                responseDTOs.Add(await ReplaceImageAsync(ObjectKey,
+                                              item, cancellationToken));
+            }
+
+            return responseDTOs;
+        }
     }
 }

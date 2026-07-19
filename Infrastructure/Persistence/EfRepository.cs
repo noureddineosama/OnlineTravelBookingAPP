@@ -30,6 +30,14 @@ public sealed class EfRepository<T> : IRepository<T> where T : class
     public async Task AddAsync(T entity, CancellationToken ct = default)
         => await _context.Set<T>().AddAsync(entity, ct);
 
+    //. not best practice 
+    public async Task AddBulkDataAsync(List<T> entity, CancellationToken cancellationToken)
+        => await _context.Set<T>().AddRangeAsync(entity);
+
+    public async Task UpdateBulkDataAsync(List<T> entities, CancellationToken cancellationToken)
+        => _context.Set<T>().UpdateRange(entities);
+
+
     public void Update(T entity)
         => _context.Set<T>().Update(entity);
 

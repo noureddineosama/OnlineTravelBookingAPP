@@ -26,32 +26,12 @@ namespace Application.Services
                                                    CancellationToken cancellationToken)
         {
             //. Validating if the new checking in less than the existing check out 
-            if (requestDTO.CheckInDate > booking.check_in_date  && requestDTO.CheckInDate != requestDTO.CheckOutDate)
+            if (requestDTO.check_in_date > booking.check_in_date  && requestDTO.check_in_date != requestDTO.check_out_date)
             {
-                if (requestDTO.CheckInDate < booking.check_out_date)
+                if (requestDTO.check_in_date < booking.check_out_date)
                     return false;
             }
             return true; 
-        }
-
-        //public async Task<> CheckAvailability(CreateHotelBookingRequestDTO requestdTO, hotel_booking booking)
-        //{
-        //    var list_Invalid_Bookings = await booking.
-        //}
-
-
-        //. Validate the quantity with the value that will be returned 
-        public async Task<int> CalculateRemainingRooms(hotel_booking booking, CancellationToken cancellationToken)
-        {
-            //. Min(2 in date .... ,3 in date ... ,4 in date ... ,12 in date ... ,8 in date ...)
-            //                --> taking least number  of rooms due to this is the least value for the available rooms 
-            int remainingRooms = booking.room.room_availabilities.Min(op => op.available_units);
-            if (remainingRooms == 0)
-            {
-                logger.LogWarning("There are no rooms Aval !!!!!!!!!");
-                return 0;
-            }
-            return remainingRooms; //. returning the minimum number of rooms that will be available at this time
         }
     }
 }

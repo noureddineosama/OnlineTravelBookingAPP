@@ -7,6 +7,7 @@ using Domain.Entities;
 using MediatR;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace Application.Features.Rooms.Handlers

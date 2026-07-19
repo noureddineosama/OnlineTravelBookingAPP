@@ -10,6 +10,5 @@ namespace Application.Common.Interfaces
     {
         Task<bool> ValidateDatesAsync(CheckRoomAvailabilityRequestDTO requestDTO, hotel_booking booking,
                                                   CancellationToken cancellationToken);
-        Task<int> CalculateRemainingRooms(hotel_booking booking, CancellationToken cancellationToken);
     }
 }

@@ -1,3 +1,4 @@
+using Amazon;
 using Amazon.Runtime;
 using Amazon.S3;
 using Application;
@@ -28,6 +29,14 @@ builder.Services.AddCors(options =>
 
 //. AWS Configurations 
 builder.Services.Configure<AwsSettings>(builder.Configuration.GetSection(AwsSettings.SectionName));
+
+builder.Services.AddSingleton<IAmazonS3>(sp =>
+{
+    return new AmazonS3Client(
+        "ACCESS_KEY",
+        "SECRET_KEY",
+        RegionEndpoint.EUCentral1);
+});
 
 builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
 

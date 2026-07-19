@@ -1178,8 +1178,8 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("id"));
 
-                    b.Property<int>("available_units")
-                        .HasColumnType("int");
+                    b.Property<bool>("IsAvailable")
+                        .HasColumnType("bit");
 
                     b.Property<DateOnly>("date")
                         .HasColumnType("date");
