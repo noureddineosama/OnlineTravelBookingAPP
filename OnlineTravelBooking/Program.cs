@@ -22,16 +22,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", p =>
         p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
 
-//_______________________________________
-builder.Services.AddAuthentication(options => { 
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; 
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme; })
-    .AddJwtBearer(options => { 
-        options.TokenValidationParameters = new TokenValidationParameters 
-        { ValidateIssuer = true, ValidateAudience = true, ValidateLifetime = true, ValidateIssuerSigningKey = true, ValidIssuer = builder.Configuration["JwtSettings:Issuer"], ValidAudience = builder.Configuration["JwtSettings:Audience"], IssuerSigningKey = 
-    new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKEY"]!)) 
-        }; 
-    }); 
+// JWT Bearer + Authorization registered inside AddInfrastructure.
 builder.Services.AddAuthorization();
 
 // ── Controllers ───────────────────────────────────────────────────────────────
