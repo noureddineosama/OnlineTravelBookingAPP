@@ -2,6 +2,7 @@ using Application.Common.Interfaces;
 using Application.Common.Models;
 using Application.Common.Pagination;
 using Application.Features.Favorites.DTOs;
+using Domain.Entities;
 using Domain.Enums;
 using FluentValidation;
 using MediatR;
@@ -63,10 +64,10 @@ public sealed class GetMyFavoritesQueryValidator : AbstractValidator<GetMyFavori
 public sealed class GetMyFavoritesQueryHandler
     : IRequestHandler<GetMyFavoritesQuery, ApiResponse<PagedResult<FavoriteDto>>>
 {
-    private readonly IApplicationDbContext _context;
+    private readonly IUnitOfWork _uow;
 
-    public GetMyFavoritesQueryHandler(IApplicationDbContext context)
-        => _context = context;
+    public GetMyFavoritesQueryHandler(IUnitOfWork uow)
+        => _uow = uow;
 
     public async Task<ApiResponse<PagedResult<FavoriteDto>>> Handle(
         GetMyFavoritesQuery request, CancellationToken cancellationToken)
@@ -74,20 +75,19 @@ public sealed class GetMyFavoritesQueryHandler
         // ── Step 1: Paginate the favorites table ──────────────────────────────
         // One lightweight query — only fetches the favorite rows (id, category, item_id, added_at).
         // No entity tracking needed for a read-only query.
-
-        var favQuery = _context.favorites
+        
+        var query = _uow.Repository<favorite>().Query()
             .Where(f => f.user_id == request.UserId)
             .OrderByDescending(f => f.added_at)
-            .AsNoTracking()
-            .AsQueryable();
+            .AsNoTracking();
 
         if (request.Category.HasValue)
         {
             var categoryStr = request.Category.Value.ToDbString();
-            favQuery = favQuery.Where(f => f.category == categoryStr);
+            query = query.Where(f => f.category == categoryStr);
         }
 
-        var paged = await favQuery.ToPagedResultAsync(request, cancellationToken);
+        var paged = await query.ToPagedResultAsync(request, cancellationToken);
 
         if (!paged.Items.Any())
         {
@@ -98,10 +98,10 @@ public sealed class GetMyFavoritesQueryHandler
         // ── Step 2: Group item IDs by category (in-memory, list is already small) ─
         // page size is capped at 100 items, so this is always cheap.
 
-        var tourIds   = paged.Items.Where(f => f.category == "tour")  .Select(f => f.item_id).ToList();
-        var hotelIds  = paged.Items.Where(f => f.category == "hotel") .Select(f => f.item_id).ToList();
-        var flightIds = paged.Items.Where(f => f.category == "flight").Select(f => f.item_id).ToList();
-        var carIds    = paged.Items.Where(f => f.category == "car")   .Select(f => f.item_id).ToList();
+        var tourIds   = paged.Items.Where(f => f.category == "tour")  .Select(f => (long)f.item_id).ToList();
+        var hotelIds  = paged.Items.Where(f => f.category == "hotel") .Select(f => (long)f.item_id).ToList();
+        var flightIds = paged.Items.Where(f => f.category == "flight").Select(f => (long)f.item_id).ToList();
+        var carIds    = paged.Items.Where(f => f.category == "car")   .Select(f => (long)f.item_id).ToList();
 
         // ── Steps 3–6: ONE batch query per category that actually appears ─────
         // If this page has no Hotel favourites, the Hotel query is skipped entirely.
@@ -133,8 +133,8 @@ public sealed class GetMyFavoritesQueryHandler
     private async Task<Dictionary<long, FavoriteDto>> LoadToursAsync(
         List<long> ids, CancellationToken ct)
     {
-        return await _context.tours
-            .Where(t => ids.Contains(t.id))
+        return await _uow.Repository<tour>().Query()
+            .Where(t => ids.Contains(t.id) && !t.is_deleted && t.status == Domain.Enums.TourStatus.Active)
             .AsNoTracking()
             .Select(t => new FavoriteDto
             {
@@ -152,7 +152,7 @@ public sealed class GetMyFavoritesQueryHandler
                                  .OrderBy(p => p.adult_price)
                                  .Select(p => p.currency)
                                  .FirstOrDefault(),
-                Rating        = (double?)_context.reviews
+                Rating        = (double?)_uow.Repository<review>().Query()
                                  .Where(r => r.category == "tour"
                                           && r.item_id  == t.id
                                           && r.status   == "approved")
@@ -170,7 +170,7 @@ public sealed class GetMyFavoritesQueryHandler
     private async Task<Dictionary<long, FavoriteDto>> LoadHotelsAsync(
         List<long> ids, CancellationToken ct)
     {
-        return await _context.hotels
+        return await _uow.Repository<hotel>().Query()
             .Where(h => ids.Contains(h.id))
             .AsNoTracking()
             .Select(h => new FavoriteDto
@@ -186,7 +186,7 @@ public sealed class GetMyFavoritesQueryHandler
                                  .Select(r => (decimal?)r.price_per_night)
                                  .Min(),
                 Currency      = null, // currency not stored on hotel/room entities
-                Rating        = (double?)_context.reviews
+                Rating        = (double?)_uow.Repository<review>().Query()
                                  .Where(r => r.category == "hotel"
                                           && r.item_id  == h.id
                                           && r.status   == "approved")
@@ -204,7 +204,7 @@ public sealed class GetMyFavoritesQueryHandler
     private async Task<Dictionary<long, FavoriteDto>> LoadFlightsAsync(
         List<long> ids, CancellationToken ct)
     {
-        return await _context.flights
+        return await _uow.Repository<flight>().Query()
             .Where(f => ids.Contains(f.id))
             .AsNoTracking()
             .Select(f => new FavoriteDto
@@ -218,7 +218,7 @@ public sealed class GetMyFavoritesQueryHandler
                 ImageUrl      = null,
                 Price         = f.base_price,
                 Currency      = f.currency,
-                Rating        = (double?)_context.reviews
+                Rating        = (double?)_uow.Repository<review>().Query()
                                  .Where(r => r.category == "flight"
                                           && r.item_id  == f.id
                                           && r.status   == "approved")
@@ -232,7 +232,7 @@ public sealed class GetMyFavoritesQueryHandler
     private async Task<Dictionary<long, FavoriteDto>> LoadCarsAsync(
         List<long> ids, CancellationToken ct)
     {
-        return await _context.cars
+        return await _uow.Repository<car>().Query()
             .Where(c => ids.Contains(c.id))
             .AsNoTracking()
             .Select(c => new FavoriteDto
@@ -251,7 +251,7 @@ public sealed class GetMyFavoritesQueryHandler
                                  .Select(p => (decimal?)p.price_per_hour)
                                  .FirstOrDefault(),
                 Currency      = null, // currency not stored on car entity
-                Rating        = (double?)_context.reviews
+                Rating        = (double?)_uow.Repository<review>().Query()
                                  .Where(r => r.category == "car"
                                           && r.item_id  == c.id
                                           && r.status   == "approved")
