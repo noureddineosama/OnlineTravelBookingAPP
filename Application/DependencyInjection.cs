@@ -29,7 +29,6 @@ public static class DependencyInjection
         
         // AutoMapper — auto-discovers all Profile implementations
         services.AddAutoMapper(assembly);
-        services.AddAutoMapper(typeof(HotelProfile).Assembly);
     
 
         return services;

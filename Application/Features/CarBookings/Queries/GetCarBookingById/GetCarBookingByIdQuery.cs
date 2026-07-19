@@ -61,7 +61,7 @@ public sealed class GetCarBookingByIdQueryHandler
         {
             BookingId       = parentBooking.id,
             BookingNumber   = parentBooking.booking_number,
-            Status          = parentBooking.status,
+            Status          = parentBooking.status?.ToString() ?? string.Empty,
             CarId           = car?.id ?? 0,
             CarModel        = car?.model ?? string.Empty,
             CarYear         = car?.year,

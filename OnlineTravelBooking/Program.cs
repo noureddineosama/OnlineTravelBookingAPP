@@ -12,9 +12,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Serialization;
 using OnlineTravelBooking.Middleware;
-using OnlineTravelBooking.Swagger;
-using System.Text;
-using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,10 +54,6 @@ builder.Services.AddTransient<ICurrentIUserService, CurrentUserService>();
 builder.Services.AddHttpContextAccessor();
 //builder.Services.AddSwaggerGen(options => 
 //            options.UseInlineDefinitionsForEnums());
-builder.Services.AddControllers().AddJsonOptions(options =>
-{
-    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-}); //. These lines aim to convert the numbers for the enums to string (in process of entering the data)
 
 // ── Swagger ───────────────────────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();

@@ -83,7 +83,7 @@ public sealed class GetUserCarBookingsQueryHandler
             {
                 BookingId       = b.id,
                 BookingNumber   = b.booking_number,
-                Status          = b.status,
+                Status          = b.status?.ToString() ?? string.Empty,
                 CarId           = car?.id ?? 0,
                 CarModel        = car?.model ?? string.Empty,
                 CarYear         = car?.year,
