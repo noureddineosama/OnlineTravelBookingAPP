@@ -1,102 +1,77 @@
-using Application.Features.CarBookings.Commands.CancelCarBooking;
-using Application.Features.CarBookings.Commands.CreateCarBooking;
-using Application.Features.CarBookings.Queries.GetCarBookingById;
-using Application.Features.CarBookings.Queries.GetUserCarBookings;
+using Application.Common.Patterns;
+using Application.Features.CarBookings.Commands;
+using Application.Features.CarBookings.DTOs;
+using Application.Features.CarBookings.Queries;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace OnlineTravelBooking.Controllers;
-
-[Route("api/car-bookings")]
-[ApiController]
-public sealed class CarBookingsController : ControllerBase
+namespace OnlineTravelBooking.Controllers
 {
-    private readonly ISender _mediator;
-
-    public CarBookingsController(ISender mediator) => _mediator = mediator;
-
-    /// <summary>
-    /// Create a new car booking.
-    /// Calculates the rental price from the car's pricing tiers based on total hours.
-    /// </summary>
-    [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateCarBookingRequest request)
+    [ApiController]
+    [Route("api/car-bookings")]
+    [Authorize]
+    public class CarBookingsController : ControllerBase
     {
-        var result = await _mediator.Send(
-            new CreateCarBookingCommand(
-                request.UserId,
-                request.CarId,
-                request.PickupLocationId,
-                request.DropoffLocationId,
-                request.PickupAt,
-                request.DropoffAt,
-                request.DriverName,
-                request.Extras.Select(e => new ExtraItem(e.ExtraId, e.Quantity)).ToList()));
+        private readonly IMediator _mediator;
 
-        if (!result.Success)
-            return BadRequest(result);
-
-        return CreatedAtAction(nameof(GetById),
-            new { bookingId = result.Data!.BookingId }, result);
-    }
-
-    /// <summary>
-    /// Cancel an existing car booking.
-    /// </summary>
-    [HttpPut("{bookingId:long}/cancel")]
-    public async Task<IActionResult> Cancel(long bookingId, [FromBody] CancelCarBookingRequest request)
-    {
-        var result = await _mediator.Send(
-            new CancelCarBookingCommand(bookingId, request.UserId));
-        return result.Success ? Ok(result) : BadRequest(result);
-    }
-
-    /// <summary>
-    /// Get a user's car bookings with pagination and optional status filter.
-    /// </summary>
-    [HttpGet("user/{userId:long}")]
-    public async Task<IActionResult> GetUserBookings(
-        long userId,
-        [FromQuery] int     page     = 1,
-        [FromQuery] int     pageSize = 20,
-        [FromQuery] string? status   = null)
-    {
-        var result = await _mediator.Send(new GetUserCarBookingsQuery
+        public CarBookingsController(IMediator mediator)
         {
-            UserId   = userId,
-            Page     = page,
-            PageSize = pageSize,
-            Status   = status
-        });
-        return Ok(result);
-    }
+            _mediator = mediator;
+        }
 
-    /// <summary>
-    /// Get a single car booking by its booking ID with full details.
-    /// </summary>
-    [HttpGet("{bookingId:long}")]
-    public async Task<IActionResult> GetById(long bookingId)
-    {
-        var result = await _mediator.Send(new GetCarBookingByIdQuery(bookingId));
-        return result.Success ? Ok(result) : NotFound(result);
+        [HttpPost]
+        [ProducesResponseType(typeof(GenericResult<CarBookingResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<GenericResult<CarBookingResponse>>> CreateBooking(
+            [FromBody] CreateCarBookingRequestDTO requestDTO,
+            CancellationToken cancellationToken)
+        {
+            var result = await _mediator.Send(new CreateCarBookingCommand(requestDTO), cancellationToken);
+            if (!result.IsSuccess) return BadRequest(result);
+            return Ok(result);
+        }
+
+        [HttpPatch("{id}")]
+        [ProducesResponseType(typeof(GenericResult<CancelCarBookingResponseDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<GenericResult<CancelCarBookingResponseDTO>>> CancelBooking(
+            long id,
+            CancellationToken cancellationToken)
+        {
+            var result = await _mediator.Send(new CancelCarBookingCommand(id), cancellationToken);
+            if (!result.IsSuccess)
+                return BadRequest(result);
+            return Ok(result);
+        }
+
+        [HttpGet("{id}")]
+        [ProducesResponseType(typeof(GenericResult<CarBookingResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<GenericResult<CarBookingResponse>>> DetailsByIdAsync(
+            long id,
+            CancellationToken cancellationToken)
+        {
+            var result = await _mediator.Send(new CarBookingDetailsQuery(id), cancellationToken);
+            if (!result.IsSuccess)
+                return BadRequest(result);
+            return Ok(result);
+        }
+
+        [HttpGet("my-booking")]
+        [ProducesResponseType(typeof(GenericResult<List<MyCarBookingsResponseDTO>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<GenericResult<List<MyCarBookingsResponseDTO>>>> MyBookingsDetailsAsync(
+            CancellationToken cancellationToken)
+        {
+            var result = await _mediator.Send(new MyCarBookingsQuery(), cancellationToken);
+            if (result == null)
+                return BadRequest(result);
+            return Ok(result);
+        }
     }
 }
-
-// ── Request DTOs ─────────────────────────────────────────────────────────────
-
-/// <summary>Body for POST /api/car-bookings</summary>
-public sealed record CreateCarBookingRequest(
-    long              UserId,
-    long              CarId,
-    int               PickupLocationId,
-    int               DropoffLocationId,
-    DateTime          PickupAt,
-    DateTime          DropoffAt,
-    string?           DriverName,
-    List<ExtraRequest> Extras);
-
-/// <summary>An extra item included in a car booking request.</summary>
-public sealed record ExtraRequest(int ExtraId, int Quantity);
-
-/// <summary>Body for PUT /api/car-bookings/{bookingId}/cancel</summary>
-public sealed record CancelCarBookingRequest(long UserId);
