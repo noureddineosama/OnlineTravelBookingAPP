@@ -63,7 +63,7 @@ graph TB
     subgraph INF["🔌 Infrastructure Layer"]
         CTX[AppDbContext]
         UOW[IUnitOfWork]
-        REP[IRepository&lt;T&gt;]
+        REP["IRepository(T)"]
         JWT[JWT Token Generator]
         STR[Stripe Service]
         SVC[Domain Services]
@@ -94,8 +94,8 @@ sequenceDiagram
     participant Client
     participant Controller
     participant MediatR
-    participant Validator as FluentValidation<br/>ValidationBehavior
-    participant Handler as Command/Query<br/>Handler
+    participant Validator as FluentValidation Behavior
+    participant Handler as Command or Query Handler
     participant UoW as IUnitOfWork
     participant DB as SQL Server
 
@@ -110,7 +110,7 @@ sequenceDiagram
         UoW->>DB: EF Core Query / SaveChanges
         DB-->>UoW: Result
         UoW-->>Handler: Entities
-        Handler-->>Controller: ApiResponse&lt;T&gt;
+        Handler-->>Controller: ApiResponse wrapped result
         Controller-->>Client: HTTP Response
     end
 ```
@@ -452,7 +452,7 @@ flowchart LR
     G --> A
 
     A -->|"POST /auth/refresh-token"| H[RefreshTokenCommand]
-    H --> I{Token Valid & Not Expired?}
+    H --> I{Token Valid and Not Expired?}
     I -->|No| D
     I -->|Yes| J[Rotate: Issue New Pair]
     J --> F
