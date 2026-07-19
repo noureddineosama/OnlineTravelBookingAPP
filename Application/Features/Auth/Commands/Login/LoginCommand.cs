@@ -65,9 +65,14 @@ public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, ApiRespo
         }
 
         var token = _jwtTokenGenerator.GenerateToken(user);
+        var refreshToken = Guid.NewGuid().ToString("N");
+
+        user.refreshToken = refreshToken;
+        user.refresh_token_expiry = DateTime.UtcNow.AddDays(7);
+        await _context.SaveChangesAsync(cancellationToken);
 
         return ApiResponse<AuthResponse>.Ok(
-            new AuthResponse(token, user.email, user.name),
+            new AuthResponse(token, refreshToken, user.email, user.name, user.role?.name ?? "Passenger"),
             "Login successful."
         );
     }

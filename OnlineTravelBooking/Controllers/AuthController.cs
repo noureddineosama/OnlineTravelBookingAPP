@@ -1,9 +1,7 @@
 using Application.Features.Auth.Commands.Login;
 using Application.Features.Auth.Commands.Register;
-using Application.Features.Auth.Commands.Logout;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Application.Features.Auth.DTOs;
 
 namespace OnlineTravelBooking.Controllers;
 
@@ -54,14 +52,24 @@ public sealed class AuthController : ControllerBase
 
         return Ok(result);
     }
+    [HttpPost("refresh-token")]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+    {
+        var result = await _mediator.Send(new Application.Features.Auth.Commands.RefreshToken.RefreshTokenCommand(request.RefreshToken));
 
-    /// <summary>
-    /// Log out the user by invalidating their refresh token.
-    /// </summary>
+        if (!result.Success)
+        {
+            return Unauthorized(result);
+        }
+
+        return Ok(result);
+    }
+
     [HttpPost("logout")]
     public async Task<IActionResult> Logout([FromBody] LogoutRequest request)
     {
-        var result = await _mediator.Send(new LogoutCommand(request.RefreshToken));
+        var result = await _mediator.Send(new Application.Features.Auth.Commands.Logout.LogoutCommand(request.RefreshToken));
+
         if (!result.Success)
         {
             return BadRequest(result);
@@ -71,10 +79,25 @@ public sealed class AuthController : ControllerBase
     }
 }
 
+// ── Request DTOs ─────────────────────────────────────────────────────────────
 
+public sealed record RegisterRequest(
+    string Name,
+    string Email,
+    string Password,
+    string? Phone = null,
+    int RoleId = 1
+);
 
+public sealed record LoginRequest(
+    string Email,
+    string Password
+);
 
+public sealed record RefreshTokenRequest(
+    string RefreshToken
+);
 
-
-
-
+public sealed record LogoutRequest(
+    string RefreshToken
+);
