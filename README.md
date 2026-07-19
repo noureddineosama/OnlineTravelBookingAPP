@@ -44,47 +44,39 @@ Built on a **Modular Monolith** paradigm, the system strictly adheres to **Clean
 ### Clean Architecture Layer Overview
 
 ```mermaid
-graph TB
-    subgraph API["🌐 Web API Layer"]
-        C[Controllers]
-        MW[Middleware]
-        SW[Swagger / OpenAPI]
-    end
-
-    subgraph APP["⚙️ Application Layer"]
-        CMD[Commands]
-        QRY[Queries]
-        VAL[FluentValidation]
-        MAP[AutoMapper Profiles]
-        DTO[DTOs]
-        MED[MediatR Pipeline]
+graph LR
+    subgraph DOM["🛡️ Domain Layer"]
+        direction TB
+        ENT["📦 Entities\n─────────────\ntour · hotel · flight\ncar · booking · passenger\nroom · payment · review"]
+        ENM["🔖 Enums\n─────────────\nBookingStatus\nTourStatus\nFavoriteCategory\nCancellationReasonType"]
+        BASE["🧱 Base Classes\n─────────────\nAuditableEntity\nBaseEntity"]
     end
 
     subgraph INF["🔌 Infrastructure Layer"]
-        CTX[AppDbContext]
-        UOW[IUnitOfWork]
-        REP["IRepository(T)"]
-        JWT[JWT Token Generator]
-        STR[Stripe Service]
-        SVC[Domain Services]
-        MIG[EF Core Migrations]
+        direction TB
+        DB["🗄️ Persistence\n─────────────\nAppDbContext\nEF Core Migrations"]
+        REPO["📂 Repository\n─────────────\nIUnitOfWork\nIRepository(T)"]
+        SVCS["⚙️ Services\n─────────────\nCurrentUserService\nJwtTokenGenerator\nStripeService\nSlugService"]
     end
 
-    subgraph DOM["🛡️ Domain Layer"]
-        ENT[Entities]
-        ENM[Enums]
-        COM[Common / AuditableEntity]
+    subgraph APP["⚙️ Application Layer"]
+        direction TB
+        CQRS["📬 CQRS\n─────────────\nCommands\nQueries\nHandlers"]
+        PIPE["🔗 Pipeline\n─────────────\nMediatR\nFluentValidation\nValidationBehavior"]
+        MAPS["🗺️ Mapping\n─────────────\nAutoMapper\nDTOs\nRequest Models"]
     end
 
-    API --> APP
-    APP --> INF
-    APP --> DOM
-    INF --> DOM
+    subgraph WEB["🌐 Web API Layer"]
+        direction TB
+        CTRL["🎮 Controllers\n─────────────\n13 Controllers\nApiResponse(T)"]
+        MIDW["🛡️ Middleware\n─────────────\nException Handler\nJWT Bearer Auth"]
+        DOCS["📖 Documentation\n─────────────\nSwagger / OpenAPI\nXML Comments"]
+    end
 
-    style API fill:#1a1a2e,color:#e0e0e0,stroke:#4a90d9
-    style APP fill:#16213e,color:#e0e0e0,stroke:#4a90d9
-    style INF fill:#0f3460,color:#e0e0e0,stroke:#4a90d9
-    style DOM fill:#533483,color:#e0e0e0,stroke:#a78bfa
+    DOM --> INF
+    DOM --> APP
+    INF --> APP
+    APP --> WEB
 ```
 
 ### Request Pipeline
