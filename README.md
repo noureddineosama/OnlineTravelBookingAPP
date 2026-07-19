@@ -132,9 +132,15 @@ OnlineTravelBookingAPP/
 │
 ├── ⚙️ Application/
 │   ├── Common/
+│   │   ├── Behaviors/   ← MediatR Pipeline Behaviors (e.g., ValidationBehavior)
+│   │   ├── Exceptions/  ← Custom Domain and Application Exceptions
 │   │   ├── Interfaces/  ← IUnitOfWork, IRepository<T>, IJwtTokenGenerator ...
 │   │   ├── Mappings/    ← AutoMapper profiles
-│   │   └── Models/      ← ApiResponse<T>, GenericResult<T>
+│   │   ├── Models/      ← ApiResponse<T>, GenericResult<T>
+│   │   ├── Pagination/  ← PaginatedList<T> and pagination helpers
+│   │   ├── Patterns/    ← Common design pattern implementations
+│   │   ├── Services/    ← Application-level shared services
+│   │   └── Settings/    ← Strongly-typed configuration objects
 │   └── Features/        ← One folder per vertical slice
 │       ├── Auth/            Commands: Login | Register | RefreshToken | Logout
 │       ├── Tours/           Commands: Create | Update | Delete | Queries: GetAll | GetById
