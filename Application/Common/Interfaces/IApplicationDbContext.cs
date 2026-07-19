@@ -42,5 +42,6 @@ public interface IApplicationDbContext
     DbSet<tour_schedule> tour_schedules { get; }
     DbSet<passenger> passengers { get; }
 
+    Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade Database { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
