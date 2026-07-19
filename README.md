@@ -44,55 +44,32 @@ Built on a **Modular Monolith** paradigm, the system strictly adheres to **Clean
 ### Clean Architecture Layer Overview
 
 ```mermaid
+%%{init: {'theme': 'default', 'themeVariables': {'fontSize': '16px'}}}%%
 graph TD
     subgraph WEB["🌐  Web API Layer"]
         direction LR
-        CTRL(["🎮 Controllers"]) ~~~ MIDW(["🛡️ Middleware"]) ~~~ DOCS(["📖 Swagger / OpenAPI"])
+        CTRL(["     🎮  Controllers     "]) ~~~ MIDW(["     🛡️  Exception Middleware     "]) ~~~ DOCS(["     📖  Swagger / OpenAPI     "])
     end
 
     subgraph APP["⚙️  Application Layer"]
         direction LR
-        CMD(["📨 Commands"]) ~~~ QRY(["🔍 Queries"]) ~~~ VAL(["✅ FluentValidation"]) ~~~ MAP(["🗺️ AutoMapper + DTOs"])
+        CMD(["     📨  CQRS Commands     "]) ~~~ QRY(["     🔍  CQRS Queries     "]) ~~~ VAL(["     ✅  FluentValidation     "]) ~~~ MAP(["     🗺️  AutoMapper + DTOs     "])
     end
 
     subgraph INF["🔌  Infrastructure Layer"]
         direction LR
-        DB(["🗄️ AppDbContext"]) ~~~ UOW(["🔗 IUnitOfWork"]) ~~~ REPO(["📂 IRepository(T)"]) ~~~ JWT(["🔐 JWT Service"]) ~~~ STR(["💳 Stripe Service"])
+        DB(["     🗄️  AppDbContext     "]) ~~~ UOW(["     🔗  IUnitOfWork     "]) ~~~ REPO(["     📂  IRepository(T)     "]) ~~~ JWT(["     🔐  JWT Service     "]) ~~~ STR(["     💳  Stripe Service     "])
     end
 
     subgraph DOM["🛡️  Domain Layer — Zero Dependencies"]
         direction LR
-        ENT(["📦 Entities · 33 Models"]) ~~~ ENM(["🔖 Enums"]) ~~~ BASE(["🧱 AuditableEntity"])
+        ENT(["     📦  Entities · 33 Models     "]) ~~~ ENM(["     🔖  Enums     "]) ~~~ BASE(["     🧱  AuditableEntity     "])
     end
 
     WEB --> APP
     APP --> INF
     APP --> DOM
     INF --> DOM
-
-    style WEB fill:#1e3a5f,color:#e2e8f0,stroke:#3b82f6,stroke-width:2px
-    style APP fill:#2d1b69,color:#e2e8f0,stroke:#8b5cf6,stroke-width:2px
-    style INF fill:#14532d,color:#e2e8f0,stroke:#22c55e,stroke-width:2px
-    style DOM fill:#4a1942,color:#e2e8f0,stroke:#c084fc,stroke-width:2px
-
-    style CTRL fill:#1d4ed8,color:#ffffff,stroke:#3b82f6,stroke-width:1px
-    style MIDW fill:#1d4ed8,color:#ffffff,stroke:#3b82f6,stroke-width:1px
-    style DOCS fill:#1d4ed8,color:#ffffff,stroke:#3b82f6,stroke-width:1px
-
-    style CMD fill:#6d28d9,color:#ffffff,stroke:#8b5cf6,stroke-width:1px
-    style QRY fill:#6d28d9,color:#ffffff,stroke:#8b5cf6,stroke-width:1px
-    style VAL fill:#6d28d9,color:#ffffff,stroke:#8b5cf6,stroke-width:1px
-    style MAP fill:#6d28d9,color:#ffffff,stroke:#8b5cf6,stroke-width:1px
-
-    style DB fill:#15803d,color:#ffffff,stroke:#22c55e,stroke-width:1px
-    style UOW fill:#15803d,color:#ffffff,stroke:#22c55e,stroke-width:1px
-    style REPO fill:#15803d,color:#ffffff,stroke:#22c55e,stroke-width:1px
-    style JWT fill:#15803d,color:#ffffff,stroke:#22c55e,stroke-width:1px
-    style STR fill:#15803d,color:#ffffff,stroke:#22c55e,stroke-width:1px
-
-    style ENT fill:#7e22ce,color:#ffffff,stroke:#c084fc,stroke-width:1px
-    style ENM fill:#7e22ce,color:#ffffff,stroke:#c084fc,stroke-width:1px
-    style BASE fill:#7e22ce,color:#ffffff,stroke:#c084fc,stroke-width:1px
 ```
 
 ### Request Pipeline
