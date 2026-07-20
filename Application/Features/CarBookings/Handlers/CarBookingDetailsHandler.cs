@@ -5,6 +5,7 @@ using Application.Features.CarBookings.Queries;
 using Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,18 +18,37 @@ namespace Application.Features.CarBookings.Handlers
         : IRequestHandler<CarBookingDetailsQuery, GenericResult<CarBookingResponse>>
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly HybridCache _cache;
 
-        public CarBookingDetailsHandler(IUnitOfWork unitOfWork)
+        public CarBookingDetailsHandler(IUnitOfWork unitOfWork, HybridCache cache)
         {
             _unitOfWork = unitOfWork;
+            _cache      = cache;
         }
 
         public async Task<GenericResult<CarBookingResponse>> Handle(
             CarBookingDetailsQuery request, CancellationToken cancellationToken)
         {
+            var cacheKey = $"car-booking-details:{request.id}";
+
+            var response = await _cache.GetOrCreateAsync(
+                cacheKey,
+                async ct => await FetchBookingDetails(request.id, ct),
+                cancellationToken: cancellationToken
+            );
+
+            if (response is null)
+                return await Result.FailureAsync<CarBookingResponse>(
+                    $"Car booking with ID '{request.id}' was not found.");
+
+            return await Result.SuccessAsync(response, "Car booking details retrieved successfully.");
+        }
+
+        private async Task<CarBookingResponse?> FetchBookingDetails(long bookingId, CancellationToken ct)
+        {
             var parentBooking = await _unitOfWork.Repository<booking>()
                 .Query()
-                .Where(b => b.id == request.id && b.category == "car")
+                .Where(b => b.id == bookingId && b.category == "car")
                 .Include(b => b.car_booking)
                     .ThenInclude(cb => cb.car)
                         .ThenInclude(c => c.brand)
@@ -42,11 +62,10 @@ namespace Application.Features.CarBookings.Handlers
                 .Include(b => b.car_booking)
                     .ThenInclude(cb => cb.car_booking_extras)
                         .ThenInclude(e => e.car_extra)
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(ct);
 
             if (parentBooking is null)
-                return await Result.FailureAsync<CarBookingResponse>(
-                    $"Car booking with ID '{request.id}' was not found.");
+                return null;
 
             var cb = parentBooking.car_booking;
             var car = cb?.car;
@@ -62,7 +81,7 @@ namespace Application.Features.CarBookings.Handlers
                     Price    = e.price
                 }).ToList() ?? new();
 
-            var response = new CarBookingResponse
+            return new CarBookingResponse
             {
                 BookingId       = parentBooking.id,
                 BookingNumber   = parentBooking.booking_number,
@@ -90,8 +109,6 @@ namespace Application.Features.CarBookings.Handlers
                 Extras          = extras,
                 CreatedAt       = parentBooking.created_at
             };
-
-            return await Result.SuccessAsync(response, "Car booking details retrieved successfully.");
         }
 
         private static string FormatLocation(location? loc)

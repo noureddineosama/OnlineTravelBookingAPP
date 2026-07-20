@@ -1,6 +1,7 @@
 using Application.Common.Interfaces;
 using Application.Common.Models;
 using Application.Features.Favorites.DTOs;
+using Domain.Entities;
 using Domain.Enums;
 using FluentValidation;
 using MediatR;
@@ -38,10 +39,10 @@ public sealed class CheckFavoriteQueryValidator : AbstractValidator<CheckFavorit
 public sealed class CheckFavoriteQueryHandler
     : IRequestHandler<CheckFavoriteQuery, ApiResponse<CheckFavoriteDto>>
 {
-    private readonly IApplicationDbContext _context;
+    private readonly IUnitOfWork _uow;
 
-    public CheckFavoriteQueryHandler(IApplicationDbContext context)
-        => _context = context;
+    public CheckFavoriteQueryHandler(IUnitOfWork uow)
+        => _uow = uow;
 
     public async Task<ApiResponse<CheckFavoriteDto>> Handle(
         CheckFavoriteQuery request, CancellationToken cancellationToken)
@@ -49,13 +50,13 @@ public sealed class CheckFavoriteQueryHandler
         var categoryStr = request.Category.ToDbString();
 
         // Project only the id — one lightweight SQL query, no entity tracking
-        var favoriteId = await _context.favorites
-            .Where(f =>
+        var favoriteId = await _uow.Repository<favorite>()
+            .GetSelectorAsync(f =>
                 f.user_id  == request.UserId &&
                 f.category == categoryStr    &&
-                f.item_id  == request.ItemId)
-            .Select(f => (long?)f.id)
-            .FirstOrDefaultAsync(cancellationToken);
+                f.item_id  == request.ItemId,
+                f => (long?)f.id,
+                cancellationToken);
 
         var dto = new CheckFavoriteDto
         {

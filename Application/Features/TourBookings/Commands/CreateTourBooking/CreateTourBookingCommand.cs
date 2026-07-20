@@ -46,31 +46,50 @@ public sealed class CreateTourBookingCommandValidator : AbstractValidator<Create
 public sealed class CreateTourBookingCommandHandler
     : IRequestHandler<CreateTourBookingCommand, ApiResponse<TourBookingResponse>>
 {
-    private readonly IApplicationDbContext _context;
+    private readonly IUnitOfWork _uow;
 
-    public CreateTourBookingCommandHandler(IApplicationDbContext context)
+    public CreateTourBookingCommandHandler(IUnitOfWork uow)
     {
-        _context = context;
+        _uow = uow;
     }
 
     public async Task<ApiResponse<TourBookingResponse>> Handle(
         CreateTourBookingCommand request, CancellationToken cancellationToken)
     {
         // 1. Verify passenger exists
-        var passenger = await _context.passengers
-            .FindAsync([request.UserId], cancellationToken);
+        var passenger = await _uow.Repository<passenger>()
+            .GetByIdAsync(request.UserId, cancellationToken);
 
         if (passenger is null)
             throw new NotFoundException(nameof(passenger), request.UserId);
 
         // 2. Load schedule with price tier and tour
-        var schedule = await _context.tour_schedules
+        var schedule = await _uow.Repository<tour_schedule>().Query()
             .Include(s => s.price_tier)
             .Include(s => s.tour)
             .FirstOrDefaultAsync(s => s.id == request.TourScheduleId, cancellationToken);
 
         if (schedule is null)
             throw new NotFoundException(nameof(tour_schedule), request.TourScheduleId);
+
+        if (schedule.is_cancelled)
+            throw new ConflictException("This tour schedule has been cancelled and is no longer accepting bookings.");
+
+        if (schedule.tour.is_deleted || schedule.tour.status != TourStatus.Active)
+            throw new BadRequestException("This tour is no longer available for booking.");
+
+        // Check for duplicate active bookings for this schedule by this user
+        var existingBooking = await _uow.Repository<Domain.Entities.booking>().Query()
+            .Include(b => b.tour_booking)
+            .Where(b => b.user_id == request.UserId && 
+                        b.category == "tour" &&
+                        b.tour_booking.tour_schedule_id == request.TourScheduleId &&
+                        b.status != BookingStatus.Cancelled.ToString() && 
+                        b.IsCancelled != true)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (existingBooking != null)
+            throw new ConflictException("You already have an active booking for this schedule.");
 
         // 3. Validate schedule is in the future
         if (schedule.start_date <= DateTime.UtcNow)
@@ -110,8 +129,8 @@ public sealed class CreateTourBookingCommandHandler
             created_at      = DateTime.UtcNow
         };
 
-        await _context.bookings.AddAsync(parentBooking, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _uow.Repository<Domain.Entities.booking>().AddAsync(parentBooking, cancellationToken);
+        await _uow.SaveChangesAsync(cancellationToken);
 
         // 8. Create tour booking linked to the parent
         var tourBooking = new tour_booking
@@ -123,12 +142,13 @@ public sealed class CreateTourBookingCommandHandler
             infants_count    = request.InfantsCount
         };
 
-        await _context.tour_bookings.AddAsync(tourBooking, cancellationToken);
+        await _uow.Repository<tour_booking>().AddAsync(tourBooking, cancellationToken);
 
         // 9. Decrement available slots
         schedule.available_slots -= totalGuests;
+        _uow.Repository<tour_schedule>().Update(schedule);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await _uow.SaveChangesAsync(cancellationToken);
 
         // 10. Build response.
         // Manual construction is intentional — we already hold all the loaded entities in memory;

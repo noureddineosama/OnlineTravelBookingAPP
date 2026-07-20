@@ -1,4 +1,4 @@
-﻿using Application.Common.Interfaces;
+using Application.Common.Interfaces;
 using Application.Common.Patterns;
 using Application.Features.Hotels.DTOs;
 using Application.Features.Hotels.Queries;
@@ -56,8 +56,8 @@ namespace Application.Features.Hotels.Handlers
                                                              },
                                                              Rooms = op.rooms.Select(r => new RoomResponsedTO
                                                              {
-                                                                 AvailableRooms = r.room_availabilities.Sum(a => a.available_units),
-                                                                 IsAvailable = r.room_availabilities.Sum(a => a.available_units) > 0,
+                                                                 AvailableRooms = r.room_availabilities.Count(a => a.IsAvailable),
+                                                                 IsAvailable = r.room_availabilities.Any(a => a.IsAvailable),
                                                                  MainImageUrl = r.room_images.Select(op => op.url).FirstOrDefault(),
                                                                  MaxAdults = r.occupancy_adults,
                                                                  MaxChildren = r.occupancy_children,

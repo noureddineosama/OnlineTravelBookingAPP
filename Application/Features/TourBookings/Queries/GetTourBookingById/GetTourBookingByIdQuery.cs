@@ -3,6 +3,7 @@ using Application.Common.Interfaces;
 using Application.Common.Models;
 using Application.Features.TourBookings.DTOs;
 using AutoMapper;
+using Domain.Entities;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -28,19 +29,19 @@ public sealed class GetTourBookingByIdQueryValidator : AbstractValidator<GetTour
 public sealed class GetTourBookingByIdQueryHandler
     : IRequestHandler<GetTourBookingByIdQuery, ApiResponse<TourBookingResponse>>
 {
-    private readonly IApplicationDbContext _context;
+    private readonly IUnitOfWork _uow;
     private readonly IMapper _mapper;
 
-    public GetTourBookingByIdQueryHandler(IApplicationDbContext context, IMapper mapper)
+    public GetTourBookingByIdQueryHandler(IUnitOfWork uow, IMapper mapper)
     {
-        _context = context;
+        _uow = uow;
         _mapper  = mapper;
     }
 
     public async Task<ApiResponse<TourBookingResponse>> Handle(
         GetTourBookingByIdQuery request, CancellationToken cancellationToken)
     {
-        var booking = await _context.bookings
+        var booking = await _uow.Repository<Domain.Entities.booking>().Query()
             .Where(b => b.id == request.BookingId && b.category == "tour")
             .Include(b => b.tour_booking)
                 .ThenInclude(tb => tb.tour_schedule)
@@ -51,6 +52,10 @@ public sealed class GetTourBookingByIdQueryHandler
             .FirstOrDefaultAsync(cancellationToken);
 
         if (booking is null)
+            throw new NotFoundException("Tour booking", request.BookingId);
+
+        if ((booking.status == Domain.Enums.BookingStatus.Cancelled.ToString() || booking.IsCancelled == true) && 
+            booking.cancellation_reason_type != Domain.Enums.CancellationReasonType.AdminCancelled)
             throw new NotFoundException("Tour booking", request.BookingId);
 
         return ApiResponse<TourBookingResponse>.Ok(_mapper.Map<TourBookingResponse>(booking));

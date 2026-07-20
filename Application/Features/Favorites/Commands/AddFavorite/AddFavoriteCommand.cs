@@ -40,10 +40,10 @@ public sealed class AddFavoriteCommandValidator : AbstractValidator<AddFavoriteC
 public sealed class AddFavoriteCommandHandler
     : IRequestHandler<AddFavoriteCommand, ApiResponse<FavoriteDto>>
 {
-    private readonly IApplicationDbContext _context;
+    private readonly IUnitOfWork _uow;
 
-    public AddFavoriteCommandHandler(IApplicationDbContext context)
-        => _context = context;
+    public AddFavoriteCommandHandler(IUnitOfWork uow)
+        => _uow = uow;
 
     public async Task<ApiResponse<FavoriteDto>> Handle(
         AddFavoriteCommand request, CancellationToken cancellationToken)
@@ -54,7 +54,7 @@ public sealed class AddFavoriteCommandHandler
         await ValidateItemAsync(request.Category, request.ItemId, cancellationToken);
 
         // 2. Check for duplicate (DB unique index UQ_favorites is the real safety net)
-        var alreadyExists = await _context.favorites
+        var alreadyExists = await _uow.Repository<favorite>()
             .AnyAsync(f =>
                 f.user_id  == request.UserId &&
                 f.category == categoryStr    &&
@@ -74,8 +74,8 @@ public sealed class AddFavoriteCommandHandler
             added_at = DateTime.UtcNow
         };
 
-        await _context.favorites.AddAsync(entity, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await _uow.Repository<favorite>().AddAsync(entity, cancellationToken);
+        await _uow.SaveChangesAsync(cancellationToken);
 
         // 4. Enrich with display fields so the frontend can render the card
         //    immediately — no second round-trip needed.
@@ -92,10 +92,10 @@ public sealed class AddFavoriteCommandHandler
     {
         var exists = category switch
         {
-            FavoriteCategory.Tour   => await _context.tours  .AnyAsync(t => t.id == itemId && t.status == "active", ct),
-            FavoriteCategory.Hotel  => await _context.hotels .AnyAsync(h => h.id == itemId && h.status == "active", ct),
-            FavoriteCategory.Flight => await _context.flights.AnyAsync(f => f.id == itemId && f.status == "active", ct),
-            FavoriteCategory.Car    => await _context.cars   .AnyAsync(c => c.id == itemId && c.status == "active", ct),
+            FavoriteCategory.Tour   => await _uow.Repository<tour>().AnyAsync(t => t.id == itemId && t.status == Domain.Enums.TourStatus.Active && !t.is_deleted, ct),
+            FavoriteCategory.Hotel  => await _uow.Repository<hotel>().AnyAsync(h => h.id == itemId && h.status == "active", ct),
+            FavoriteCategory.Flight => await _uow.Repository<flight>().AnyAsync(f => f.id == itemId && f.status == "active", ct),
+            FavoriteCategory.Car    => await _uow.Repository<car>().AnyAsync(c => c.id == itemId && c.status == "active", ct),
             _ => throw new BadRequestException(
                     $"No item validation is registered for category '{category}'. " +
                     "Add a case to ValidateItemAsync.")
@@ -121,7 +121,7 @@ public sealed class AddFavoriteCommandHandler
 
     private async Task<FavoriteDto> EnrichTourAsync(favorite entity, CancellationToken ct)
     {
-        var t = await _context.tours
+        var t = await _uow.Repository<tour>().Query()
             .Where(t => t.id == entity.item_id)
             .AsNoTracking()
             .Select(t => new
@@ -130,7 +130,7 @@ public sealed class AddFavoriteCommandHandler
                 Price    = t.tour_price_tiers.OrderBy(p => p.adult_price).Select(p => (decimal?)p.adult_price).FirstOrDefault(),
                 Currency = t.tour_price_tiers.OrderBy(p => p.adult_price).Select(p => p.currency).FirstOrDefault(),
                 Location = t.location != null ? t.location.city + ", " + t.location.country : null,
-                Rating   = (double?)_context.reviews.Where(r => r.category == "tour" && r.item_id == t.id && r.status == "approved").Average(r => (double?)r.rating)
+                Rating   = (double?)_uow.Repository<review>().Query().Where(r => r.category == "tour" && r.item_id == t.id && r.status == "approved").Average(r => (double?)r.rating)
             })
             .FirstOrDefaultAsync(ct);
 
@@ -157,7 +157,7 @@ public sealed class AddFavoriteCommandHandler
 
     private async Task<FavoriteDto> EnrichHotelAsync(favorite entity, CancellationToken ct)
     {
-        var h = await _context.hotels
+        var h = await _uow.Repository<hotel>().Query()
             .Where(h => h.id == entity.item_id)
             .AsNoTracking()
             .Select(h => new
@@ -165,7 +165,7 @@ public sealed class AddFavoriteCommandHandler
                 h.name, h.description, h.main_image_url, h.star_rating,
                 Price    = h.rooms.Where(r => r.status == "active").Select(r => (decimal?)r.price_per_night).Min(),
                 Location = h.location != null ? h.location.city + ", " + h.location.country : null,
-                Rating   = (double?)_context.reviews.Where(r => r.category == "hotel" && r.item_id == h.id && r.status == "approved").Average(r => (double?)r.rating)
+                Rating   = (double?)_uow.Repository<review>().Query().Where(r => r.category == "hotel" && r.item_id == h.id && r.status == "approved").Average(r => (double?)r.rating)
             })
             .FirstOrDefaultAsync(ct);
 
@@ -191,7 +191,7 @@ public sealed class AddFavoriteCommandHandler
 
     private async Task<FavoriteDto> EnrichFlightAsync(favorite entity, CancellationToken ct)
     {
-        var f = await _context.flights
+        var f = await _uow.Repository<flight>().Query()
             .Where(f => f.id == entity.item_id)
             .AsNoTracking()
             .Select(f => new
@@ -200,7 +200,7 @@ public sealed class AddFavoriteCommandHandler
                 f.carrier_name, f.cabin_class,
                 f.origin_airport_code, f.destination_airport_code,
                 f.base_price, f.currency,
-                Rating = (double?)_context.reviews.Where(r => r.category == "flight" && r.item_id == f.id && r.status == "approved").Average(r => (double?)r.rating)
+                Rating = (double?)_uow.Repository<review>().Query().Where(r => r.category == "flight" && r.item_id == f.id && r.status == "approved").Average(r => (double?)r.rating)
             })
             .FirstOrDefaultAsync(ct);
 
@@ -225,7 +225,7 @@ public sealed class AddFavoriteCommandHandler
 
     private async Task<FavoriteDto> EnrichCarAsync(favorite entity, CancellationToken ct)
     {
-        var c = await _context.cars
+        var c = await _uow.Repository<car>().Query()
             .Where(c => c.id == entity.item_id)
             .AsNoTracking()
             .Select(c => new
@@ -235,7 +235,7 @@ public sealed class AddFavoriteCommandHandler
                 CategoryName = c.car_category != null ? c.car_category.name : null,
                 ImageUrl     = c.car_images.OrderBy(ci => ci.sort_order).Select(ci => ci.url).FirstOrDefault(),
                 Price        = c.car_pricing_tiers.OrderBy(p => p.price_per_hour).Select(p => (decimal?)p.price_per_hour).FirstOrDefault(),
-                Rating       = (double?)_context.reviews.Where(r => r.category == "car" && r.item_id == c.id && r.status == "approved").Average(r => (double?)r.rating)
+                Rating       = (double?)_uow.Repository<review>().Query().Where(r => r.category == "car" && r.item_id == c.id && r.status == "approved").Average(r => (double?)r.rating)
             })
             .FirstOrDefaultAsync(ct);
 

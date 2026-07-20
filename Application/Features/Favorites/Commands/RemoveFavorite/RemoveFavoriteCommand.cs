@@ -1,5 +1,6 @@
 using Application.Common.Exceptions;
 using Application.Common.Interfaces;
+using Domain.Entities;
 using Domain.Enums;
 using FluentValidation;
 using MediatR;
@@ -37,10 +38,10 @@ public sealed class RemoveFavoriteCommandValidator : AbstractValidator<RemoveFav
 public sealed class RemoveFavoriteCommandHandler
     : IRequestHandler<RemoveFavoriteCommand, Unit>
 {
-    private readonly IApplicationDbContext _context;
+    private readonly IUnitOfWork _uow;
 
-    public RemoveFavoriteCommandHandler(IApplicationDbContext context)
-        => _context = context;
+    public RemoveFavoriteCommandHandler(IUnitOfWork uow)
+        => _uow = uow;
 
     public async Task<Unit> Handle(
         RemoveFavoriteCommand request, CancellationToken cancellationToken)
@@ -48,8 +49,8 @@ public sealed class RemoveFavoriteCommandHandler
         var categoryStr = request.Category.ToDbString();
 
         // Lookup by composite business key (same columns as the UQ index)
-        var entity = await _context.favorites
-            .FirstOrDefaultAsync(f =>
+        var entity = await _uow.Repository<favorite>()
+            .GetByIdAsync(f =>
                 f.user_id  == request.UserId &&
                 f.category == categoryStr    &&
                 f.item_id  == request.ItemId,
@@ -59,8 +60,8 @@ public sealed class RemoveFavoriteCommandHandler
             throw new NotFoundException("Favourite",
                 $"UserId={request.UserId}, Category={request.Category}, ItemId={request.ItemId}");
 
-        _context.favorites.Remove(entity);
-        await _context.SaveChangesAsync(cancellationToken);
+        _uow.Repository<favorite>().Remove(entity);
+        await _uow.SaveChangesAsync(cancellationToken);
 
         return Unit.Value;
     }

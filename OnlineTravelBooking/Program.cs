@@ -11,7 +11,10 @@ using Microsoft.OpenApi.Models;
 using OnlineTravelBooking.Middleware;
 using OnlineTravelBooking.Swagger;
 using System.Text;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
+using Microsoft.Extensions.Caching.Hybrid;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,21 +49,24 @@ builder.Services.AddCors(options =>
         p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
 
 //_______________________________________
-builder.Services.AddAuthentication(options => { 
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; 
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme; })
-    .AddJwtBearer(options => { 
-        options.TokenValidationParameters = new TokenValidationParameters 
-        { 
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
-            ValidateIssuerSigningKey = true, 
+            ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
-            ValidAudience = builder.Configuration["JwtSettings:Audience"], IssuerSigningKey = 
-    new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKEY"]!)) 
-        }; 
-    }); 
+            ValidAudience = builder.Configuration["JwtSettings:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKEY"]!))
+        };
+    });
 builder.Services.AddAuthorization();
 
 // ── Controllers ───────────────────────────────────────────────────────────────
@@ -76,8 +82,37 @@ builder.Services.AddControllers()
 
 builder.Services.AddTransient<ICurrentIUserService, CurrentUserService>();
 builder.Services.AddHttpContextAccessor();
-//builder.Services.AddSwaggerGen(options => 
-//            options.UseInlineDefinitionsForEnums());
+
+//______________RateLimitMiddleWare___________________________
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy("auth-fixed-window", context =>
+    {
+        var key = context.Connection.RemoteIpAddress?.ToString()
+                  ?? "Anonymous";
+
+        return RateLimitPartition.GetFixedWindowLimiter(key,
+           _ => new FixedWindowRateLimiterOptions
+           {
+               PermitLimit = 5,
+               AutoReplenishment = true,
+               QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+               Window = TimeSpan.FromSeconds(10),
+               QueueLimit = 0 //. don't put anything in queue and return to the customer 429 response
+           });
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
+//___________HybirdCashing_____________________________
+builder.Services.AddHybridCache(options =>
+{
+    options.DefaultEntryOptions = new HybridCacheEntryOptions
+    {
+        Expiration = TimeSpan.FromMinutes(30),
+        LocalCacheExpiration = TimeSpan.FromMinutes(5)
+    };
+});
 
 // ── Swagger ───────────────────────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
@@ -126,13 +161,12 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-
-
 var app = builder.Build();
 
 // ── Middleware Pipeline ───────────────────────────────────────────────────────
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseMiddleware<MeasuringExecutingTimeMiddleware>();
+app.UseRateLimiter();
 
 if (app.Environment.IsDevelopment())
 {

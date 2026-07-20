@@ -6,6 +6,7 @@ using Domain.Entities;
 using Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,11 +18,16 @@ namespace Application.Features.CarBookings.Handlers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ICurrentIUserService _currentIUser;
+        private readonly HybridCache _cache;
 
-        public CancelCarBookingHandler(IUnitOfWork unitOfWork, ICurrentIUserService currentIUser)
+        public CancelCarBookingHandler(
+            IUnitOfWork unitOfWork,
+            ICurrentIUserService currentIUser,
+            HybridCache cache)
         {
-            _unitOfWork = unitOfWork;
+            _unitOfWork   = unitOfWork;
             _currentIUser = currentIUser;
+            _cache        = cache;
         }
 
         public async Task<GenericResult<CancelCarBookingResponseDTO>> Handle(
@@ -48,6 +54,11 @@ namespace Application.Features.CarBookings.Handlers
             parentBooking.updated_at = DateTime.UtcNow;
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Evict stale cache entries so both the details and the user's list
+            // reflect the updated Cancelled status on the next fetch.
+            await _cache.RemoveAsync($"car-booking-details:{request.id}", cancellationToken);
+            await _cache.RemoveAsync($"my-car-bookings:{_currentIUser.UserId}", cancellationToken);
 
             return await Result.SuccessAsync<CancelCarBookingResponseDTO>(new CancelCarBookingResponseDTO
             {

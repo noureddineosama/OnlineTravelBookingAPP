@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -264,7 +264,7 @@ namespace Infrastructure.Migrations
                     location_id = table.Column<int>(type: "int", nullable: true),
                     is_email_verified = table.Column<bool>(type: "bit", nullable: false),
                     refreshToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    refresh_token_expiry = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    refresh_token_expiry = table.Column<DateTime>(type: "datetime2", nullable: false),
                     status = table.Column<string>(type: "varchar(20)", unicode: false, maxLength: 20, nullable: false, defaultValue: "unverified"),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "(sysutcdatetime())"),
                     CreatedBy = table.Column<long>(type: "bigint", nullable: false),

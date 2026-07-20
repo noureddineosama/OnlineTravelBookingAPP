@@ -19,7 +19,7 @@ namespace OnlineTravelBooking.Controllers;
 /// </summary>
 [Route("api/favorites")]
 [ApiController]
-[Authorize]
+[Authorize(Roles = "Passenger")]
 public sealed class FavoritesController : ControllerBase
 {
     private readonly ISender _mediator;
