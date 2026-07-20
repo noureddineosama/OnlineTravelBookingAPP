@@ -19,11 +19,15 @@ namespace Application.Features.HotelBooking.Handlers
     {
         private readonly IUnitOfWork unitOfWork;
         private readonly ICurrentIUserService currentIUser;
+        private readonly ICachService<hotel_booking> cachService;
 
-        public CancelHotelBookingHandler(IUnitOfWork unitOfWork, ICurrentIUserService currentIUser)
+        public CancelHotelBookingHandler(IUnitOfWork unitOfWork,
+                                         ICurrentIUserService currentIUser,
+                                         ICachService<hotel_booking> cachService) 
         {
             this.unitOfWork = unitOfWork;
             this.currentIUser = currentIUser;
+            this.cachService = cachService;
         }
         //. Cancelling the booking using the id for the hotel booking with steps: 
         /// <summary>
@@ -39,6 +43,8 @@ namespace Application.Features.HotelBooking.Handlers
 
             var hotel_booking_instance = unitOfWork.Repository<hotel_booking>();
             if(hotel_booking_instance == null)throw new ArgumentNullException(nameof(hotel_booking_instance));
+
+            await cachService.GetAsync("existing-hotel-booking-cancel", cancellationToken);
 
             var existing_hotel_booking = await hotel_booking_instance.GetByIdAsync(predicate: op => op.id == request.id &&
                                                                                               op.booking.status == "Active" &&
@@ -62,6 +68,7 @@ namespace Application.Features.HotelBooking.Handlers
             existing_hotel_booking.booking.updated_at = DateTime.UtcNow;
             existing_hotel_booking.booking.UpdatedBy = currentIUser.UserId;
 
+            await cachService.SetAsync("existing-hotel-booking-cancel", existing_hotel_booking, cancellationToken);
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
 

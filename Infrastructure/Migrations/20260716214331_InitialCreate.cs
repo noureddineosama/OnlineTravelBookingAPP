@@ -264,11 +264,7 @@ namespace Infrastructure.Migrations
                     location_id = table.Column<int>(type: "int", nullable: true),
                     is_email_verified = table.Column<bool>(type: "bit", nullable: false),
                     refreshToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
-<<<<<<<< HEAD:Infrastructure/Migrations/20260716214331_InitialCreate.cs
-                    refresh_token_expiry = table.Column<DateTime>(type: "datetime2", nullable: false),
-========
                     refresh_token_expiry = table.Column<string>(type: "nvarchar(max)", nullable: true),
->>>>>>>> main:Infrastructure/Migrations/20260718153223_Initial.cs
                     status = table.Column<string>(type: "varchar(20)", unicode: false, maxLength: 20, nullable: false, defaultValue: "unverified"),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "(sysutcdatetime())"),
                     CreatedBy = table.Column<long>(type: "bigint", nullable: false),
@@ -463,7 +459,7 @@ namespace Infrastructure.Migrations
                     booking_number = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
                     user_id = table.Column<long>(type: "bigint", nullable: false),
                     category = table.Column<string>(type: "varchar(10)", unicode: false, maxLength: 10, nullable: false),
-                    status = table.Column<string>(type: "varchar(10)", unicode: false, maxLength: 10, nullable: false, defaultValue: "pending"),
+                    status = table.Column<int>(type: "int", unicode: false, maxLength: 10, nullable: false, defaultValue: 2),
                     IsCancelled = table.Column<bool>(type: "bit", nullable: true),
                     subtotal = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
                     discount_amount = table.Column<decimal>(type: "decimal(10,2)", nullable: false),

@@ -109,7 +109,7 @@ namespace Application.Features.CarBookings.Handlers
                 booking_number = BookingNumber.GeneratBookingNumber(),
                 user_id = _currentIUser.UserId,
                 category = "car",
-                status = Domain.Enums.BookingStatus.Confirmed,
+                status = Domain.Enums.BookingStatus.Confirmed.ToString(),
                 subtotal = subtotal,
                 discount_amount = 0m,
                 total_price = totalPrice,

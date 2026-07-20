@@ -5,12 +5,14 @@ using Application.Features.HotelBooking.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace OnlineTravelBooking.Controllers
 {
     [ApiController]
     [Route("api/hotel-bookings")]
     [Authorize]
+    [EnableRateLimiting("auth-fixed-window")] 
     public class HotelBookingController : ControllerBase
     {
         private readonly IMediator mediator;

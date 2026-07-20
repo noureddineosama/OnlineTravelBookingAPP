@@ -15,12 +15,15 @@ namespace Application.Features.HotelAvailability.Handlers
     {
         private readonly IUnitOfWork unitOfWork;
         private readonly ICheckAvailabilityRoom checkAvailability;
+        private readonly Common.Interfaces.ICachService<hotel_booking> cachService;
 
         public CheckRoomAvailabilityHandler(IUnitOfWork unitOfWork, 
-                                            ICheckAvailabilityRoom checkAvailability)
+                                            ICheckAvailabilityRoom checkAvailability,
+                                            ICachService<hotel_booking> cachService )
         {
             this.unitOfWork = unitOfWork;
             this.checkAvailability = checkAvailability;
+            this.cachService = cachService;
         }
 
         //. this service or mothod for if the user asking for a specific room and is the room is available in that time or not
@@ -33,7 +36,9 @@ namespace Application.Features.HotelAvailability.Handlers
             if (room_instance == null)
                 throw new ArgumentNullException(nameof(instance));
 
-            var result = await instance.GetByIdAsync(predicate: op => op.room.id == request.requestDTO.room_id, cancellationToken);
+            var result = await instance.GetByIdAsync(predicate: op => op.room.id == request.requestDTO.room_id && 
+                                                            op.booking.status == "Active" && op.booking.IsDeleted == false&& 
+                                                            op.booking.IsCancelled == false, cancellationToken);
             if(result == null)
                 return await Result.FailureAsync<CheckRoomAvailabilityResponseDTO>(nameof(result));
 

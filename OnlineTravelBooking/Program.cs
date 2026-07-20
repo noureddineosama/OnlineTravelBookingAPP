@@ -1,26 +1,44 @@
 using Amazon;
-using Amazon.Runtime;
 using Amazon.S3;
 using Application;
 using Application.Common.Interfaces;
 using Infrastructure;
 using Infrastructure.AWSSettings;
-using Infrastructure.Security;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Newtonsoft.Json.Serialization;
 using OnlineTravelBooking.Middleware;
 using OnlineTravelBooking.Swagger;
 using System.Text;
-using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ── Clean Architecture DI ─────────────────────────────────────────────────────
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+//.----Fixed Rate Limiting Registeration 
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy("auth-fixed-window", context =>
+    {
+        var key = context.Connection.RemoteIpAddress?.ToString()
+                  ?? "Anonymous";
+
+        return RateLimitPartition.GetFixedWindowLimiter(key,
+           _ => new FixedWindowRateLimiterOptions
+           {
+               PermitLimit = 5,
+               AutoReplenishment = true,
+               QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+               Window = TimeSpan.FromSeconds(10),
+               QueueLimit = 0 //. don't put anything in queue and return to the customer 429 response
+           });
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
 
 // ── CORS ──────────────────────────────────────────────────────
 builder.Services.AddCors(options =>
@@ -33,7 +51,13 @@ builder.Services.AddAuthentication(options => {
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme; })
     .AddJwtBearer(options => { 
         options.TokenValidationParameters = new TokenValidationParameters 
-        { ValidateIssuer = true, ValidateAudience = true, ValidateLifetime = true, ValidateIssuerSigningKey = true, ValidIssuer = builder.Configuration["JwtSettings:Issuer"], ValidAudience = builder.Configuration["JwtSettings:Audience"], IssuerSigningKey = 
+        { 
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true, 
+            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+            ValidAudience = builder.Configuration["JwtSettings:Audience"], IssuerSigningKey = 
     new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKEY"]!)) 
         }; 
     }); 
@@ -102,21 +126,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-//. ----------------------------------
-builder.Services.AddAuthentication(options =>
-    { 
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme; })
-    .AddJwtBearer(options => 
-    { 
-        options.TokenValidationParameters = new TokenValidationParameters 
-        { 
-            ValidateIssuer = true, 
-            ValidateAudience = true, 
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["JwtSettings:Issuer"], ValidAudience = builder.Configuration["JwtSettings:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKEY"]!)) }; });
+
 
 var app = builder.Build();
 

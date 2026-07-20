@@ -5,6 +5,7 @@ using Application.Features.HotelBooking.Queries;
 using Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore.Storage.Json;
+using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -14,19 +15,27 @@ namespace Application.Features.HotelBooking.Handlers
     public sealed class HotelBookingDetailsHandler : IRequestHandler<HotelBookingDetailsQuery, GenericResult<HotelBookingDetailsResponseDTO>>
     {
         private readonly IUnitOfWork unitOfWork;
+        private readonly ICachService<hotel_booking> cacheService;
 
-        public HotelBookingDetailsHandler(IUnitOfWork unitOfWork)
+        public HotelBookingDetailsHandler(IUnitOfWork unitOfWork,
+                                          ICachService<hotel_booking> cacheService)
         {
             this.unitOfWork = unitOfWork;
+            this.cacheService = cacheService;
         }
         public async Task<GenericResult<HotelBookingDetailsResponseDTO>> Handle(HotelBookingDetailsQuery request, CancellationToken cancellationToken)
         {
             var instace_Of_hotel_booking = unitOfWork.Repository<hotel_booking>();
             if (instace_Of_hotel_booking == null)
                 throw new ArgumentNullException("Something invalid occurred!!");
+
+            await cacheService.GetAsync("existing-booking", cancellationToken);
+
             var existing_booking = await instace_Of_hotel_booking.GetByIdAsync(predicate: op => op.id == request.id);
             if (existing_booking == null)
                 return await Result.FailureAsync<HotelBookingDetailsResponseDTO>("Booking not found.");
+
+            await cacheService.SetAsync("existing-booking", existing_booking, cancellationToken);
 
             return await Result.SuccessAsync<HotelBookingDetailsResponseDTO>(new HotelBookingDetailsResponseDTO
             {

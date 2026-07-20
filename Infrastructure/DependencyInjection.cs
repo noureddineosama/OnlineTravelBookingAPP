@@ -1,8 +1,11 @@
+using Amazon;
+using Amazon.S3;
 using Application.Common.Interfaces;
-using Application.Services;
-using Infrastructure.Persistence;
 using Application.Common.Settings;
+using Application.Services;
+using Infrastructure.AWSSettings;
 using Infrastructure.Payments;
+using Infrastructure.Persistence;
 using Infrastructure.Security;
 using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +31,11 @@ public static class DependencyInjection
         services.AddTransient<ICheckAvailabilityRoom, CheckAvailabilityRoom>();
         services.AddTransient<ICalculateNumberOfNights, CalculateNumberOfNights>();
         services.AddTransient<IGenerateSlug, GenerateSlug>();
+        services.AddTransient(typeof(ICachService<>), typeof(CachService<>));
+
+        //. AWS registeration 
+
+        services.AddAWSService<IAmazonS3>();
 
         //. Images Service Registeration's DI 
         services.AddTransient<IAWSImageService, AWSImageService>();
@@ -37,6 +45,7 @@ public static class DependencyInjection
         services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
         services.AddScoped<IHotelBookingRepository, HotelBookingRepository>();
 
+        services.AddMemoryCache();
         // ── Security & JWT ───────────────────────────────────
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();

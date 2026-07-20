@@ -3,26 +3,37 @@ using Application.Common.Patterns;
 using Application.Features.Rooms.DTOs;
 using Application.Features.Rooms.Queries;
 using Domain.Entities;
+using FluentValidation.Results;
 using MediatR;
+using Microsoft.Extensions.Caching.Hybrid;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Application.Features.Rooms.Handlers
 {
-    public class HoteRoomsHandler : IRequestHandler<GetHotelRoomsQuery, PaginatedResult<GetHotelRoomsResponseDTO>>
+    public class HotelRoomsHandler : IRequestHandler<GetHotelRoomsQuery, PaginatedResult<GetHotelRoomsResponseDTO>>
     {
         private readonly IUnitOfWork unitOfWork;
+        private readonly ICachService<PaginatedResult<GetHotelRoomsResponseDTO>> cachService;
 
-        public HoteRoomsHandler(IUnitOfWork unitOfWork)
+        public HotelRoomsHandler(IUnitOfWork unitOfWork, 
+                                ICachService<PaginatedResult<GetHotelRoomsResponseDTO>> cachService)
         {
             this.unitOfWork = unitOfWork;
+            this.cachService = cachService;
         }
         public async Task<PaginatedResult<GetHotelRoomsResponseDTO>> Handle(GetHotelRoomsQuery request, CancellationToken cancellationToken)
         {
             var room_instance = unitOfWork.Repository<room>();
             if(room_instance == null) 
                 throw new ArgumentNullException(nameof(room_instance));
+
+            var cach_result = await cachService.GetAsync($"get-hotels-rooms{request.page}-" +
+                                                         $"{request.pageSize}-" +
+                                                         $"{request.hotelId}-", cancellationToken);
+            if (cach_result != null)
+                return cach_result;
 
             var result = await room_instance.GetPaginationAsync(predicate: op => op.hotel_id == request.hotelId
                                                                                  && op.IsDeleted == false,
@@ -40,6 +51,11 @@ namespace Application.Features.Rooms.Handlers
                                                                  pageSize: request.pageSize,
                                                                  cancellationToken: cancellationToken,
                                                                  includes: op => op.room_images);
+
+            await cachService.SetAsync($"get-hotels-rooms{request.page}-" +
+                                                         $"{request.pageSize}-" +
+                                                         $"{request.hotelId}-", result, cancellationToken);
+            
             return result;
         }
     }

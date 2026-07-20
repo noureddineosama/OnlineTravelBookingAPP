@@ -23,18 +23,21 @@ namespace Application.Features.HotelBooking.Handlers
         private readonly ICalculateNightPrice calculateNightPrice;
         private readonly ILogger<CreateHotelBookingHandler> logger;
         private readonly IMapper mapper;
+        private readonly ICachService<hotel_booking> cachService;
 
         public CreateHotelBookingHandler(IUnitOfWork unitOfWork,  
                                          ICheckAvailabilityRoom checkAvailability,
                                          ICalculateNightPrice calculateNightPrice,
                                          ILogger<CreateHotelBookingHandler> logger,
-                                         IMapper mapper)
+                                         IMapper mapper, 
+                                         ICachService<hotel_booking> cachService)
         {
             this.unitOfWork = unitOfWork;
             this.checkAvailability = checkAvailability;
             this.calculateNightPrice = calculateNightPrice;
             this.logger = logger;
             this.mapper = mapper;
+            this.cachService = cachService;
         }
 
         //. first: Validate the booking for the same check in and out date in room available table 
@@ -49,6 +52,8 @@ namespace Application.Features.HotelBooking.Handlers
             var hotel_booking_instance = unitOfWork.Repository<hotel_booking>();
             if (hotel_booking_instance == null)
                 throw new ArgumentNullException("Something invalid occurred ");
+
+            await cachService.GetAsync("existing-hotel-booking", cancellationToken);
 
             //. first validating if there is booking for this data  
             var existing_booking_Using_Room_Id = await hotel_booking_instance.GetByIdAsync(op => op.room_id == request.requestDTO.room_id && 
@@ -71,6 +76,8 @@ namespace Application.Features.HotelBooking.Handlers
                 if (await checkAvailability.ValidateDatesAsync(check_room_aval_request, existing_booking_Using_Room_Id, cancellationToken))
                     return await Result.FailureAsync<CreateHotelBookingResponseDTO>("Room can't be booked");
             }
+
+            await cachService.SetAsync("existing-hotel-booking", existing_booking_Using_Room_Id, cancellationToken);
 
             var room_available_instance = unitOfWork.Repository<room_availability>();
             if(room_available_instance == null)
