@@ -36,6 +36,13 @@ namespace Application.Features.HotelBooking.Handlers
             this.logger = logger;
             this.mapper = mapper;
         }
+
+        //. first: Validate the booking for the same check in and out date in room available table 
+        //. after that if didn't exist, that's meaning that i will validate the conflicts for the booking 
+        //. if exist i will reject this booking 
+        //. if not exist that's meaning that i will create a new room_aval record from check_in time and check_out and create this booking 
+        //. but create parent booking and after that create the hotel_booking 
+        //. first problem we will use the SaveChangesAsync two times --> when we create a new room
         public async Task<GenericResult<CreateHotelBookingResponseDTO>> Handle(CreateHotelBookingCommand request,
                                                                                CancellationToken cancellationToken)
         {
@@ -43,39 +50,75 @@ namespace Application.Features.HotelBooking.Handlers
             if (hotel_booking_instance == null)
                 throw new ArgumentNullException("Something invalid occurred ");
 
-            var existing_booing_Using_Room_Id = await hotel_booking_instance.GetByIdAsync(op => op.room_id == request.requestDTO.rooom_id);
-            if (existing_booing_Using_Room_Id == null)
-                return await Result.FailureAsync<CreateHotelBookingResponseDTO>("Room not found");
+            //. first validating if there is booking for this data  
+            var existing_booking_Using_Room_Id = await hotel_booking_instance.GetByIdAsync(op => op.room_id == request.requestDTO.room_id && 
+                                                                                                 op.check_out_date > op.check_in_date &&
+                                                                                                 op.check_in_date == request.requestDTO.check_in_date&& 
+                                                                                                 op.check_out_date == request.requestDTO.check_out_date && 
+                                                                                                 op.room.status == "Active");
+            if (existing_booking_Using_Room_Id != null)
+                return await Result.FailureAsync<CreateHotelBookingResponseDTO>("Room is not Available");
 
-            var data_mapped = mapper.Map<CheckRoomAvailabilityRequestDTO>(request.requestDTO);
 
-            if (!await checkAvailability.ValidateDatesAsync(data_mapped, existing_booing_Using_Room_Id, cancellationToken))
-                return await Result.FailureAsync<CreateHotelBookingResponseDTO>("Room can't be booked");
+            var check_room_aval_request = mapper.Map<CheckRoomAvailabilityRequestDTO>(request.requestDTO);
 
+            //. and after that validate if there are conflicts existing with the booking 
+            if (await hotel_booking_instance.AnyAsync(op => op.room_id == request.requestDTO.room_id &&
+                                                      op.check_out_date > op.check_in_date &&
+                                                      op.check_in_date < request.requestDTO.check_in_date
+                                                      , cancellationToken))
+            {
+                if (await checkAvailability.ValidateDatesAsync(check_room_aval_request, existing_booking_Using_Room_Id, cancellationToken))
+                    return await Result.FailureAsync<CreateHotelBookingResponseDTO>("Room can't be booked");
+            }
+
+            var room_available_instance = unitOfWork.Repository<room_availability>();
+            if(room_available_instance == null)
+                throw new ArgumentNullException(nameof(room_available_instance));
+
+            //. room created here due to if there are no bookings in the table will give me an exception of null reference 
             var room = unitOfWork.Repository<room>();
-            if (room == null)
-                throw new ArgumentNullException("Something invalid occurred");
+            if (room_available_instance == null)
+                throw new ArgumentNullException(nameof(room_available_instance));
 
-            //.Getting Room using the id that will be inputed from the user request
-            var bringing_room_using_room_id = await room.GetByIdAsync(predicate: op => op.id == request.requestDTO.rooom_id);
-            if (bringing_room_using_room_id == null)
-                return await Result.FailureAsync<CreateHotelBookingResponseDTO>("Room not found");
+            var existing_room = await room.GetByIdAsync(op => op.id == request.requestDTO.room_id 
+                                                            && op.status == "Active"
+                                                            ,cancellationToken);
+            if (existing_room == null)
+                return await Result.FailureAsync<CreateHotelBookingResponseDTO>("Room not found. ");
 
-            if (bringing_room_using_room_id.status != "active")
-                return await Result.FailureAsync<CreateHotelBookingResponseDTO>("Room is not active now.");
+            //.Create room available records 
+            var room_availability_instance = unitOfWork.Repository<room_availability>();
+            if (room_availability_instance is null) throw new ArgumentNullException(nameof(room_availability_instance));
 
-            if (request.requestDTO.quantity > await checkAvailability.CalculateRemainingRooms(existing_booing_Using_Room_Id, cancellationToken))
-                return await Result.FailureAsync<CreateHotelBookingResponseDTO>("This quantity is not available right now.");
+            var room_availabilities = new List<room_availability>();
 
-            //. Creating new hotel booking
+            //. from check in date to before last day of the check out due to we don't booking the leaving day 
+            for (var day = request.requestDTO.check_in_date; day < request.requestDTO.check_out_date; day = day.AddDays(1))
+            {
+                room_availabilities.Add(new room_availability
+                {
+                    date = day,
+                    IsAvailable = false, //. due to this booking will be booked now 
+                    price_override = existing_room.price_per_night,
+                    room_id = existing_room.id
+                });
+            }
+
+            await room_availability_instance.AddBulkDataAsync(room_availabilities, cancellationToken);
+
+            //. Creating new hotel booking 
+
             var new_hotel_booking = mapper.Map<hotel_booking>(request.requestDTO);
 
             //. The Price per night of hotel is the same price for the price per night for the room
-            new_hotel_booking.price_per_night = bringing_room_using_room_id.price_per_night;
+            new_hotel_booking.price_per_night = existing_room.price_per_night;
 
             //. calculate total price 
 
-            var calculate_total_price = await calculateNightPrice.TotalBookingPrice(new_hotel_booking, cancellationToken);
+            var calculate_total_price = await calculateNightPrice.TotalBookingPrice(existing_room.price_per_night,
+                                                       request.requestDTO.check_in_date, request.requestDTO.check_out_date,
+                                                       request.requestDTO.quantity, cancellationToken);
             if (calculate_total_price == 0)
             {
                 logger.LogWarning("Take a look in your financial class `calculate Night Price or Total Price`");
@@ -83,10 +126,11 @@ namespace Application.Features.HotelBooking.Handlers
             }
             //.Create Booking 
 
+            //. there is booking will be created and after that we will add in it the totalPrice and subprice and display it on the customer
 
             //. Create Hotel Booking 
             await hotel_booking_instance.AddAsync(new_hotel_booking);
-            await unitOfWork.SaveChangesAsync();
+            await unitOfWork.SaveChangesAsync(cancellationToken);
 
             return await Result.SuccessAsync<CreateHotelBookingResponseDTO>(new CreateHotelBookingResponseDTO
             {

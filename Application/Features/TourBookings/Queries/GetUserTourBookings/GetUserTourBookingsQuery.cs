@@ -74,7 +74,7 @@ public sealed class GetUserTourBookingsQueryHandler
 
         if (!string.IsNullOrWhiteSpace(request.Status) &&
             Enum.TryParse<BookingStatus>(request.Status, ignoreCase: true, out var statusEnum))
-            query = query.Where(b => b.status == statusEnum);
+            query = query.Where(b => b.status == statusEnum.ToString());
 
         var paged = await query.ToPagedResultAsync(request, cancellationToken);
 

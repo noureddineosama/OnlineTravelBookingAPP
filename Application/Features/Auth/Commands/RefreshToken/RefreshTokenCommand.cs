@@ -45,7 +45,7 @@ public sealed class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCom
 
         if (user is null)
         {
-            return ApiResponse<AuthResponse>.Fail("Invalid refresh token.", 401);
+            return ApiResponse<AuthResponse>.Fail("Invalid refresh token.", statusCode: 400);
         }
 
         // 2. Check if token is expired
@@ -53,10 +53,10 @@ public sealed class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCom
         {
             // Clear expired token details
             user.refreshToken = null;
-            user.refresh_token_expiry = null;
+            user.refresh_token_expiry = default ;
             await _context.SaveChangesAsync(cancellationToken);
 
-            return ApiResponse<AuthResponse>.Fail("Refresh token has expired. Please login again.", 401);
+            return ApiResponse<AuthResponse>.Fail("Refresh token has expired. Please login again.", statusCode: 400);
         }
 
         // 3. Generate new JWT token and rotate refresh token
@@ -64,11 +64,11 @@ public sealed class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCom
         var newRefreshToken = Guid.NewGuid().ToString("N");
 
         user.refreshToken = newRefreshToken;
-        user.refresh_token_expiry = DateTime.UtcNow.AddDays(7).ToString("o");
+        user.refresh_token_expiry = DateTime.UtcNow.AddDays(7);
         await _context.SaveChangesAsync(cancellationToken);
 
         return ApiResponse<AuthResponse>.Ok(
-            new AuthResponse(newAccessToken, user.email, user.name),
+             new AuthResponse(newAccessToken, user.email, user.name),
             "Token refreshed successfully."
         );
     }

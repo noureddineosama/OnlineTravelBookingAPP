@@ -8,8 +8,6 @@ namespace Application.Features.HotelAvailability.DTOs
     {
         public bool IsAvailable { get; set; }
 
-        public int RemainingRooms { get; set; }
-
         public string Message { get; set; }
     }
 }

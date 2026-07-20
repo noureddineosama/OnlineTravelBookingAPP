@@ -29,8 +29,13 @@ public static class DependencyInjection
         services.AddTransient<ICalculateNumberOfNights, CalculateNumberOfNights>();
         services.AddTransient<IGenerateSlug, GenerateSlug>();
 
+        //. Images Service Registeration's DI 
+        services.AddTransient<IAWSImageService, AWSImageService>();
+        services.AddTransient<IValidateRequest, ValidateRequest>();
+
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
+        services.AddScoped<IHotelBookingRepository, HotelBookingRepository>();
 
         // ── Security & JWT ───────────────────────────────────
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));

@@ -8,8 +8,8 @@ namespace Application.Features.Rooms.DTOs
     {
         public DateOnly Date { get; set; }
 
-        public int AvailableUnits { get; set; }
-
         public decimal? PriceOverride { get; set; }
+        public bool IsAvailable { get; set; }
+
     }
 }

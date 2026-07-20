@@ -101,7 +101,7 @@ public sealed class CreateTourBookingCommandHandler
             booking_number  = bookingNumber,
             user_id         = request.UserId,
             category        = "tour",
-            status          = BookingStatus.Confirmed,
+            status          = BookingStatus.Confirmed.ToString(),
             subtotal        = subtotal,
             discount_amount = 0m,
             total_price     = totalPrice,

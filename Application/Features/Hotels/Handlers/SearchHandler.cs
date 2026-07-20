@@ -36,9 +36,9 @@ namespace Application.Features.Hotels.Handlers
 
             var result = await instance.GetPaginationAsync(predicate: op => op.location.city == request.requestdTO.City &&
                                                                         op.location_id == request.requestdTO.location_id && 
-                                                                        op.check_in_time == request.requestdTO.CheckInDate &&
+                                                                        op.check_in_time >= request.requestdTO.CheckInDate &&
                                                                         op.check_out_time == request.requestdTO.CheckOutDate &&
-                                                                        op.star_rating == request.requestdTO.StarRating,
+                                                                        op.star_rating >= request.requestdTO.StarRating,
                                                            selector: op => new SearchHotelResponseDTO
                                                            {
                                                                hote_id = op.id,
@@ -49,8 +49,8 @@ namespace Application.Features.Hotels.Handlers
                                                                Slug = op.slug,
                                                                StarRating = op.star_rating,
                                                                Available = op.rooms
-                                                                            .SelectMany(op => op.room_availabilities
-                                                                            .Select(op => op.available_units)).Count() < 1  //. Available for room not for  hotel
+                                                                            .SelectMany(op => op.room_availabilities.Where(op => op.room_id == op.room_id)
+                                                                            .Select(op => op.IsAvailable)).FirstOrDefault()  //. Available for room not for  hotel
                                                            },
                                                            includes: op => op.rooms,
                                                            cancellationToken: cancellationToken,

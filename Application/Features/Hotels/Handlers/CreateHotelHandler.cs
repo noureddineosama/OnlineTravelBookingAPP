@@ -34,20 +34,27 @@ namespace Application.Features.Hotels.Handlers
             if (location_instance == null)
                 throw new ArgumentNullException(nameof(location_instance));
 
-            await location_instance.AddAsync(new location
+            var location = new location
             {
                 address_line = request.requestDTO.location.address_line,
                 city = request.requestDTO.location.city,
                 country = request.requestDTO.location.country,
                 latitude = request.requestDTO.location.latitude,
                 longitude = request.requestDTO.location.longitude,
-            });
+            };
+
+            //. this will the instance in memory not in db 
+            await location_instance.AddAsync(location);
+            //. must here saving the changes to use the location id and after that we will can to create a new hotel
+            await unitOfWork.SaveChangesAsync();
+
             var hotel = new hotel
             {
                 check_in_time = request.requestDTO.CheckInTime,
                 check_out_time = request.requestDTO.CheckOutTime,
                 description = request.requestDTO.Description,
                 created_at = DateTime.UtcNow,
+                location_id = location.id,
                 name = request.requestDTO.Name,
                 star_rating = request.requestDTO.StarRating,
                 main_image_url = default,
@@ -56,7 +63,7 @@ namespace Application.Features.Hotels.Handlers
             hotel.slug = generateSlug.generateSlug(hotel);
             
 
-            if (!await hotel_instance.AnyAsync(op => op.slug == hotel.slug, cancellationToken))
+            if (await hotel_instance.AnyAsync(op => op.slug == hotel.slug, cancellationToken))
                 return await Result.FailureAsync<CreateHotelResponseDTO>("Slug is already exist. ");
 
             await hotel_instance.AddAsync(hotel);
@@ -69,7 +76,7 @@ namespace Application.Features.Hotels.Handlers
                 Slug = hotel.slug,
                 CreatedAt = hotel.created_at,
                 Status = hotel.status
-            });
+            }, message: "Hotel created successfully. ");
         }
     }
 }

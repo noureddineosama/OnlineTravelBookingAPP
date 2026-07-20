@@ -29,23 +29,21 @@ namespace Application.Features.HotelAvailability.Handlers
             var instance = unitOfWork.Repository<hotel_booking>();
             if(instance == null)
                 throw new ArgumentNullException(nameof(instance));
+            var room_instance = unitOfWork.Repository<room>();
+            if (room_instance == null)
+                throw new ArgumentNullException(nameof(instance));
 
-            var result = await instance.GetByIdAsync(predicate: op => op.room_id == request.requestDTO.RoomId, cancellationToken);
+            var result = await instance.GetByIdAsync(predicate: op => op.room.id == request.requestDTO.room_id, cancellationToken);
             if(result == null)
                 return await Result.FailureAsync<CheckRoomAvailabilityResponseDTO>(nameof(result));
 
             if (!await checkAvailability.ValidateDatesAsync(request.requestDTO, result, cancellationToken))
                 return await Result.FailureAsync<CheckRoomAvailabilityResponseDTO>("Room is not available now.");
 
-            if (await checkAvailability.CalculateRemainingRooms(result, cancellationToken) == 0)
-                return await Result.FailureAsync<CheckRoomAvailabilityResponseDTO>("You can not book this booking");
-
             return await Result.SuccessAsync<CheckRoomAvailabilityResponseDTO>(new CheckRoomAvailabilityResponseDTO
             {
                 IsAvailable = true,
                 Message = "Room is Available",
-                //.here you need to know the number of the rooms that will be available in the time that the customer enetered
-                RemainingRooms = await checkAvailability.CalculateRemainingRooms(result, cancellationToken)
             });
         }
     }

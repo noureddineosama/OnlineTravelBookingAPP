@@ -6,7 +6,7 @@ namespace Application.Features.HotelBooking.DTOs
 {
     public class CreateHotelBookingRequestDTO
     {
-        public long rooom_id { get; set; }
+        public long room_id { get; set; }
 
         public DateOnly check_in_date { get; set; }
 

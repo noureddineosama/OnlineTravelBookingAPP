@@ -4,18 +4,23 @@ using Application.Features.HotelAvailability.Queries;
 using Application.Features.Hotels.Commands;
 using Application.Features.Hotels.DTOs;
 using Application.Features.Hotels.Queries;
+using Application.Features.Images.DTOs;
+using Application.Features.Images.HotelImages.Commands;
 using Application.Features.Rooms.Commands;
 using Application.Features.Rooms.DTOs;
 using Application.Features.Rooms.Queries;
+using Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OnlineTravelBooking.DTOs;
+using System.Reflection.Metadata;
 
 namespace OnlineTravelBooking.Controllers
 {
     [ApiController]
     [Route("api/hotels")]
-    [Authorize]
+    //[Authorize]
     public class HotelController : ControllerBase
     {
         private readonly IMediator mediator;
@@ -46,8 +51,12 @@ namespace OnlineTravelBooking.Controllers
         public async Task<ActionResult<PaginatedResult<SearchHotelResponseDTO>>> GetAllHotelsAsyc([FromQuery] GetHotelsRequestDTO requestDTO,CancellationToken cancellationToken)
         {
             var result = await mediator.Send(new GetPagedHotelsQuery(requestDTO), cancellationToken);
-            if (result == null)
+            if (!result.IsSuccess)
+            {
+                if (result.Data == null)
+                    return NotFound(result.Data);
                 return BadRequest(result);
+            }
             return Ok(result);
         }
 
@@ -60,6 +69,29 @@ namespace OnlineTravelBooking.Controllers
                                                                                                 CancellationToken cancellationToken)
         {
             var result = await mediator.Send(new CreateHotelCommand(request), cancellationToken);
+            if (!result.IsSuccess)
+                return BadRequest(result);
+            return Ok(result);
+        }
+
+        [HttpPost("{id}/images")]
+        [ProducesResponseType(typeof(GenericResult<IReadOnlyCollection<UploadImageResponseDTO>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<GenericResult<IReadOnlyCollection<UploadImageResponseDTO>>>> UploadImageAsync(long id,[FromForm]UplodImageRequestControllerDTO request, 
+                                                                                                                    CancellationToken cancellationToken)
+        {
+            if (!request.images.Any())
+                return BadRequest(request.images);
+            var data_mapped = request.images.Select(image => new UploadImageRequestDTO
+            {
+                FileStream = image.OpenReadStream(),
+                ContentType = image.ContentType,
+                FileName = image.Name,
+                FolderName = ImageFolder.Hotels.ToString()
+            }).ToList();
+
+            var result = await mediator.Send(new CreateHotelImageCommand(id,data_mapped), cancellationToken);
             if (!result.IsSuccess)
                 return BadRequest(result);
             return Ok(result);

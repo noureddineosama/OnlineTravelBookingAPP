@@ -27,7 +27,8 @@ namespace Application.Features.Hotels.Handlers
                 throw new ArgumentNullException(nameof(instance));
             }
 
-            var result = await instance.GetSelectorAsync(predicate: op => op.id == request.Id,
+            var result = await instance.GetSelectorAsync(predicate: op => op.id == request.Id && op.IsDeleted == false &&
+                                                                     op.status == "Active",
                                                          selector: op => new HotelDetailsResponseDTO
                                                          {
                                                              Id = request.Id,
@@ -63,10 +64,10 @@ namespace Application.Features.Hotels.Handlers
                                                                  ImageUrl = img.url
                                                              }).ToList(),
 
-                                                         }, cancellationToken, includes: op => op.rooms);
+                                                         }, cancellationToken);
 
             if (result == null)
-                return await Result.FailureAsync<HotelDetailsResponseDTO>("Proccess Failed!!");
+                return await Result.FailureAsync<HotelDetailsResponseDTO>("Validate Failed!!");
 
             return await Result.SuccessAsync(result, "Data Recieved Successfully");
         }

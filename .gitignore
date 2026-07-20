@@ -71,3 +71,4 @@ package-lock.json
 
 # Postman collections
 *.postman_collection.json
+/Application/Features/Auth/Commands/Logout/LogoutCommand.cs

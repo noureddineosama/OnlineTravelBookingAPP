@@ -12,7 +12,7 @@ namespace OnlineTravelBooking.Controllers
 {
     [ApiController]
     [Route("api/rooms")]
-    [Authorize]
+    //[Authorize]
     public class RoomController : ControllerBase
     {
         private readonly IMediator mediator;
@@ -25,7 +25,7 @@ namespace OnlineTravelBooking.Controllers
         [HttpPost("hotels/{hotelId}/rooms")]
         [ProducesResponseType(typeof(GenericResult<CreateHotelResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<ActionResult<GenericResult<CreateHotelResponseDTO>>> AddNewRoomTOSpecificHotel(long hotelId,
                                                                                                          CreateRoomRequestDTO request,
                                                                                                          CancellationToken cancellationToken)
@@ -54,6 +54,7 @@ namespace OnlineTravelBooking.Controllers
         [HttpPut("{id}")]
         [ProducesResponseType(typeof(GenericResult<UpdateRoomResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<GenericResult<RoomDetailsResponseDTO>>> UpdateRoomeDetailsAsync(long id,
                                                                                                        UpdateRoomRequestDTO requestDTO, 
                                                                                                        CancellationToken cancellationToken)
@@ -67,6 +68,7 @@ namespace OnlineTravelBooking.Controllers
         [HttpPut("{id}/update-price")]
         [ProducesResponseType(typeof(GenericResult<string>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<GenericResult<string>>> UpdatePriceAsync(long id, UpdateRoomPriceRequestDTO requestDTO, CancellationToken cancellationToken)
         {
             var result = await mediator.Send(new UpdateRoomPriceCommand(id, requestDTO), cancellationToken);
@@ -78,6 +80,7 @@ namespace OnlineTravelBooking.Controllers
         [HttpPut("{id}/update-availability")]
         [ProducesResponseType(typeof(GenericResult<string>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<GenericResult<string>>> UpdateAvailabilityAsync(long id, UpdateAvailabilityRequestDTO requestDTO, CancellationToken cancellationToken)
         {
             var result = await mediator.Send(new UpdateAvailabilityCommand(id, requestDTO), cancellationToken);

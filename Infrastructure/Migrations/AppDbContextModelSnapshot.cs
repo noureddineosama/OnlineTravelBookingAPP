@@ -911,8 +911,8 @@ namespace Infrastructure.Migrations
                     b.Property<string>("refreshToken")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("refresh_token_expiry")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<DateTime>("refresh_token_expiry")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("role_id")
                         .HasColumnType("int");
@@ -1177,8 +1177,8 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("id"));
 
-                    b.Property<int>("available_units")
-                        .HasColumnType("int");
+                    b.Property<bool>("IsAvailable")
+                        .HasColumnType("bit");
 
                     b.Property<DateOnly>("date")
                         .HasColumnType("date");

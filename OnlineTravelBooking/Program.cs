@@ -1,11 +1,16 @@
+using Amazon;
+using Amazon.Runtime;
+using Amazon.S3;
 using Application;
 using Application.Common.Interfaces;
 using Infrastructure;
+using Infrastructure.AWSSettings;
 using Infrastructure.Security;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Newtonsoft.Json.Serialization;
 using OnlineTravelBooking.Middleware;
 using OnlineTravelBooking.Swagger;
 using System.Text;
@@ -96,6 +101,22 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
+
+//. ----------------------------------
+builder.Services.AddAuthentication(options =>
+    { 
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme; })
+    .AddJwtBearer(options => 
+    { 
+        options.TokenValidationParameters = new TokenValidationParameters 
+        { 
+            ValidateIssuer = true, 
+            ValidateAudience = true, 
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["JwtSettings:Issuer"], ValidAudience = builder.Configuration["JwtSettings:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKEY"]!)) }; });
 
 var app = builder.Build();
 

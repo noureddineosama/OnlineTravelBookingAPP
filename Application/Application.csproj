@@ -27,6 +27,8 @@
     <None Remove="Features\HotelImages\**" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Features\Images\HotelImages\Queries\" />
+    <Folder Include="Features\Images\RoomImages\Queries\" />
     <Folder Include="Features\Payments\Commands\HandleStripeWebhook\" />
   </ItemGroup>
 </Project>

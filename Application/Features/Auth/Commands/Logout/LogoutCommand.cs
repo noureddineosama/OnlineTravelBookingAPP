@@ -42,7 +42,7 @@ public sealed class LogoutCommandHandler : IRequestHandler<LogoutCommand, ApiRes
 
         // Invalidate the refresh token
         user.refreshToken = null;
-        user.refresh_token_expiry = null;
+        user.refresh_token_expiry = default;
 
         await _context.SaveChangesAsync(cancellationToken);
 

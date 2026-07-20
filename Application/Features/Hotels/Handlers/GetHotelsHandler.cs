@@ -53,10 +53,7 @@ namespace Application.Features.Hotels.Handlers
                                      cancellationToken);
 
             if (paginated_hotels_result == null)
-            {
                 logger.LogError("Something invalid occurred in Get Hotels Service or handler . ");
-                throw new ArgumentNullException("Something invalid occurred. ");
-            }
 
             return paginated_hotels_result;
         }

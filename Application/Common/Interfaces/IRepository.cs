@@ -15,7 +15,9 @@ public interface IRepository<T> where T : class
     Task<T?> GetByIdAsync(long id, CancellationToken ct = default);
     Task<List<T>> GetAllAsync(CancellationToken ct = default);
     IQueryable<T> Query();
+    Task AddBulkDataAsync(List<T> entity, CancellationToken cancellationToken);
     Task AddAsync(T entity, CancellationToken ct = default);
+    Task UpdateBulkDataAsync(List<T> entities, CancellationToken cancellationToken);
     void Update(T entity);
     void Remove(T entity);
     Task<bool> AnyAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken);

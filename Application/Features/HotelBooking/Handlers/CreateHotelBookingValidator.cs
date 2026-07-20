@@ -12,7 +12,8 @@ namespace Application.Features.HotelBooking.Handlers
     {
         public CreateHotelBookingValidator()
         {
-            RuleFor(x => x.requestDTO.rooom_id)
+            RuleFor(x => x.requestDTO.room_id)
+                .NotEqual(0)
                 .GreaterThan(0)
                 .WithMessage("Room Id must be greater than zero.");
 

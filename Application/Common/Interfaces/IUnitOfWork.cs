@@ -6,5 +6,6 @@ namespace Application.Common.Interfaces;
 public interface IUnitOfWork
 {
     IRepository<T> Repository<T>() where T : class;
+    IHotelBookingRepository hotelBookingRepository { get; }
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }
