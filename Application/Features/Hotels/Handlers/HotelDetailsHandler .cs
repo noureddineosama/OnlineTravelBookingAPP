@@ -47,25 +47,21 @@ namespace Application.Features.Hotels.Handlers
                                                                  Address = op.location.address_line,
                                                                  Id = op.location_id
                                                              },
-                                                             Rooms = op.rooms.Select(op => new RoomResponsedTO
+                                                             Rooms = op.rooms.Select(r => new RoomResponsedTO
                                                              {
-                                                                 IsAvailable = op.room_availabilities.Where(op => op.room_id == op.room_id).Select(op => op.IsAvailable).FirstOrDefault(),
-                                                                 MainImageUrl = op.hotel.main_image_url,
-                                                                 MaxAdults = op.hotel_bookings.Any()
-                                                                                         ? op.hotel_bookings.Max(x => x.guests_adults)
-                                                                                         : op.hotel_bookings.Select(op => op.guests_adults).FirstOrDefault(),
-                                                                 MaxChildren = op.hotel_bookings.Any()
-                                                                                                ? op.hotel_bookings.Max(op => op.guests_children)
-                                                                                                : op.hotel_bookings.Select(op => op.guests_children).FirstOrDefault()
-                                                                 ,
-                                                                 PricePerNight = op.price_per_night,
-                                                                 RoomId = op.id,
-                                                                 RoomName = op.name
+                                                                 AvailableRooms = r.room_availabilities.Sum(a => a.available_units),
+                                                                 IsAvailable = r.room_availabilities.Sum(a => a.available_units) > 0,
+                                                                 MainImageUrl = r.room_images.Select(op => op.url).FirstOrDefault(),
+                                                                 MaxAdults = r.occupancy_adults,
+                                                                 MaxChildren = r.occupancy_children,
+                                                                 PricePerNight = r.price_per_night,
+                                                                 RoomId = r.id,
+                                                                 RoomName = r.name
                                                              }).ToList(),
-                                                             Images = op.hotel_images.Select(op => new HotelImageResponseDTO
+                                                             Images = op.hotel_images.Select(img => new HotelImageResponseDTO
                                                              {
-                                                                 Id = op.id,
-                                                                 ImageUrl = op.url
+                                                                 Id = img.id,
+                                                                 ImageUrl = img.url
                                                              }).ToList(),
 
                                                          }, cancellationToken);

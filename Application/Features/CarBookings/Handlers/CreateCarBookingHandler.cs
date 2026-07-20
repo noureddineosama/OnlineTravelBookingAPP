@@ -119,7 +119,6 @@ namespace Application.Features.CarBookings.Handlers
             };
 
             await _unitOfWork.Repository<booking>().AddAsync(parentBooking, cancellationToken);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             // Create car booking
             var carBooking = new car_booking
@@ -134,7 +133,6 @@ namespace Application.Features.CarBookings.Handlers
             };
 
             await _unitOfWork.Repository<car_booking>().AddAsync(carBooking, cancellationToken);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             // Create car booking extras
             if (request.requestDTO.extras != null && request.requestDTO.extras.Count > 0)
@@ -155,9 +153,8 @@ namespace Application.Features.CarBookings.Handlers
                         await _unitOfWork.Repository<car_booking_extra>().AddAsync(bookingExtra, cancellationToken);
                     }
                 }
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
             }
-
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             // Load locations for response
             var pickupLocation = await _unitOfWork.Repository<location>()
                 .GetByIdAsync(request.requestDTO.pickup_location_id, cancellationToken);
