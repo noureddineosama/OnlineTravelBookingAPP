@@ -1,14 +1,16 @@
 using Application.Features.Auth.Commands.Login;
-using Application.Features.Auth.Commands.Register;
 using Application.Features.Auth.Commands.Logout;
+using Application.Features.Auth.Commands.Register;
+using Application.Features.Auth.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Application.Features.Auth.DTOs;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace OnlineTravelBooking.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[EnableRateLimiting("auth-fixed-window")]
 public sealed class AuthController : ControllerBase
 {
     private readonly ISender _mediator;

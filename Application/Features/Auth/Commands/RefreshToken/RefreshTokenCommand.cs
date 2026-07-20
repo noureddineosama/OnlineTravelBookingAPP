@@ -4,6 +4,7 @@ using Application.Features.Auth.DTOs;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,17 +28,23 @@ public sealed class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCom
 {
     private readonly IApplicationDbContext _context;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
+    private readonly HybridCache _cache;
 
     public RefreshTokenCommandHandler(
         IApplicationDbContext context,
-        IJwtTokenGenerator jwtTokenGenerator)
+        IJwtTokenGenerator jwtTokenGenerator,
+        HybridCache cache)
     {
         _context = context;
         _jwtTokenGenerator = jwtTokenGenerator;
+        _cache = cache;
     }
 
     public async Task<ApiResponse<AuthResponse>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
     {
+        // NOTE: refreshToken is a random GUID — not suitable as a cache key.
+        // We look it up from the DB, rotate it, and then evict the email-keyed profile.
+
         // 1. Find passenger with matching refresh token
         var user = await _context.passengers
             .Include(p => p.role)
@@ -66,6 +73,10 @@ public sealed class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCom
         user.refreshToken = newRefreshToken;
         user.refresh_token_expiry = DateTime.UtcNow.AddDays(7);
         await _context.SaveChangesAsync(cancellationToken);
+
+        // 4. Evict the cached profile — the passenger record has changed (new refresh token).
+        //    The next Login call will re-populate the cache from the DB.
+        await _cache.RemoveAsync($"passenger-email:{user.email}", cancellationToken);
 
         return ApiResponse<AuthResponse>.Ok(
              new AuthResponse(newAccessToken, user.email, user.name),

@@ -6,6 +6,7 @@ using Application.Features.CarBookings.DTOs;
 using Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -18,15 +19,18 @@ namespace Application.Features.CarBookings.Handlers
     public sealed class CreateCarBookingHandler 
         : IRequestHandler<CreateCarBookingCommand, GenericResult<CarBookingResponse>>
     {
+        private readonly HybridCache cash;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ICurrentIUserService _currentIUser;
         private readonly ILogger<CreateCarBookingHandler> _logger;
 
         public CreateCarBookingHandler(
+            HybridCache cash,
             IUnitOfWork unitOfWork,
             ICurrentIUserService currentIUser,
             ILogger<CreateCarBookingHandler> logger)
         {
+            this.cash = cash;
             _unitOfWork = unitOfWork;
             _currentIUser = currentIUser;
             _logger = logger;
@@ -208,6 +212,9 @@ namespace Application.Features.CarBookings.Handlers
                 Extras            = responseExtras,
                 CreatedAt         = parentBooking.created_at
             };
+
+            
+            await cash.RemoveAsync($"my-car-bookings:{_currentIUser.UserId}", cancellationToken);
 
             return await Result.SuccessAsync(response, "Car booking created successfully.");
         }

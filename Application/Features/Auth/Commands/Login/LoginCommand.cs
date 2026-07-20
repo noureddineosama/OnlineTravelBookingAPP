@@ -4,6 +4,7 @@ using Application.Features.Auth.DTOs;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace Application.Features.Auth.Commands.Login;
 
@@ -30,45 +31,81 @@ public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, ApiRespo
     private readonly IApplicationDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
+    private readonly HybridCache _cache;
+
+    private static readonly HybridCacheEntryOptions AuthCacheOptions = new()
+    {
+        Expiration = TimeSpan.FromMinutes(5),
+        LocalCacheExpiration = TimeSpan.FromMinutes(2)
+    };
 
     public LoginCommandHandler(
         IApplicationDbContext context,
         IPasswordHasher passwordHasher,
-        IJwtTokenGenerator jwtTokenGenerator)
+        IJwtTokenGenerator jwtTokenGenerator,
+        HybridCache cache)
     {
         _context = context;
         _passwordHasher = passwordHasher;
         _jwtTokenGenerator = jwtTokenGenerator;
+        _cache = cache;
     }
 
     public async Task<ApiResponse<AuthResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        var user = await _context.passengers
-            .Include(p => p.role)
-            .FirstOrDefaultAsync(p => p.email == request.Email, cancellationToken);
+        // Cache the passenger profile by email to avoid repeated DB round-trips.
+        // Only non-secret, auth-needed fields are stored in the cached profile.
+        var cacheKey = $"passenger-email:{request.Email}";
 
-        if (user is null)
-        {
+        var profile = await _cache.GetOrCreateAsync(
+            cacheKey,
+            async ct =>
+            {
+                var dbUser = await _context.passengers
+                    .Include(p => p.role)
+                    .FirstOrDefaultAsync(p => p.email == request.Email, ct);
+
+                if (dbUser is null) return null;
+
+                return new CachedPassengerProfile(
+                    dbUser.id,
+                    dbUser.email,
+                    dbUser.name,
+                    dbUser.password_hash ?? string.Empty,
+                    dbUser.role?.name
+                );
+            },
+            AuthCacheOptions,
+            cancellationToken: cancellationToken
+        );
+
+        if (profile is null)
             return ApiResponse<AuthResponse>.Fail("Invalid credentials.", 401);
-        }
 
-        if (string.IsNullOrEmpty(user.password_hash))
-        {
+        if (string.IsNullOrEmpty(profile.PasswordHash))
             return ApiResponse<AuthResponse>.Fail("Authentication method not supported for this account (no password set).", 400);
-        }
 
-        var isPasswordValid = _passwordHasher.VerifyPassword(request.Password, user.password_hash);
-
-        if (!isPasswordValid)
-        {
+        if (!_passwordHasher.VerifyPassword(request.Password, profile.PasswordHash))
             return ApiResponse<AuthResponse>.Fail("Invalid credentials.", 401);
-        }
 
-        var token = _jwtTokenGenerator.GenerateToken(user);
+        // Build a lightweight passenger object so the token generator can consume it
+        var tokenUser = new Domain.Entities.passenger
+        {
+            id           = profile.Id,
+            email        = profile.Email,
+            name         = profile.Name,
+            password_hash = profile.PasswordHash,
+            role         = profile.RoleName is not null
+                               ? new Domain.Entities.role { name = profile.RoleName }
+                               : null
+        };
+
+        var token = _jwtTokenGenerator.GenerateToken(tokenUser);
 
         return ApiResponse<AuthResponse>.Ok(
-            new AuthResponse(token, user.email, user.name),
+            new AuthResponse(token, profile.Email, profile.Name),
             "Login successful."
         );
     }
 }
+

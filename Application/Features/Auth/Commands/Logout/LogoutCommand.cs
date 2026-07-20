@@ -3,6 +3,7 @@ using Application.Common.Models;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -24,10 +25,12 @@ public sealed class LogoutCommandValidator : AbstractValidator<LogoutCommand>
 public sealed class LogoutCommandHandler : IRequestHandler<LogoutCommand, ApiResponse<string>>
 {
     private readonly IApplicationDbContext _context;
+    private readonly HybridCache _cache;
 
-    public LogoutCommandHandler(IApplicationDbContext context)
+    public LogoutCommandHandler(IApplicationDbContext context, HybridCache cache)
     {
         _context = context;
+        _cache   = cache;
     }
 
     public async Task<ApiResponse<string>> Handle(LogoutCommand request, CancellationToken cancellationToken)
@@ -37,7 +40,7 @@ public sealed class LogoutCommandHandler : IRequestHandler<LogoutCommand, ApiRes
 
         if (user is null)
         {
-            return ApiResponse<string>.Fail("Invalid refresh token or already logged out.",400);
+            return ApiResponse<string>.Fail("Invalid refresh token or already logged out.", 400);
         }
 
         // Invalidate the refresh token
@@ -45,6 +48,9 @@ public sealed class LogoutCommandHandler : IRequestHandler<LogoutCommand, ApiRes
         user.refresh_token_expiry = default;
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        // Evict the cached auth profile so stale data is not served on next login
+        await _cache.RemoveAsync($"passenger-email:{user.email}", cancellationToken);
 
         return ApiResponse<string>.Ok("Logged out successfully.", "Logout successful.");
     }
