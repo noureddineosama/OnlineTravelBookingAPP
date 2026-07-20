@@ -111,6 +111,11 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Ap
             .FirstAsync(p => p.id == user.id, cancellationToken);
 
         var token = _jwtTokenGenerator.GenerateToken(savedUser);
+        var refreshToken = Guid.NewGuid().ToString("N");
+
+        savedUser.refreshToken = refreshToken;
+        savedUser.refresh_token_expiry = DateTime.UtcNow.AddDays(7);
+        await _context.SaveChangesAsync(cancellationToken);
 
         // Warm the cache for the new user so the next Login is served from cache.
         // Evict first (defensive) in case a stale entry somehow existed.
@@ -130,7 +135,7 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Ap
         );
 
         return ApiResponse<AuthResponse>.Ok(
-            new AuthResponse(token, savedUser.email, savedUser.name),
+            new AuthResponse(token, refreshToken, savedUser.email, savedUser.name, savedUser.role?.name ?? "Passenger"),
             "Registration successful."
         );
     }

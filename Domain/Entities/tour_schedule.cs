@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Entities;
 
-[Index("tour_id", "start_date", Name = "IX_tour_schedules_tour_start")]
+[Index("tour_id", "start_date", Name = "IX_tour_schedules_tour_start", IsUnique = true)]
 public partial class tour_schedule
 {
     [Key]
@@ -24,6 +24,13 @@ public partial class tour_schedule
     public int capacity { get; set; }
 
     public int available_slots { get; set; }
+
+    public bool is_cancelled { get; set; }
+
+    public DateTime? cancelled_at { get; set; }
+
+    [StringLength(500)]
+    public string? cancellation_reason { get; set; }
 
     [ForeignKey("price_tier_id")]
     [InverseProperty("tour_schedules")]

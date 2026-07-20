@@ -31,6 +31,12 @@ public partial class booking : AuditableEntity
     public string? status { get; set; }
     public bool? IsCancelled { get; set; } = false;
 
+    // Cancellation metadata
+    public DateTime? cancelled_at { get; set; }
+    public CancellationReasonType? cancellation_reason_type { get; set; }
+    [StringLength(500)]
+    public string cancellation_reason_details { get; set; }
+
     [Column(TypeName = "decimal(10, 2)")]
     public decimal subtotal { get; set; } //. is the same like totalPrice 
 

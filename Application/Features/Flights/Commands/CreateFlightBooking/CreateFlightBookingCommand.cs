@@ -152,7 +152,7 @@ public sealed class CreateFlightBookingCommandHandler
             booking_number = GenerateBookingNumber(),
             user_id = request.UserId,
             category = "flight",
-            status = BookingStatus.pending.ToString(),
+            status = BookingStatus.Pending.ToString(),
             subtotal = subtotal,
             discount_amount = 0,
             total_price = subtotal,

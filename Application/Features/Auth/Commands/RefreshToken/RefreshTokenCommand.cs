@@ -56,7 +56,7 @@ public sealed class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCom
         }
 
         // 2. Check if token is expired
-        if (user.refresh_token_expiry < DateTime.UtcNow)
+        if (user.refresh_token_expiry.HasValue && user.refresh_token_expiry.Value < DateTime.UtcNow)
         {
             // Clear expired token details
             user.refreshToken = null;
@@ -79,7 +79,7 @@ public sealed class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCom
         await _cache.RemoveAsync($"passenger-email:{user.email}", cancellationToken);
 
         return ApiResponse<AuthResponse>.Ok(
-             new AuthResponse(newAccessToken, user.email, user.name),
+            new AuthResponse(newAccessToken, newRefreshToken, user.email, user.name, user.role?.name ?? "Passenger"),
             "Token refreshed successfully."
         );
     }

@@ -10,9 +10,6 @@ namespace Domain.Entities;
 
 public partial class room : CreatedAtEntity
 {
-    [Key]
-    public long id { get; set; }
-
     public long hotel_id { get; set; }
 
     [Required]

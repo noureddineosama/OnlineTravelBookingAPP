@@ -10,7 +10,6 @@ using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Newtonsoft.Json.Serialization;
 using OnlineTravelBooking.Middleware;
 using OnlineTravelBooking.Swagger;
 using System.Text;
@@ -31,15 +30,24 @@ builder.Services.AddCors(options =>
         p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
 
 //_______________________________________
-builder.Services.AddAuthentication(options => { 
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; 
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme; })
-    .AddJwtBearer(options => { 
-        options.TokenValidationParameters = new TokenValidationParameters 
-        { ValidateIssuer = true, ValidateAudience = true, ValidateLifetime = true, ValidateIssuerSigningKey = true, ValidIssuer = builder.Configuration["JwtSettings:Issuer"], ValidAudience = builder.Configuration["JwtSettings:Audience"], IssuerSigningKey = 
-    new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKEY"]!)) 
-        }; 
-    }); 
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+            ValidAudience = builder.Configuration["JwtSettings:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKEY"]!))
+        };
+    });
 builder.Services.AddAuthorization();
 
 // ── Controllers ───────────────────────────────────────────────────────────────
@@ -55,8 +63,7 @@ builder.Services.AddControllers()
 
 builder.Services.AddTransient<ICurrentIUserService, CurrentUserService>();
 builder.Services.AddHttpContextAccessor();
-//builder.Services.AddSwaggerGen(options => 
-//            options.UseInlineDefinitionsForEnums());
+
 //______________RateLimitMiddleWare___________________________
 builder.Services.AddRateLimiter(options =>
 {
@@ -77,13 +84,14 @@ builder.Services.AddRateLimiter(options =>
     });
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
+
 //___________HybirdCashing_____________________________
 builder.Services.AddHybridCache(options =>
 {
     options.DefaultEntryOptions = new HybridCacheEntryOptions
     {
-        Expiration = TimeSpan.FromMinutes(30),       
-        LocalCacheExpiration = TimeSpan.FromMinutes(5) 
+        Expiration = TimeSpan.FromMinutes(30),
+        LocalCacheExpiration = TimeSpan.FromMinutes(5)
     };
 });
 
@@ -133,22 +141,6 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
-
-//. ----------------------------------
-builder.Services.AddAuthentication(options =>
-    { 
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme; })
-    .AddJwtBearer(options => 
-    { 
-        options.TokenValidationParameters = new TokenValidationParameters 
-        { 
-            ValidateIssuer = true, 
-            ValidateAudience = true, 
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["JwtSettings:Issuer"], ValidAudience = builder.Configuration["JwtSettings:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKEY"]!)) }; });
 
 var app = builder.Build();
 

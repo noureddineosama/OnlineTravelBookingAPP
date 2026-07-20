@@ -7,6 +7,8 @@ using Application.Features.TourBookings.DTOs;
 using Application.Features.HotelAvailability.DTOs;
 using Application.Features.HotelBooking.DTOs;
 using Application.Features.Hotels.DTOs;
+using Application.Features.Tours.DTOs;
+using Application.Features.Tours.Commands.CreateTour;
 
 namespace Application.Common.Mappings;
 
@@ -117,5 +119,55 @@ public sealed class MappingProfile : Profile
         // ── Hotel & HotelBooking ─────────────────────────────────────────────
         CreateMap<CreateHotelBookingRequestDTO, CheckRoomAvailabilityRequestDTO>();
         CreateMap<CreateHotelBookingRequestDTO, hotel_booking>();
+
+        // ── Tours ────────────────────────────────────────────────────────────
+        CreateMap<tour_price_tier, TourPriceTierDto>()
+            .ForMember(d => d.Id,          opt => opt.MapFrom(s => s.id))
+            .ForMember(d => d.Name,        opt => opt.MapFrom(s => s.name))
+            .ForMember(d => d.AdultPrice,  opt => opt.MapFrom(s => s.adult_price))
+            .ForMember(d => d.ChildPrice,  opt => opt.MapFrom(s => s.child_price))
+            .ForMember(d => d.InfantPrice, opt => opt.MapFrom(s => s.infant_price))
+            .ForMember(d => d.Currency,    opt => opt.MapFrom(s => s.currency));
+
+        CreateMap<tour_schedule, TourScheduleDto>()
+            .ForMember(d => d.Id,             opt => opt.MapFrom(s => s.id))
+            .ForMember(d => d.PriceTierId,    opt => opt.MapFrom(s => s.price_tier_id))
+            .ForMember(d => d.StartDate,      opt => opt.MapFrom(s => s.start_date))
+            .ForMember(d => d.EndDate,        opt => opt.MapFrom(s => s.end_date))
+            .ForMember(d => d.Capacity,       opt => opt.MapFrom(s => s.capacity))
+            .ForMember(d => d.AvailableSlots, opt => opt.MapFrom(s => s.available_slots));
+
+        CreateMap<tour, TourDto>()
+            .ForMember(d => d.Id,              opt => opt.MapFrom(s => s.id))
+            .ForMember(d => d.Title,           opt => opt.MapFrom(s => s.title))
+            .ForMember(d => d.Slug,            opt => opt.MapFrom(s => s.slug))
+            .ForMember(d => d.Summary,         opt => opt.MapFrom(s => s.summary))
+            .ForMember(d => d.FullDescription, opt => opt.MapFrom(s => s.full_description))
+            .ForMember(d => d.MainImageUrl,    opt => opt.MapFrom(s => s.main_image_url))
+            .ForMember(d => d.DurationDays,    opt => opt.MapFrom(s => s.duration_days))
+            .ForMember(d => d.LocationId,      opt => opt.MapFrom(s => s.location_id))
+            .ForMember(d => d.Difficulty,      opt => opt.MapFrom(s => s.difficulty))
+            .ForMember(d => d.Status,          opt => opt.MapFrom(s => s.status))
+            .ForMember(d => d.PriceTiers,      opt => opt.MapFrom(s => s.tour_price_tiers))
+            .ForMember(d => d.Schedules,       opt => opt.MapFrom(s => s.tour_schedules));
+
+        CreateMap<CreateTourCommand, tour>()
+            .ForMember(d => d.title,            opt => opt.MapFrom(s => s.Title))
+            .ForMember(d => d.summary,          opt => opt.MapFrom(s => s.Summary))
+            .ForMember(d => d.full_description, opt => opt.MapFrom(s => s.FullDescription))
+            .ForMember(d => d.main_image_url,   opt => opt.MapFrom(s => s.MainImageUrl))
+            .ForMember(d => d.duration_days,    opt => opt.MapFrom(s => s.DurationDays))
+            .ForMember(d => d.location_id,      opt => opt.MapFrom(s => s.LocationId))
+            .ForMember(d => d.difficulty,       opt => opt.MapFrom(s => s.Difficulty))
+            .ForMember(d => d.status,           opt => opt.MapFrom(s => s.Status))
+            .ForMember(d => d.id,               opt => opt.Ignore())
+            .ForMember(d => d.slug,             opt => opt.Ignore())
+            .ForMember(d => d.created_at,       opt => opt.Ignore())
+            .ForMember(d => d.updated_at,       opt => opt.Ignore())
+            .ForMember(d => d.location,         opt => opt.Ignore())
+            .ForMember(d => d.tour_images,      opt => opt.Ignore())
+            .ForMember(d => d.tour_inclusions,  opt => opt.Ignore())
+            .ForMember(d => d.tour_price_tiers, opt => opt.Ignore())
+            .ForMember(d => d.tour_schedules,   opt => opt.Ignore());
     }
 }

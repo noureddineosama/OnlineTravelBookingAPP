@@ -3,6 +3,7 @@ using Application.Common.Models;
 using Application.Common.Pagination;
 using Application.Features.TourBookings.DTOs;
 using AutoMapper;
+using Domain.Entities;
 using Domain.Enums;
 using FluentValidation;
 using MediatR;
@@ -49,20 +50,22 @@ public sealed class GetUserTourBookingsQueryValidator : AbstractValidator<GetUse
 public sealed class GetUserTourBookingsQueryHandler
     : IRequestHandler<GetUserTourBookingsQuery, ApiResponse<PagedResult<TourBookingResponse>>>
 {
-    private readonly IApplicationDbContext _context;
+    private readonly IUnitOfWork _uow;
     private readonly IMapper _mapper;
 
-    public GetUserTourBookingsQueryHandler(IApplicationDbContext context, IMapper mapper)
+    public GetUserTourBookingsQueryHandler(IUnitOfWork uow, IMapper mapper)
     {
-        _context = context;
+        _uow = uow;
         _mapper  = mapper;
     }
 
     public async Task<ApiResponse<PagedResult<TourBookingResponse>>> Handle(
         GetUserTourBookingsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.bookings
-            .Where(b => b.user_id == request.UserId && b.category == "tour")
+        var query = _uow.Repository<Domain.Entities.booking>().Query()
+            .Where(b => b.user_id == request.UserId && b.category == "tour" && 
+                        (!(b.status == BookingStatus.Cancelled || b.IsCancelled == true) || 
+                         b.cancellation_reason_type == CancellationReasonType.AdminCancelled))
             .Include(b => b.tour_booking)
                 .ThenInclude(tb => tb.tour_schedule)
                     .ThenInclude(s => s.tour)

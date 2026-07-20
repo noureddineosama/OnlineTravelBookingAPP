@@ -91,19 +91,30 @@ public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, ApiRespo
         // Build a lightweight passenger object so the token generator can consume it
         var tokenUser = new Domain.Entities.passenger
         {
-            id           = profile.Id,
-            email        = profile.Email,
-            name         = profile.Name,
+            id            = profile.Id,
+            email         = profile.Email,
+            name          = profile.Name,
             password_hash = profile.PasswordHash,
-            role         = profile.RoleName is not null
-                               ? new Domain.Entities.role { name = profile.RoleName }
-                               : null
+            role          = profile.RoleName is not null
+                                ? new Domain.Entities.role { name = profile.RoleName }
+                                : null
         };
 
         var token = _jwtTokenGenerator.GenerateToken(tokenUser);
 
+        // Persist the new refresh token so the client can use it to rotate access tokens.
+        var refreshToken = Guid.NewGuid().ToString("N");
+        var dbUser = await _context.passengers
+            .FirstAsync(p => p.email == request.Email, cancellationToken);
+        dbUser.refreshToken          = refreshToken;
+        dbUser.refresh_token_expiry  = DateTime.UtcNow.AddDays(7);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        // Evict the now-stale cached profile so the next login re-reads from DB.
+        await _cache.RemoveAsync(cacheKey, cancellationToken);
+
         return ApiResponse<AuthResponse>.Ok(
-            new AuthResponse(token, profile.Email, profile.Name),
+            new AuthResponse(token, refreshToken, profile.Email, profile.Name, profile.RoleName ?? "Passenger"),
             "Login successful."
         );
     }
