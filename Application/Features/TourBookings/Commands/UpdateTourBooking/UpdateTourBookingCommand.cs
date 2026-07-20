@@ -72,7 +72,7 @@ public sealed class UpdateTourBookingCommandHandler
         if (booking == null || booking.user_id != request.UserId)
             throw new NotFoundException("Tour booking", request.BookingId);
 
-        if (booking.status == BookingStatus.Cancelled || booking.IsCancelled == true)
+        if (booking.status == BookingStatus.Cancelled.ToString() || booking.IsCancelled == true)
             throw new BadRequestException("Cannot update a cancelled booking.");
 
         var tourBooking = booking.tour_booking;

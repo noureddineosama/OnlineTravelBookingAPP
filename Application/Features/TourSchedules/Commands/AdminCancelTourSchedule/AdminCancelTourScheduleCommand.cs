@@ -61,9 +61,9 @@ public sealed class AdminCancelTourScheduleCommandHandler
         foreach (var tb in schedule.tour_bookings)
         {
             var booking = tb.booking;
-            if (booking != null && booking.status != BookingStatus.Cancelled && booking.status != BookingStatus.Completed)
+            if (booking != null && booking.status != BookingStatus.Cancelled.ToString() && booking.status != BookingStatus.Completed.ToString())
             {
-                booking.status = BookingStatus.Cancelled;
+                booking.status = BookingStatus.Cancelled.ToString();
                 booking.IsCancelled = true;
                 booking.cancelled_at = DateTime.UtcNow;
                 booking.cancellation_reason_type = CancellationReasonType.AdminCancelled;

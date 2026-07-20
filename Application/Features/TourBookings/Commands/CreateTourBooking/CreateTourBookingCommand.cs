@@ -84,7 +84,7 @@ public sealed class CreateTourBookingCommandHandler
             .Where(b => b.user_id == request.UserId && 
                         b.category == "tour" &&
                         b.tour_booking.tour_schedule_id == request.TourScheduleId &&
-                        b.status != BookingStatus.Cancelled && 
+                        b.status != BookingStatus.Cancelled.ToString() && 
                         b.IsCancelled != true)
             .FirstOrDefaultAsync(cancellationToken);
 

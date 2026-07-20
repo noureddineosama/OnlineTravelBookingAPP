@@ -64,7 +64,7 @@ public sealed class GetUserTourBookingsQueryHandler
     {
         var query = _uow.Repository<Domain.Entities.booking>().Query()
             .Where(b => b.user_id == request.UserId && b.category == "tour" && 
-                        (!(b.status == BookingStatus.Cancelled || b.IsCancelled == true) || 
+                        (!(b.status == BookingStatus.Cancelled.ToString() || b.IsCancelled == true) || 
                          b.cancellation_reason_type == CancellationReasonType.AdminCancelled))
             .Include(b => b.tour_booking)
                 .ThenInclude(tb => tb.tour_schedule)
