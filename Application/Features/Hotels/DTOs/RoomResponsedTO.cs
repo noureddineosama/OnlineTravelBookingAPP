@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -17,6 +17,8 @@ namespace Application.Features.Hotels.DTOs
         public int MaxChildren { get; set; }
 
         public bool IsAvailable { get; set; }
+
+        public int AvailableRooms { get; set; }
 
         public string MainImageUrl { get; set; }
     }

@@ -45,11 +45,11 @@ namespace Application.Features.CarBookings.Handlers
                 return await Result.FailureAsync<CancelCarBookingResponseDTO>(
                     $"Car booking with ID '{request.id}' was not found for this user.");
 
-            if (parentBooking.status == BookingStatus.Cancelled)
+            if (parentBooking.status == BookingStatus.Cancelled.ToString())
                 return await Result.FailureAsync<CancelCarBookingResponseDTO>(
                     "This booking is already cancelled.");
 
-            parentBooking.status = BookingStatus.Cancelled;
+            parentBooking.status = BookingStatus.Cancelled.ToString();
             parentBooking.IsCancelled = true;
             parentBooking.updated_at = DateTime.UtcNow;
 
