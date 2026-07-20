@@ -10,6 +10,9 @@ using OnlineTravelBooking.Middleware;
 using OnlineTravelBooking.Swagger;
 using System.Text;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
+using Microsoft.Extensions.Caching.Hybrid;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +52,35 @@ builder.Services.AddTransient<ICurrentIUserService, CurrentUserService>();
 builder.Services.AddHttpContextAccessor();
 //builder.Services.AddSwaggerGen(options => 
 //            options.UseInlineDefinitionsForEnums());
+//______________RateLimitMiddleWare___________________________
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy("auth-fixed-window", context =>
+    {
+        var key = context.Connection.RemoteIpAddress?.ToString()
+                  ?? "Anonymous";
+
+        return RateLimitPartition.GetFixedWindowLimiter(key,
+           _ => new FixedWindowRateLimiterOptions
+           {
+               PermitLimit = 5,
+               AutoReplenishment = true,
+               QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+               Window = TimeSpan.FromSeconds(10),
+               QueueLimit = 0 //. don't put anything in queue and return to the customer 429 response
+           });
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+//___________HybirdCashing_____________________________
+builder.Services.AddHybridCache(options =>
+{
+    options.DefaultEntryOptions = new HybridCacheEntryOptions
+    {
+        Expiration = TimeSpan.FromMinutes(30),       
+        LocalCacheExpiration = TimeSpan.FromMinutes(5) 
+    };
+});
 
 // ── Swagger ───────────────────────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
@@ -102,6 +134,7 @@ var app = builder.Build();
 // ── Middleware Pipeline ───────────────────────────────────────────────────────
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseMiddleware<MeasuringExecutingTimeMiddleware>();
+app.UseRateLimiter();
 
 if (app.Environment.IsDevelopment())
 {

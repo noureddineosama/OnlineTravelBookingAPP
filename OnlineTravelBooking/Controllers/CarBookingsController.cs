@@ -6,6 +6,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ namespace OnlineTravelBooking.Controllers
     [ApiController]
     [Route("api/car-bookings")]
     [Authorize]
+    [EnableRateLimiting("auth-fixed-window")]
     public class CarBookingsController : ControllerBase
     {
         private readonly IMediator _mediator;

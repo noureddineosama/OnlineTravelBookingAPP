@@ -5,6 +5,7 @@ using Domain.Entities;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace Application.Features.Auth.Commands.Register;
 
@@ -47,15 +48,25 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Ap
     private readonly IApplicationDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
+    private readonly HybridCache _cache;
+
+    // Match the same short TTL used in Login
+    private static readonly HybridCacheEntryOptions AuthCacheOptions = new()
+    {
+        Expiration = TimeSpan.FromMinutes(5),
+        LocalCacheExpiration = TimeSpan.FromMinutes(2)
+    };
 
     public RegisterCommandHandler(
         IApplicationDbContext context,
         IPasswordHasher passwordHasher,
-        IJwtTokenGenerator jwtTokenGenerator)
+        IJwtTokenGenerator jwtTokenGenerator,
+        HybridCache cache)
     {
         _context = context;
         _passwordHasher = passwordHasher;
         _jwtTokenGenerator = jwtTokenGenerator;
+        _cache = cache;
     }
 
     public async Task<ApiResponse<AuthResponse>> Handle(RegisterCommand request, CancellationToken cancellationToken)
@@ -100,6 +111,23 @@ public sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, Ap
             .FirstAsync(p => p.id == user.id, cancellationToken);
 
         var token = _jwtTokenGenerator.GenerateToken(savedUser);
+
+        // Warm the cache for the new user so the next Login is served from cache.
+        // Evict first (defensive) in case a stale entry somehow existed.
+        var cacheKey = $"passenger-email:{savedUser.email}";
+        await _cache.RemoveAsync(cacheKey, cancellationToken);
+        await _cache.SetAsync(
+            cacheKey,
+            new CachedPassengerProfile(
+                savedUser.id,
+                savedUser.email,
+                savedUser.name,
+                savedUser.password_hash ?? string.Empty,
+                savedUser.role?.name
+            ),
+            AuthCacheOptions,
+            cancellationToken: cancellationToken
+        );
 
         return ApiResponse<AuthResponse>.Ok(
             new AuthResponse(token, savedUser.email, savedUser.name),

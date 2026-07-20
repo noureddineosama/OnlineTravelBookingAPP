@@ -15,8 +15,8 @@ namespace OnlineTravelBooking.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            var timer = Stopwatch.StartNew(); //. Starting Time
-            await next(context);//. sending the request to the server or the controller 
+            var timer = Stopwatch.StartNew(); 
+            await next(context);
             timer.Stop();
 
             var ExecutionTime = timer.ElapsedMilliseconds;
