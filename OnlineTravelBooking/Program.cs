@@ -13,6 +13,7 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using Microsoft.Extensions.Caching.Hybrid;
+using Sentry.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -81,6 +82,19 @@ builder.Services.AddHybridCache(options =>
         LocalCacheExpiration = TimeSpan.FromMinutes(5) 
     };
 });
+//______________Sentry____________________________________
+// UseSentry() with no arguments reads ALL settings from the (Sentry) section
+builder.WebHost.UseSentry();
+builder.Services.Configure<SentryAspNetCoreOptions>(options =>
+{
+    options.Environment = builder.Environment.EnvironmentName;
+    var version = System.Reflection.Assembly
+        .GetExecutingAssembly()
+        .GetName()
+        .Version?.ToString() ?? "1.0.0";
+    options.Release = $"online-travel-booking@{version}";
+
+});
 
 // ── Swagger ───────────────────────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
@@ -135,6 +149,11 @@ var app = builder.Build();
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseMiddleware<MeasuringExecutingTimeMiddleware>();
 app.UseRateLimiter();
+
+// ── Sentry performance tracing ────────────────────────────────────────────────
+// Creates one Sentry "transaction" per HTTP request so you can see
+// slow endpoints in the Performance tab of your Sentry dashboard.
+app.UseSentryTracing();
 
 if (app.Environment.IsDevelopment())
 {
