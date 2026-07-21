@@ -16,16 +16,28 @@ namespace Application.Features.Rooms.Handlers
     public class SearchRoomHandler : IRequestHandler<SearchRoomQuery, PaginatedResult<GetHotelRoomsResponseDTO>>
     {
         private readonly IUnitOfWork unitOfWork;
+        private readonly ICachService<PaginatedResult<GetHotelRoomsResponseDTO>> cachService;
 
-        public SearchRoomHandler(IUnitOfWork unitOfWork)
+        public SearchRoomHandler(IUnitOfWork unitOfWork,
+                                 ICachService<PaginatedResult<GetHotelRoomsResponseDTO>> cachService)
         {
             this.unitOfWork = unitOfWork;
+            this.cachService = cachService;
         }
         public async Task<PaginatedResult<GetHotelRoomsResponseDTO>> Handle(SearchRoomQuery request, CancellationToken cancellationToken)
         {
             var room_isntance = unitOfWork.Repository<room>();
             if (room_isntance == null)
                 throw new ArgumentNullException(nameof(room_isntance));
+
+            var cach_result = await cachService.GetAsync($"get room for hotel id : {request.hotelId}" +
+                                                         $"{request.page}-" +
+                                                         $"{request.pageSize}-" +
+                                                         $"{request.requestDTO.MaxPrice}-" +
+                                                         $"{request.requestDTO.MinPrice}-" +
+                                                         $"{request.requestDTO.BedType}", cancellationToken);
+            if (cach_result is not null)
+                return cach_result;
 
             var paginated_result = await room_isntance.GetPaginationAsync(predicate: op => op.hotel_id == request.hotelId && 
                                                                                          op.IsDeleted == false
@@ -41,6 +53,12 @@ namespace Application.Features.Rooms.Handlers
                                                                               RoomId= op.id
                                                                           }, page:request.page, pageSize: request.pageSize, cancellationToken:cancellationToken
                                                                           );
+            await cachService.SetAsync($"get room for hotel id : {request.hotelId}" +
+                                                         $"{request.page}-" +
+                                                         $"{request.pageSize}-" +
+                                                         $"{request.requestDTO.MaxPrice}-" +
+                                                         $"{request.requestDTO.MinPrice}-" +
+                                                         $"{request.requestDTO.BedType}", paginated_result, cancellationToken);
             return paginated_result;
         }
     }

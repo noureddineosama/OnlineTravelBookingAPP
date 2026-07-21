@@ -13,10 +13,13 @@ namespace Application.Features.Rooms.Handlers
     public class GetRoomExtrasHandler : IRequestHandler<GetRoomExtrasQuery, GenericResult<RoomExtrasResponseDTO>>
     {
         private readonly IUnitOfWork unitOfWork;
+        private readonly ICachService<RoomExtrasResponseDTO> cachService;
 
-        public GetRoomExtrasHandler(IUnitOfWork unitOfWork)
+        public GetRoomExtrasHandler(IUnitOfWork unitOfWork, 
+                                    ICachService<RoomExtrasResponseDTO> cachService)
         {
             this.unitOfWork = unitOfWork;
+            this.cachService = cachService;
         }
         public async Task<GenericResult<RoomExtrasResponseDTO>> Handle(GetRoomExtrasQuery request, CancellationToken cancellationToken)
         {
@@ -24,11 +27,16 @@ namespace Application.Features.Rooms.Handlers
             if (room_instance == null)
                 throw new ArgumentNullException(nameof(room_instance));
 
+            var cach_result = await cachService.GetAsync($"get-room-extras with room {request.roomId}", cancellationToken);
+            
             if (!await room_instance.AnyAsync(predicate: op => op.id == request.roomId &&
                                                                 op.IsDeleted == false &&
                                                                 op.status == "Active",
                                                                 cancellationToken))
                 return await Result.FailureAsync<RoomExtrasResponseDTO>("Room not found. ");
+
+            if (cach_result is not null)
+                return await Result.SuccessAsync<RoomExtrasResponseDTO>(cach_result);
 
             RoomExtrasResponseDTO room_extras = await room_instance.GetSelectorAsync(
                                                                              predicate: op => op.id == request.roomId,
@@ -42,6 +50,9 @@ namespace Application.Features.Rooms.Handlers
                                                                                      Price =op.price
                                                                                  }).ToList()
                                                                              });
+
+            await cachService.SetAsync($"get-room-extras with room {request.roomId}",room_extras, cancellationToken);
+
             return await Result.SuccessAsync<RoomExtrasResponseDTO>(room_extras);
         }
     }

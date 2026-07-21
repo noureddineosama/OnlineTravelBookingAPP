@@ -14,16 +14,24 @@ namespace Application.Features.Rooms.Handlers
     public sealed class RoomDetailsHandler : IRequestHandler<RoomDetailsQuery, GenericResult<RoomDetailsResponseDTO>>
     {
         private readonly IUnitOfWork unitOfWork;
+        private readonly ICachService<RoomDetailsResponseDTO> cachService;
 
-        public RoomDetailsHandler(IUnitOfWork unitOfWork)
+        public RoomDetailsHandler(IUnitOfWork unitOfWork, 
+                                  ICachService<RoomDetailsResponseDTO> cachService)  
         {
             this.unitOfWork = unitOfWork;
+            this.cachService = cachService;
         }
         public async Task<GenericResult<RoomDetailsResponseDTO>> Handle(RoomDetailsQuery request, CancellationToken cancellationToken)
         {
             var room_instance = unitOfWork.Repository<room>();
             if(room_instance == null)
                 throw new ArgumentNullException(nameof(room_instance));
+
+            var cach_result = await cachService.GetAsync($"room-details with id : {request.id}", 
+                                                            cancellationToken);
+            if (cach_result is not null)
+                return await Result.SuccessAsync<RoomDetailsResponseDTO>(cach_result);
             
             var existing_room = await room_instance.GetSelectorAsync(
                                predicate: op => op.id == request.id && op.IsDeleted == false && 
@@ -53,6 +61,8 @@ namespace Application.Features.Rooms.Handlers
 
             if (existing_room == null)
                 return await Result.FailureAsync<RoomDetailsResponseDTO>("Room not found. ");
+
+            await cachService.SetAsync($"room-details with id : {request.id}", existing_room, cancellationToken);
 
             return await Result.SuccessAsync<RoomDetailsResponseDTO>(existing_room);
         }

@@ -14,12 +14,15 @@ namespace Application.Features.HotelBooking.Handlers
     {
         private readonly IUnitOfWork unitOfWork;
         private readonly ICurrentIUserService currentIUser;
+        private readonly ICachService<List<MyBookingsResponseDTO>> cachService;
 
         public MyBookingsHandler(IUnitOfWork unitOfWork,
-                                ICurrentIUserService currentIUser)
+                                ICurrentIUserService currentIUser, 
+                                ICachService<List<MyBookingsResponseDTO>> cachService)
         {
             this.unitOfWork = unitOfWork;
             this.currentIUser = currentIUser;
+            this.cachService = cachService;
         }
         public async Task<GenericResult<List<MyBookingsResponseDTO>>> Handle(MyBookingsResponseQuery request, CancellationToken cancellationToken)
         {
@@ -27,7 +30,12 @@ namespace Application.Features.HotelBooking.Handlers
             if (hotel_booking_instance == null)
                 throw new ArgumentNullException("Something invalid occurred!!");
 
-            var hotel_bookings = await hotel_booking_instance.GetListSelectorAsync<MyBookingsResponseDTO>(
+            var cach_result = await cachService.GetAsync("My-bookings", cancellationToken);
+
+            if (cach_result != null)
+                return await Result.SuccessAsync(cach_result, "Data recieved successfully");
+
+            var My_Bookings = await hotel_booking_instance.GetListSelectorAsync<MyBookingsResponseDTO>(
 
                                 predicate: op => op.booking.user_id == currentIUser.UserId,
                                 selector: op => new MyBookingsResponseDTO
@@ -44,7 +52,9 @@ namespace Application.Features.HotelBooking.Handlers
                                 includes: 
                                  op => op.booking); //. not necessary 
 
-            return await Result.SuccessAsync<List<MyBookingsResponseDTO>>(hotel_bookings);
+            await cachService.SetAsync("My-bookings", My_Bookings, cancellationToken);
+
+            return await Result.SuccessAsync<List<MyBookingsResponseDTO>>(My_Bookings);
         }
     }
 }

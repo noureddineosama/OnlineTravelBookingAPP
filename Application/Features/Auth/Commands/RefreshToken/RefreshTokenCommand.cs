@@ -56,7 +56,7 @@ public sealed class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCom
         }
 
         // 2. Check if token is expired
-        if (user.refresh_token_expiry.HasValue && user.refresh_token_expiry.Value < DateTime.UtcNow)
+        if (DateTime.TryParse(user.refreshToken, out var expiry) && expiry < DateTime.UtcNow)
         {
             // Clear expired token details
             user.refreshToken = null;

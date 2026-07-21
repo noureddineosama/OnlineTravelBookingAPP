@@ -24,13 +24,17 @@
   <!-- Exclude old helpers â€” superseded by Clean Architecture structure -->
   <ItemGroup>
     <Compile Remove="Features\HotelImages\**" />
+    <Compile Remove="Features\Images\HotelImages\Queries\**" />
+    <Compile Remove="Features\Images\RoomImages\Queries\**" />
     <Compile Remove="Helpers\**" />
     <EmbeddedResource Remove="Features\HotelImages\**" />
+    <EmbeddedResource Remove="Features\Images\HotelImages\Queries\**" />
+    <EmbeddedResource Remove="Features\Images\RoomImages\Queries\**" />
     <None Remove="Features\HotelImages\**" />
+    <None Remove="Features\Images\HotelImages\Queries\**" />
+    <None Remove="Features\Images\RoomImages\Queries\**" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Features\Images\HotelImages\Queries\" />
-    <Folder Include="Features\Images\RoomImages\Queries\" />
     <Folder Include="Features\Payments\Commands\HandleStripeWebhook\" />
   </ItemGroup>
 </Project>

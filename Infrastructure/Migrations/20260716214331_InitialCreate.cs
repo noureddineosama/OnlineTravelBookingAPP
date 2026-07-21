@@ -459,7 +459,7 @@ namespace Infrastructure.Migrations
                     booking_number = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
                     user_id = table.Column<long>(type: "bigint", nullable: false),
                     category = table.Column<string>(type: "varchar(10)", unicode: false, maxLength: 10, nullable: false),
-                    status = table.Column<string>(type: "varchar(10)", unicode: false, maxLength: 10, nullable: false, defaultValue: "pending"),
+                    status = table.Column<int>(type: "int", unicode: false, maxLength: 10, nullable: false, defaultValue: 2),
                     IsCancelled = table.Column<bool>(type: "bit", nullable: true),
                     subtotal = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
                     discount_amount = table.Column<decimal>(type: "decimal(10,2)", nullable: false),

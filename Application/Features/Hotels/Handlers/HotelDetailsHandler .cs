@@ -13,10 +13,13 @@ namespace Application.Features.Hotels.Handlers
     public class HotelDetailsHandler : IRequestHandler<HotelDetailsQuery, GenericResult<HotelDetailsResponseDTO>>
     {
         private readonly IUnitOfWork unitOfWork;
+        private readonly ICachService<HotelDetailsResponseDTO> cachService;
 
-        public HotelDetailsHandler(IUnitOfWork unitOfWork)
+        public HotelDetailsHandler(IUnitOfWork unitOfWork, 
+                                   ICachService<HotelDetailsResponseDTO> cachService)
         {
             this.unitOfWork = unitOfWork;
+            this.cachService = cachService;
         }
 
         public async Task<GenericResult<HotelDetailsResponseDTO>> Handle(HotelDetailsQuery request, CancellationToken cancellationToken)
@@ -26,6 +29,10 @@ namespace Application.Features.Hotels.Handlers
             {
                 throw new ArgumentNullException(nameof(instance));
             }
+
+            var cach_result = await cachService.GetAsync($"hotel-details-response with id: {request.Id}", cancellationToken);
+            if (cach_result != null)
+                return await Result.SuccessAsync<HotelDetailsResponseDTO>(cach_result);
 
             var result = await instance.GetSelectorAsync(predicate: op => op.id == request.Id && op.IsDeleted == false &&
                                                                      op.status == "Active",
@@ -65,6 +72,8 @@ namespace Application.Features.Hotels.Handlers
                                                              }).ToList(),
 
                                                          }, cancellationToken);
+
+            await cachService.SetAsync("hotel-details-response", result, cancellationToken);
 
             if (result == null)
                 return await Result.FailureAsync<HotelDetailsResponseDTO>("Validate Failed!!");

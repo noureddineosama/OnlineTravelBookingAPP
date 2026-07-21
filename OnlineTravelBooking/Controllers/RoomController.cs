@@ -6,13 +6,16 @@ using Application.Features.Rooms.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Stripe.Tax;
 using System.Runtime.CompilerServices;
 
 namespace OnlineTravelBooking.Controllers
 {
     [ApiController]
     [Route("api/rooms")]
-    //[Authorize]
+    [Authorize]
+    [EnableRateLimiting("auth-fixed-window")]
     public class RoomController : ControllerBase
     {
         private readonly IMediator mediator;
@@ -25,7 +28,7 @@ namespace OnlineTravelBooking.Controllers
         [HttpPost("hotels/{hotelId}/rooms")]
         [ProducesResponseType(typeof(GenericResult<CreateHotelResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<GenericResult<CreateHotelResponseDTO>>> AddNewRoomTOSpecificHotel(long hotelId,
                                                                                                          CreateRoomRequestDTO request,
                                                                                                          CancellationToken cancellationToken)
@@ -92,6 +95,7 @@ namespace OnlineTravelBooking.Controllers
         [HttpPut("{id}/update-extras")]
         [ProducesResponseType(typeof(GenericResult<UpdateRoomExtraResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<GenericResult<UpdateRoomExtraResponseDTO>>> UpdateRoomExtras(long id,UpdateRoomExtraRequestDTO requestDTO
                                                                                             , CancellationToken cancellationToken)
         {
@@ -169,6 +173,7 @@ namespace OnlineTravelBooking.Controllers
         [HttpDelete("{id}")]
         [ProducesResponseType(typeof(GenericResult<DeleteRoomResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<GenericResult<DeleteRoomResponseDTO>>> DeleteRoom(long id,
                                                                                               CancellationToken cancellationToken)
         {
@@ -181,6 +186,7 @@ namespace OnlineTravelBooking.Controllers
         [HttpDelete("{id}/extras/{extraId}")]
         [ProducesResponseType(typeof(GenericResult<string>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize (Roles = "Admin")]
         public async Task<ActionResult<GenericResult<string>>> RemoveRoomExtras(long id, long extraId,
                                                                                               CancellationToken cancellationToken)
         {
@@ -195,6 +201,7 @@ namespace OnlineTravelBooking.Controllers
         [HttpPatch("{id}/change-status")]
         [ProducesResponseType(typeof(GenericResult<string>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<GenericResult<string>>> ChangeStatusAsync(long id,
                                                                                  ChangeRoomStatusRequestDTO requestDTO
                                                                                 ,CancellationToken cancellationToken)

@@ -1,11 +1,9 @@
 using Amazon;
-using Amazon.Runtime;
 using Amazon.S3;
 using Application;
 using Application.Common.Interfaces;
 using Infrastructure;
 using Infrastructure.AWSSettings;
-using Infrastructure.Security;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -23,6 +21,27 @@ var builder = WebApplication.CreateBuilder(args);
 // ── Clean Architecture DI ─────────────────────────────────────────────────────
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+//.----Fixed Rate Limiting Registeration 
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy("auth-fixed-window", context =>
+    {
+        var key = context.Connection.RemoteIpAddress?.ToString()
+                  ?? "Anonymous";
+
+        return RateLimitPartition.GetFixedWindowLimiter(key,
+           _ => new FixedWindowRateLimiterOptions
+           {
+               PermitLimit = 5,
+               AutoReplenishment = true,
+               QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+               Window = TimeSpan.FromSeconds(10),
+               QueueLimit = 0 //. don't put anything in queue and return to the customer 429 response
+           });
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
 
 // ── CORS ──────────────────────────────────────────────────────
 builder.Services.AddCors(options =>

@@ -13,6 +13,7 @@ using Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using OnlineTravelBooking.DTOs;
 using System.Reflection.Metadata;
 
@@ -20,7 +21,8 @@ namespace OnlineTravelBooking.Controllers
 {
     [ApiController]
     [Route("api/hotels")]
-    //[Authorize]
+    [Authorize]
+    [EnableRateLimiting("auth-fixed-window")]
     public class HotelController : ControllerBase
     {
         private readonly IMediator mediator;
