@@ -59,7 +59,11 @@ public partial class AppDbContext : DbContext, IApplicationDbContext
             entity.Property(e => e.created_at).HasDefaultValueSql("(sysutcdatetime())");
             entity.Property(e => e.currency).HasDefaultValue("USD").IsFixedLength();
             entity.Property(e => e.payment_status).HasDefaultValue("unpaid");
-            entity.Property(e => e.status).HasDefaultValue(BookingStatus.Pending);
+            entity.Property(e => e.status)
+                .HasConversion(
+                    v => v != null ? (int)Enum.Parse<Domain.Enums.BookingStatus>(v, true) : 0,
+                    v => Enum.GetName(typeof(Domain.Enums.BookingStatus), v) ?? "Pending")
+                .HasColumnType("int");
             entity.HasOne(d => d.coupon).WithMany(p => p.bookings)
                 .HasConstraintName("FK_bookings_coupon");
             entity.HasOne(d => d.passenger).WithMany(p => p.bookings)
