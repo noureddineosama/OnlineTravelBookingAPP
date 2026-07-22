@@ -1,6 +1,7 @@
 using Application.Common.Interfaces;
 using Application.Common.Models;
 using Application.Common.Pagination;
+using Application.Common.RateLimiting;
 using Application.Features.Favorites.Commands.AddFavorite;
 using Application.Features.Favorites.Commands.RemoveFavorite;
 using Application.Features.Favorites.DTOs;
@@ -11,6 +12,7 @@ using Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace OnlineTravelBooking.Controllers;
 
@@ -40,6 +42,7 @@ public sealed class FavoritesController : ControllerBase
     /// Category values: <c>Tour</c>, <c>Hotel</c>, <c>Flight</c>, <c>Car</c>
     /// </remarks>
     [HttpPost]
+    [EnableRateLimiting(RateLimitingPolicies.FavoritesWrite)]
     [ProducesResponseType(typeof(ApiResponse<FavoriteDto>),          StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<object>),               StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>),               StatusCodes.Status404NotFound)]
@@ -57,6 +60,7 @@ public sealed class FavoritesController : ControllerBase
     /// Returns 204 No Content on success — no body.
     /// </summary>
     [HttpDelete]
+    [EnableRateLimiting(RateLimitingPolicies.FavoritesWrite)]
     [ProducesResponseType(                                            StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ApiResponse<object>),               StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>),               StatusCodes.Status404NotFound)]
@@ -76,6 +80,7 @@ public sealed class FavoritesController : ControllerBase
     /// <param name="page">Page number (default: 1).</param>
     /// <param name="pageSize">Items per page, 1–100 (default: 20).</param>
     [HttpGet]
+    [EnableRateLimiting(RateLimitingPolicies.FavoritesRead)]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<FavoriteDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>),                   StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetMyFavorites(
@@ -100,6 +105,7 @@ public sealed class FavoritesController : ControllerBase
     /// frontend can call DELETE immediately without an extra lookup.
     /// </summary>
     [HttpGet("check")]
+    [EnableRateLimiting(RateLimitingPolicies.FavoritesRead)]
     [ProducesResponseType(typeof(ApiResponse<CheckFavoriteDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>),           StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Check(
