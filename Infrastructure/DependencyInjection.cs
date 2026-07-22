@@ -4,8 +4,10 @@ using Application.Common.Interfaces;
 using Application.Common.Settings;
 using Application.Services;
 using Infrastructure.AWSSettings;
+using Infrastructure.Caching;
 using Infrastructure.Payments;
 using Infrastructure.Persistence;
+using Infrastructure.RateLimiting;
 using Infrastructure.Security;
 using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
@@ -29,6 +31,12 @@ public static class DependencyInjection
 
         services.AddScoped<IApplicationDbContext>(sp =>
             sp.GetRequiredService<AppDbContext>());
+
+        // ── Caching (IMemoryCache + ICacheService + CacheSettings validation) ──
+        services.AddApplicationCaching(configuration);
+
+        // ── Rate Limiting (fixed-window policies + RateLimiterSettings validation) ──
+        services.AddApplicationRateLimiting(configuration);
 
         services.AddTransient<ICalculateNightPrice, CalculateNightPrice>();
         services.AddTransient<ICheckAvailabilityRoom, CheckAvailabilityRoom>();
