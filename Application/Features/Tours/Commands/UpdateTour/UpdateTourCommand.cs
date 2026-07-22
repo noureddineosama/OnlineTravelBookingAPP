@@ -1,5 +1,7 @@
+using Application.Common.Caching;
 using Application.Common.Interfaces;
 using Application.Common.Models;
+using Application.Features.Tours.Cache;
 using Domain.Entities;
 using Domain.Enums;
 using FluentValidation;
@@ -41,11 +43,13 @@ public sealed class UpdateTourCommandValidator : AbstractValidator<UpdateTourCom
 
 internal sealed class UpdateTourCommandHandler : IRequestHandler<UpdateTourCommand, ApiResponse<bool>>
 {
-    private readonly IUnitOfWork _uow;
+    private readonly IUnitOfWork   _uow;
+    private readonly ICacheService _cache;
 
-    public UpdateTourCommandHandler(IUnitOfWork uow)
+    public UpdateTourCommandHandler(IUnitOfWork uow, ICacheService cache)
     {
-        _uow = uow;
+        _uow   = uow;
+        _cache = cache;
     }
 
     public async Task<ApiResponse<bool>> Handle(UpdateTourCommand request, CancellationToken cancellationToken)
@@ -70,6 +74,11 @@ internal sealed class UpdateTourCommandHandler : IRequestHandler<UpdateTourComma
 
         _uow.Repository<tour>().Update(entity);
         await _uow.SaveChangesAsync(cancellationToken);
+
+        // Invalidate the specific tour detail and every list page.
+        await _cache.RemoveAsync(TourCacheKeys.ById(request.Id), cancellationToken);
+        await _cache.RemoveAsync(TourCacheKeys.BySlug(entity.slug ?? string.Empty), cancellationToken);
+        await _cache.RemoveByPrefixAsync(TourCacheKeys.ListPrefix, cancellationToken);
 
         return ApiResponse<bool>.Ok(true);
     }

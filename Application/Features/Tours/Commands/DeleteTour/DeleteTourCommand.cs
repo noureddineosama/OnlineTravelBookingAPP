@@ -1,5 +1,7 @@
+using Application.Common.Caching;
 using Application.Common.Interfaces;
 using Application.Common.Models;
+using Application.Features.Tours.Cache;
 using Domain.Entities;
 using Domain.Enums;
 using FluentValidation;
@@ -25,13 +27,18 @@ public sealed class DeleteTourCommandValidator : AbstractValidator<DeleteTourCom
 
 internal sealed class DeleteTourCommandHandler : IRequestHandler<DeleteTourCommand, ApiResponse<bool>>
 {
-    private readonly IUnitOfWork _uow;
-    private readonly ICurrentIUserService _currentUserService;
+    private readonly IUnitOfWork           _uow;
+    private readonly ICurrentIUserService  _currentUserService;
+    private readonly ICacheService         _cache;
 
-    public DeleteTourCommandHandler(IUnitOfWork uow, ICurrentIUserService currentUserService)
+    public DeleteTourCommandHandler(
+        IUnitOfWork uow,
+        ICurrentIUserService currentUserService,
+        ICacheService cache)
     {
-        _uow = uow;
+        _uow                = uow;
         _currentUserService = currentUserService;
+        _cache              = cache;
     }
 
     public async Task<ApiResponse<bool>> Handle(DeleteTourCommand request, CancellationToken cancellationToken)
@@ -112,6 +119,11 @@ internal sealed class DeleteTourCommandHandler : IRequestHandler<DeleteTourComma
             }
 
             await _uow.SaveChangesAsync(cancellationToken);
+
+            // Invalidate cache regardless of hard vs soft delete path.
+            await _cache.RemoveAsync(TourCacheKeys.ById(request.Id), cancellationToken);
+            await _cache.RemoveAsync(TourCacheKeys.BySlug(entity.slug ?? string.Empty), cancellationToken);
+            await _cache.RemoveByPrefixAsync(TourCacheKeys.ListPrefix, cancellationToken);
 
             return ApiResponse<bool>.Ok(true);
     }

@@ -1,5 +1,7 @@
+using Application.Common.Caching;
 using Application.Common.Exceptions;
 using Application.Common.Interfaces;
+using Application.Features.Favorites.Cache;
 using Domain.Entities;
 using Domain.Enums;
 using FluentValidation;
@@ -38,10 +40,14 @@ public sealed class RemoveFavoriteCommandValidator : AbstractValidator<RemoveFav
 public sealed class RemoveFavoriteCommandHandler
     : IRequestHandler<RemoveFavoriteCommand, Unit>
 {
-    private readonly IUnitOfWork _uow;
+    private readonly IUnitOfWork   _uow;
+    private readonly ICacheService _cache;
 
-    public RemoveFavoriteCommandHandler(IUnitOfWork uow)
-        => _uow = uow;
+    public RemoveFavoriteCommandHandler(IUnitOfWork uow, ICacheService cache)
+    {
+        _uow   = uow;
+        _cache = cache;
+    }
 
     public async Task<Unit> Handle(
         RemoveFavoriteCommand request, CancellationToken cancellationToken)
@@ -62,6 +68,12 @@ public sealed class RemoveFavoriteCommandHandler
 
         _uow.Repository<favorite>().Remove(entity);
         await _uow.SaveChangesAsync(cancellationToken);
+
+        // Invalidate user's list (all pages) and the per-item check key.
+        await _cache.RemoveByPrefixAsync(FavoriteCacheKeys.UserPrefix(request.UserId), cancellationToken);
+        await _cache.RemoveAsync(
+            FavoriteCacheKeys.Check(request.UserId, categoryStr, request.ItemId),
+            cancellationToken);
 
         return Unit.Value;
     }

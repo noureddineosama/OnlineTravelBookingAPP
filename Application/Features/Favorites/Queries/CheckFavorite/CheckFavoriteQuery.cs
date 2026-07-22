@@ -1,5 +1,6 @@
 using Application.Common.Interfaces;
 using Application.Common.Models;
+using Application.Features.Favorites.Cache;
 using Application.Features.Favorites.DTOs;
 using Domain.Entities;
 using Domain.Enums;
@@ -15,7 +16,17 @@ public sealed record CheckFavoriteQuery(
     long             UserId,
     FavoriteCategory Category,
     long             ItemId
-) : IRequest<ApiResponse<CheckFavoriteDto>>;
+) : IRequest<ApiResponse<CheckFavoriteDto>>, ICacheableQuery
+{
+    // ── ICacheableQuery ──────────────────────────────────────────────────────
+    /// <inheritdoc />
+    /// User-scoped key: each user+category+item combination has its own cache slot.
+    public string    CacheKey          => FavoriteCacheKeys.Check(UserId, Category.ToDbString(), ItemId);
+
+    /// <inheritdoc />
+    /// Returns <c>null</c> — driven by <c>CacheSettings.FavoritesCheckMinutes</c> in appsettings.json.
+    public TimeSpan? SlidingExpiration => null;
+}
 
 // ── Validator ─────────────────────────────────────────────────────────────────
 
