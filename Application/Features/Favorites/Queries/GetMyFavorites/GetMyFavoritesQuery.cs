@@ -1,6 +1,7 @@
 using Application.Common.Interfaces;
 using Application.Common.Models;
 using Application.Common.Pagination;
+using Application.Features.Favorites.Cache;
 using Application.Features.Favorites.DTOs;
 using Domain.Entities;
 using Domain.Enums;
@@ -26,14 +27,22 @@ namespace Application.Features.Favorites.Queries.GetMyFavorites;
 /// TODO: Replace request.UserId with ICurrentUserService.UserId once JWT auth is implemented.
 /// </summary>
 public sealed record GetMyFavoritesQuery : PagedQuery,
-    IRequest<ApiResponse<PagedResult<FavoriteDto>>>
+    IRequest<ApiResponse<PagedResult<FavoriteDto>>>,
+    ICacheableQuery
 {
-    /// <summary>
-    /// TODO: Remove this property once JWT authentication is implemented.
-    /// UserId will be read from ICurrentUserService (extracted from the JWT token).
-    /// </summary>
+    /// <summary>ID of the authenticated passenger whose favourites to load.</summary>
     public long              UserId   { get; init; }
     public FavoriteCategory? Category { get; init; } // null = all categories
+
+    // ── ICacheableQuery ──────────────────────────────────────────────────────
+    /// <inheritdoc />
+    /// User-scoped key prevents data leaking across different users.
+    public string CacheKey =>
+        FavoriteCacheKeys.UserList(UserId, Category?.ToString(), Page, PageSize);
+
+    /// <inheritdoc />
+    /// Returns <c>null</c> — driven by <c>CacheSettings.FavoritesListMinutes</c> in appsettings.json.
+    public TimeSpan? SlidingExpiration => null;
 }
 
 // ── Validator ─────────────────────────────────────────────────────────────────

@@ -1,6 +1,8 @@
+using Application.Common.Caching;
 using Application.Common.Exceptions;
 using Application.Common.Interfaces;
 using Application.Common.Models;
+using Application.Features.Favorites.Cache;
 using Application.Features.Favorites.DTOs;
 using Domain.Entities;
 using Domain.Enums;
@@ -40,10 +42,14 @@ public sealed class AddFavoriteCommandValidator : AbstractValidator<AddFavoriteC
 public sealed class AddFavoriteCommandHandler
     : IRequestHandler<AddFavoriteCommand, ApiResponse<FavoriteDto>>
 {
-    private readonly IUnitOfWork _uow;
+    private readonly IUnitOfWork   _uow;
+    private readonly ICacheService _cache;
 
-    public AddFavoriteCommandHandler(IUnitOfWork uow)
-        => _uow = uow;
+    public AddFavoriteCommandHandler(IUnitOfWork uow, ICacheService cache)
+    {
+        _uow   = uow;
+        _cache = cache;
+    }
 
     public async Task<ApiResponse<FavoriteDto>> Handle(
         AddFavoriteCommand request, CancellationToken cancellationToken)
@@ -77,9 +83,14 @@ public sealed class AddFavoriteCommandHandler
         await _uow.Repository<favorite>().AddAsync(entity, cancellationToken);
         await _uow.SaveChangesAsync(cancellationToken);
 
-        // 4. Enrich with display fields so the frontend can render the card
-        //    immediately — no second round-trip needed.
+        // Enrich with display fields so the frontend can render the card immediately.
         var dto = await EnrichAsync(entity, request.Category, cancellationToken);
+
+        // Invalidate user's favorites list (all pages) and the check-key for this item.
+        await _cache.RemoveByPrefixAsync(FavoriteCacheKeys.UserPrefix(request.UserId), cancellationToken);
+        await _cache.RemoveAsync(
+            FavoriteCacheKeys.Check(request.UserId, categoryStr, request.ItemId),
+            cancellationToken);
 
         return ApiResponse<FavoriteDto>.Ok(dto,
             $"{request.Category} added to favourites successfully.");

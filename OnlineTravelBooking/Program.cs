@@ -1,16 +1,15 @@
-using Amazon;
-using Amazon.S3;
+// ════════════════════════════════════════════════════════════════════════════
+//  Online Travel Booking API  —  Composition Root
+//  Clean Architecture: Domain → Application → Infrastructure → API
+// ════════════════════════════════════════════════════════════════════════════
+
 using Application;
 using Application.Common.Interfaces;
 using Infrastructure;
-using Infrastructure.AWSSettings;
 using Infrastructure.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using OnlineTravelBooking.Middleware;
 using OnlineTravelBooking.Swagger;
-using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
@@ -20,10 +19,13 @@ using Sentry.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ── Clean Architecture DI ─────────────────────────────────────────────────────
+// ── 1. Clean Architecture layers ─────────────────────────────────────────────
+//  AddApplication  : MediatR, FluentValidation, AutoMapper, pipeline behaviors
+//  AddInfrastructure: EF Core, JWT, caching, rate limiting, Stripe, AWS, repositories
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// ── 2. CORS ───────────────────────────────────────────────────────────────────
 //.----Fixed Rate Limiting Registeration 
 builder.Services.AddRateLimiter(options =>
 {
@@ -86,69 +88,26 @@ builder.Services.AddRateLimiter(options =>
 
 // ── CORS ──────────────────────────────────────────────────────
 builder.Services.AddCors(options =>
-    options.AddPolicy("AllowAll", p =>
-        p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
+    options.AddPolicy("AllowAll", policy =>
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader()));
 
-//_______________________________________
-builder.Services.AddAuthentication(options =>
-    {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
-            ValidAudience = builder.Configuration["JwtSettings:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKEY"]!))
-        };
-    });
+// ── 3. Authorization (JWT Bearer registered inside AddInfrastructure) ─────────
 builder.Services.AddAuthorization();
 
-// ── Controllers ───────────────────────────────────────────────────────────────
-// JsonStringEnumConverter ensures all enums (e.g. FavoriteCategory) are
-// serialized as their string names ("Tour", "Hotel", "Flight", "Car")
-// rather than integer values — gives the frontend a stable, readable contract.
+// ── 4. Controllers ────────────────────────────────────────────────────────────
 builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.Converters.Add(
-            new System.Text.Json.Serialization.JsonStringEnumConverter());
-    });
+    .AddJsonOptions(opts =>
+        opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
-builder.Services.AddTransient<ICurrentIUserService, CurrentUserService>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<ICurrentIUserService, CurrentUserService>();
 
-//______________RateLimitMiddleWare___________________________
-builder.Services.AddRateLimiter(options =>
-{
-    options.AddPolicy("auth-fixed-window", context =>
-    {
-        var key = context.Connection.RemoteIpAddress?.ToString()
-                  ?? "Anonymous";
-
-        return RateLimitPartition.GetFixedWindowLimiter(key,
-           _ => new FixedWindowRateLimiterOptions
-           {
-               PermitLimit = 5,
-               AutoReplenishment = true,
-               QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-               Window = TimeSpan.FromSeconds(10),
-               QueueLimit = 0 //. don't put anything in queue and return to the customer 429 response
-           });
-    });
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-});
-
-//___________HybirdCashing_____________________________
+// ── 5. HybridCache ────────────────────────────────────────────────────────────
 builder.Services.AddHybridCache(options =>
 {
-    options.DefaultEntryOptions = new HybridCacheEntryOptions
+    options.DefaultEntryOptions = new Microsoft.Extensions.Caching.Hybrid.HybridCacheEntryOptions
     {
         Expiration = TimeSpan.FromMinutes(30),
         LocalCacheExpiration = TimeSpan.FromMinutes(5)
@@ -168,7 +127,7 @@ builder.Services.Configure<SentryAspNetCoreOptions>(options =>
 
 });
 
-// ── Swagger ───────────────────────────────────────────────────────────────────
+// ── 6. Swagger / OpenAPI ──────────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -176,19 +135,17 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title       = "Online Travel Booking API",
         Version     = "v1",
-        Description = "Clean Architecture — Domain / Application / Infrastructure / API"
+        Description = "Clean Architecture — Domain · Application · Infrastructure · API"
     });
 
-    // Enum values appear as strings ("Tour", "Hotel") instead of integers.
     options.SchemaFilter<StringEnumSchemaFilter>();
 
-    // Surface all XML <summary> comments as Swagger descriptions.
-    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    var xmlPath = Path.Combine(
+        AppContext.BaseDirectory,
+        $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml");
     if (File.Exists(xmlPath))
         options.IncludeXmlComments(xmlPath);
 
-    // JWT Bearer auth in Swagger UI
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name         = "Authorization",
@@ -196,7 +153,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme       = "Bearer",
         BearerFormat = "JWT",
         In           = ParameterLocation.Header,
-        Description  = "Enter 'Bearer' [space] and then your token.\r\n\r\nExample: \"Bearer eyJhbGci...\""
+        Description  = "Enter: Bearer {your-token}"
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -215,9 +172,12 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+// ════════════════════════════════════════════════════════════════════════════
+//  Middleware pipeline
+// ════════════════════════════════════════════════════════════════════════════
+
 var app = builder.Build();
 
-// ── Middleware Pipeline ───────────────────────────────────────────────────────
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseMiddleware<MeasuringExecutingTimeMiddleware>();
 
@@ -238,10 +198,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
-
 app.UseAuthentication();
 app.UseRateLimiter();
 app.UseAuthorization();
+app.UseRateLimiter();   // after auth so identity is available to future user-scoped policies
 
 app.MapControllers();
 

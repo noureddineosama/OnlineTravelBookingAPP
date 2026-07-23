@@ -1,3 +1,4 @@
+using Application.Common.RateLimiting;
 using Application.Features.Tours.Commands.CreateTour;
 using Application.Features.Tours.Commands.DeleteTour;
 using Application.Features.Tours.Commands.UpdateTour;
@@ -6,6 +7,7 @@ using Application.Features.Tours.Queries.GetTourById;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace OnlineTravelBooking.Controllers;
 
@@ -24,6 +26,7 @@ public sealed class ToursController : ControllerBase
     /// Get a paginated list of tours. Publicly accessible.
     /// </summary>
     [HttpGet]
+    [EnableRateLimiting(RateLimitingPolicies.TourRead)]
     public async Task<IActionResult> GetAll(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
@@ -47,6 +50,7 @@ public sealed class ToursController : ControllerBase
     /// Get details of a specific tour by ID. Publicly accessible.
     /// </summary>
     [HttpGet("{id:long}")]
+    [EnableRateLimiting(RateLimitingPolicies.TourRead)]
     public async Task<IActionResult> GetById(long id)
     {
         var result = await _mediator.Send(new GetTourByIdQuery(id));
@@ -62,6 +66,7 @@ public sealed class ToursController : ControllerBase
     /// </summary>
     [HttpPost]
     [Authorize(Roles = "Admin")]
+    [EnableRateLimiting(RateLimitingPolicies.TourWrite)]
     public async Task<IActionResult> Create([FromBody] CreateTourCommand command)
     {
         var result = await _mediator.Send(command);
@@ -77,6 +82,7 @@ public sealed class ToursController : ControllerBase
     /// </summary>
     [HttpPut("{id:long}")]
     [Authorize(Roles = "Admin")]
+    [EnableRateLimiting(RateLimitingPolicies.TourWrite)]
     public async Task<IActionResult> Update(long id, [FromBody] UpdateTourCommand command)
     {
         if (id != command.Id)
@@ -95,6 +101,7 @@ public sealed class ToursController : ControllerBase
     /// </summary>
     [HttpDelete("{id:long}")]
     [Authorize(Roles = "Admin")]
+    [EnableRateLimiting(RateLimitingPolicies.TourWrite)]
     public async Task<IActionResult> Delete(long id)
     {
         var result = await _mediator.Send(new DeleteTourCommand(id));
