@@ -1,12 +1,14 @@
 using Application.Common.Interfaces;
 using Application.Common.Models;
 using Application.Features.FlightBookings.DTOs;
+using Application.Features.Flights.Caching;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Application.Features.FlightBookings.Commands.CreateFlightBooking;
 
@@ -71,14 +73,20 @@ public sealed class CreateFlightBookingCommandHandler
     : IRequestHandler<CreateFlightBookingCommand, ApiResponse<FlightBookingResponse>>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IFlightCacheService _cache;
     private readonly IMapper _mapper;
+    private readonly ILogger<CreateFlightBookingCommandHandler> _logger;
 
     public CreateFlightBookingCommandHandler(
         IApplicationDbContext context,
-        IMapper mapper)
+        IFlightCacheService cache,
+        IMapper mapper,
+        ILogger<CreateFlightBookingCommandHandler> logger)
     {
         _context = context;
+        _cache = cache;
         _mapper = mapper;
+        _logger = logger;
     }
 
     /// <summary>
@@ -91,13 +99,24 @@ public sealed class CreateFlightBookingCommandHandler
         CreateFlightBookingCommand request,
         CancellationToken cancellationToken)
     {
+        _logger.LogInformation(
+            "Creating flight booking for UserId {UserId}, FlightId {FlightId}, PassengerCount {PassengerCount}",
+            request.UserId,
+            request.FlightId,
+            request.Passengers.Count);
+
         // Check if the passenger exists in the database
         var passengerExists = await _context.passengers
             .AnyAsync(p => p.id == request.UserId, cancellationToken);
 
         // If the passenger does not exist, return a failure response
         if (!passengerExists)
+        {
+            _logger.LogWarning(
+                "Flight booking rejected because UserId {UserId} was not found",
+                request.UserId);
             return ApiResponse<FlightBookingResponse>.Fail("Passenger account not found.", 404);
+        }
 
         // Retrieve the flight from the database based on the provided FlightId
         var flight = await _context.flights
@@ -105,7 +124,12 @@ public sealed class CreateFlightBookingCommandHandler
 
         // If the flight does not exist, return a failure response
         if (flight is null)
+        {
+            _logger.LogWarning(
+                "Flight booking rejected because FlightId {FlightId} was not found",
+                request.FlightId);
             return ApiResponse<FlightBookingResponse>.Fail("Flight not found.", 404);
+        }
 
         // Check if the flight is scheduled and available for booking
         if (flight.status != "scheduled")
@@ -116,7 +140,14 @@ public sealed class CreateFlightBookingCommandHandler
 
         // Check if there are enough seats available on the flight for the requested number of passengers
         if (flight.seats_available < passengerCount)
+        {
+            _logger.LogWarning(
+                "Insufficient seats on FlightId {FlightId}. Requested {RequestedSeats}, Available {AvailableSeats}",
+                flight.id,
+                passengerCount,
+                flight.seats_available);
             return ApiResponse<FlightBookingResponse>.Fail("Not enough seats available.", 409);
+        }
 
         // If the trip type is round trip, retrieve the return flight and perform similar checks
         flight? returnFlight = null;
@@ -198,8 +229,24 @@ public sealed class CreateFlightBookingCommandHandler
             .Include(x => x.flight_booking_passengers)
             .FirstAsync(x => x.id == flightBooking.id, cancellationToken);
 
+        var response = _mapper.Map<FlightBookingResponse>(saved);
+
+        _cache.Remove(FlightCacheKeys.FlightDetails(flight.id));
+        if (returnFlight is not null)
+            _cache.Remove(FlightCacheKeys.FlightDetails(returnFlight.id));
+        _cache.RemoveByPrefix(FlightCacheKeys.FlightSearchPrefix);
+        _cache.Set(
+            FlightCacheKeys.FlightBookingDetails(saved.id),
+            response,
+            TimeSpan.FromMinutes(5));
+
+        _logger.LogInformation(
+            "Flight booking {BookingId} created successfully with BookingNumber {BookingNumber}",
+            saved.id,
+            saved.booking.booking_number);
+
         return ApiResponse<FlightBookingResponse>.Ok(
-            _mapper.Map<FlightBookingResponse>(saved),
+            response,
             "Flight booked successfully.");
     }
 
