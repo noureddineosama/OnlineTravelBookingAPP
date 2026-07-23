@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using System.Security.Claims;
 using System.Threading.RateLimiting;
 
 namespace Infrastructure.RateLimiting;
@@ -44,9 +45,6 @@ public static class RateLimitingRegistration
         // ── 3. Register all named policies ────────────────────────────────────
         services.AddRateLimiter(options =>
         {
-            static string Ip(HttpContext ctx) =>
-                ctx.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
-
             options.AddPolicy(RateLimitingPolicies.TourRead,
                 ctx => FixedWindow(Ip(ctx), rl.TourRead));
 
@@ -72,6 +70,26 @@ public static class RateLimitingRegistration
                     QueueLimit           = 0
                 }));
 
+            options.AddPolicy(RateLimitingPolicies.FlightRead,
+                ctx => RateLimitPartition.GetFixedWindowLimiter(UserOrIp(ctx), _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit          = 60,
+                    Window               = TimeSpan.FromMinutes(1),
+                    AutoReplenishment    = true,
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit           = 0
+                }));
+
+            options.AddPolicy(RateLimitingPolicies.FlightWrite,
+                ctx => RateLimitPartition.GetFixedWindowLimiter(UserOrIp(ctx), _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit          = 10,
+                    Window               = TimeSpan.FromMinutes(1),
+                    AutoReplenishment    = true,
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit           = 0
+                }));
+
             // Fail-fast: never queue — return 429 immediately.
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
         });
@@ -80,6 +98,9 @@ public static class RateLimitingRegistration
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────
+
+    private static string Ip(HttpContext ctx) =>
+        ctx.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
 
     private static RateLimitPartition<string> FixedWindow(
         string key, RateLimiterPolicySettings p)
@@ -91,4 +112,12 @@ public static class RateLimitingRegistration
             QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
             QueueLimit           = 0
         });
+
+    private static string UserOrIp(HttpContext ctx)
+    {
+        var userId = ctx.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return !string.IsNullOrWhiteSpace(userId)
+            ? $"user:{userId}"
+            : $"ip:{Ip(ctx)}";
+    }
 }

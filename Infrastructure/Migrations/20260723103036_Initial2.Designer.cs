@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260718201216_AddUniqueConstraintToTourSchedule")]
-    partial class AddUniqueConstraintToTourSchedule
+    [Migration("20260723103036_Initial2")]
+    partial class Initial2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -98,11 +98,9 @@ namespace Infrastructure.Migrations
                         .HasDefaultValue("unpaid");
 
                     b.Property<int>("status")
-                        .ValueGeneratedOnAdd()
                         .HasMaxLength(10)
                         .IsUnicode(false)
-                        .HasColumnType("int")
-                        .HasDefaultValue(1);
+                        .HasColumnType("int");
 
                     b.Property<decimal>("subtotal")
                         .HasColumnType("decimal(10, 2)");
@@ -1190,8 +1188,8 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("id"));
 
-                    b.Property<int>("available_units")
-                        .HasColumnType("int");
+                    b.Property<bool>("IsAvailable")
+                        .HasColumnType("bit");
 
                     b.Property<DateOnly>("date")
                         .HasColumnType("date");

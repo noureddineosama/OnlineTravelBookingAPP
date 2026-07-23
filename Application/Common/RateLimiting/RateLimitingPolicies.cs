@@ -56,4 +56,18 @@ public static class RateLimitingPolicies
     /// Authentication and general endpoints rate limit (5 req/10s).
     /// </summary>
     public const string AuthFixedWindow = "auth-fixed-window";
+
+    // ── Flights ───────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Flight read endpoints: GET /api/flights, GET /api/flight-bookings/{id}.
+    /// 60 requests / 1 min per user (or IP when unauthenticated).
+    /// </summary>
+    public const string FlightRead = "flight-read";
+
+    /// <summary>
+    /// Flight write endpoints: POST/PUT/DELETE on /api/flight-bookings.
+    /// 10 requests / 1 min per user (or IP when unauthenticated).
+    /// </summary>
+    public const string FlightWrite = "flight-write";
 }

@@ -11,10 +11,7 @@ using Microsoft.OpenApi.Models;
 using OnlineTravelBooking.Middleware;
 using OnlineTravelBooking.Swagger;
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.RateLimiting;
-using System.Threading.RateLimiting;
 using Microsoft.Extensions.Caching.Hybrid;
-using System.Security.Claims;
 using Sentry.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,66 +23,7 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 // ── 2. CORS ───────────────────────────────────────────────────────────────────
-//.----Fixed Rate Limiting Registeration 
-builder.Services.AddRateLimiter(options =>
-{
-    options.AddPolicy("auth-fixed-window", context =>
-    {
-        var key = context.Connection.RemoteIpAddress?.ToString()
-                  ?? "Anonymous";
-
-        return RateLimitPartition.GetFixedWindowLimiter(key,
-           _ => new FixedWindowRateLimiterOptions
-           {
-               PermitLimit = 5,
-               AutoReplenishment = true,
-               QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-               Window = TimeSpan.FromSeconds(10),
-               QueueLimit = 0 //. don't put anything in queue and return to the customer 429 response
-           });
-    });
-
-    options.AddPolicy("flight-read", context =>
-    {
-        var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var key = !string.IsNullOrWhiteSpace(userId)
-            ? $"user:{userId}"
-            : $"ip:{context.Connection.RemoteIpAddress?.ToString() ?? "anonymous"}";
-
-        return RateLimitPartition.GetFixedWindowLimiter(
-            key,
-            _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 60,
-                Window = TimeSpan.FromMinutes(1),
-                QueueLimit = 0,
-                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                AutoReplenishment = true
-            });
-    });
-
-    options.AddPolicy("flight-write", context =>
-    {
-        var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var key = !string.IsNullOrWhiteSpace(userId)
-            ? $"user:{userId}"
-            : $"ip:{context.Connection.RemoteIpAddress?.ToString() ?? "anonymous"}";
-
-        return RateLimitPartition.GetFixedWindowLimiter(
-            key,
-            _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 10,
-                Window = TimeSpan.FromMinutes(1),
-                QueueLimit = 0,
-                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                AutoReplenishment = true
-            });
-    });
-
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-});
-
+// Rate limiting is registered inside AddInfrastructure → AddApplicationRateLimiting.
 // ── CORS ──────────────────────────────────────────────────────
 builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", policy =>
@@ -186,22 +124,20 @@ app.UseMiddleware<MeasuringExecutingTimeMiddleware>();
 // slow endpoints in the Performance tab of your Sentry dashboard.
 app.UseSentryTracing();
 
-if (app.Environment.IsDevelopment())
-{
+
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Online Travel Booking API v1");
         c.RoutePrefix = "swagger";
     });
-}
+
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthentication();
-app.UseRateLimiter();
+app.UseRateLimiter();   // after auth so user-scoped policies (e.g. flight-read/write) see identity
 app.UseAuthorization();
-app.UseRateLimiter();   // after auth so identity is available to future user-scoped policies
 
 app.MapControllers();
 
