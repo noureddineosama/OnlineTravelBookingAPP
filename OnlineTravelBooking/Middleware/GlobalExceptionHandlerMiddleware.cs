@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using Application.Common.Models;
+using Sentry;
 using ValidationException  = Application.Common.Exceptions.ValidationException;
 using NotFoundException    = Application.Common.Exceptions.NotFoundException;
 using ConflictException    = Application.Common.Exceptions.ConflictException;
@@ -8,10 +9,6 @@ using BadRequestException  = Application.Common.Exceptions.BadRequestException;
 
 namespace OnlineTravelBooking.Middleware;
 
-/// <summary>
-/// Global exception handler middleware. Ensures every error returns
-/// a consistent ApiResponse format — no unhandled exceptions leak to the client.
-/// </summary>
 public sealed class GlobalExceptionHandlerMiddleware
 {
     private readonly RequestDelegate _next;
@@ -59,15 +56,27 @@ public sealed class GlobalExceptionHandlerMiddleware
                 ApiResponse<object>.Fail(be.Message, (int)HttpStatusCode.BadRequest)
             ),
 
-            _ => 
-                (
+            _ => (
                 HttpStatusCode.InternalServerError,
                 ApiResponse<object>.Fail("An unexpected error occurred.", (int)HttpStatusCode.InternalServerError)
             )
         };
 
         if (statusCode == HttpStatusCode.InternalServerError)
+        {
             _logger.LogError(exception, "Unhandled exception: {Message}", exception.Message);
+            SentrySdk.AddBreadcrumb(
+                message: $"{context.Request.Method} {context.Request.Path}",
+                category: "http.request",
+                level: BreadcrumbLevel.Error,
+                data: new Dictionary<string, string>
+                {
+                    ["query"]  = context.Request.QueryString.ToString(),
+                    ["status"] = ((int)statusCode).ToString()
+                }
+            );
+            SentrySdk.CaptureException(exception);
+        }
 
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)statusCode;
@@ -76,4 +85,3 @@ public sealed class GlobalExceptionHandlerMiddleware
         await context.Response.WriteAsync(JsonSerializer.Serialize(response, options));
     }
 }
-

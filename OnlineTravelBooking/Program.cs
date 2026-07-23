@@ -11,6 +11,11 @@ using Microsoft.OpenApi.Models;
 using OnlineTravelBooking.Middleware;
 using OnlineTravelBooking.Swagger;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
+using Microsoft.Extensions.Caching.Hybrid;
+using System.Security.Claims;
+using Sentry.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +26,67 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 // ── 2. CORS ───────────────────────────────────────────────────────────────────
+//.----Fixed Rate Limiting Registeration 
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy("auth-fixed-window", context =>
+    {
+        var key = context.Connection.RemoteIpAddress?.ToString()
+                  ?? "Anonymous";
+
+        return RateLimitPartition.GetFixedWindowLimiter(key,
+           _ => new FixedWindowRateLimiterOptions
+           {
+               PermitLimit = 5,
+               AutoReplenishment = true,
+               QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+               Window = TimeSpan.FromSeconds(10),
+               QueueLimit = 0 //. don't put anything in queue and return to the customer 429 response
+           });
+    });
+
+    options.AddPolicy("flight-read", context =>
+    {
+        var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var key = !string.IsNullOrWhiteSpace(userId)
+            ? $"user:{userId}"
+            : $"ip:{context.Connection.RemoteIpAddress?.ToString() ?? "anonymous"}";
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            key,
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 60,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                AutoReplenishment = true
+            });
+    });
+
+    options.AddPolicy("flight-write", context =>
+    {
+        var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var key = !string.IsNullOrWhiteSpace(userId)
+            ? $"user:{userId}"
+            : $"ip:{context.Connection.RemoteIpAddress?.ToString() ?? "anonymous"}";
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            key,
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                AutoReplenishment = true
+            });
+    });
+
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
+// ── CORS ──────────────────────────────────────────────────────
 builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", policy =>
         policy.AllowAnyOrigin()
@@ -46,6 +112,19 @@ builder.Services.AddHybridCache(options =>
         Expiration = TimeSpan.FromMinutes(30),
         LocalCacheExpiration = TimeSpan.FromMinutes(5)
     };
+});
+//______________Sentry____________________________________
+// UseSentry() with no arguments reads ALL settings from the (Sentry) section
+builder.WebHost.UseSentry();
+builder.Services.Configure<SentryAspNetCoreOptions>(options =>
+{
+    options.Environment = builder.Environment.EnvironmentName;
+    var version = System.Reflection.Assembly
+        .GetExecutingAssembly()
+        .GetName()
+        .Version?.ToString() ?? "1.0.0";
+    options.Release = $"online-travel-booking@{version}";
+
 });
 
 // ── 6. Swagger / OpenAPI ──────────────────────────────────────────────────────
@@ -102,6 +181,11 @@ var app = builder.Build();
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseMiddleware<MeasuringExecutingTimeMiddleware>();
 
+// ── Sentry performance tracing ────────────────────────────────────────────────
+// Creates one Sentry "transaction" per HTTP request so you can see
+// slow endpoints in the Performance tab of your Sentry dashboard.
+app.UseSentryTracing();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -115,6 +199,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 app.UseRateLimiter();   // after auth so identity is available to future user-scoped policies
 

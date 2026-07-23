@@ -43,6 +43,7 @@ public static class DependencyInjection
         services.AddTransient<ICalculateNumberOfNights, CalculateNumberOfNights>();
         services.AddTransient<IGenerateSlug, GenerateSlug>();
         services.AddTransient(typeof(ICachService<>), typeof(CachService<>));
+        services.AddSingleton<IFlightCacheService, FlightMemoryCacheService>();
 
         //. AWS registeration 
 

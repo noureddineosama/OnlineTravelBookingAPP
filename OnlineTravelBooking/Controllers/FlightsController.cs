@@ -1,12 +1,14 @@
 ﻿using Application.Features.Flights.Queries.GetAllFlights;
 using Application.Features.Flights.Queries.GetFlightById;
 using MediatR;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 
 namespace OnlineTravelBooking.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[EnableRateLimiting("flight-read")]
 public sealed class FlightsController : ControllerBase
 {
     private readonly ISender _mediator;
