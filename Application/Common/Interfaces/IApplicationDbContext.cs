@@ -18,7 +18,6 @@ public interface IApplicationDbContext
     DbSet<car_extra> car_extras { get; }
     DbSet<car_image> car_images { get; }
     DbSet<car_pricing_tier> car_pricing_tiers { get; }
-    DbSet<coupon> coupons { get; }
     DbSet<favorite> favorites { get; }
     DbSet<flight> flights { get; }
     DbSet<flight_booking> flight_bookings { get; }

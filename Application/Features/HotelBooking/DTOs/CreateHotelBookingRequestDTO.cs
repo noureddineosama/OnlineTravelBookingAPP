@@ -12,8 +12,6 @@ namespace Application.Features.HotelBooking.DTOs
 
         public DateOnly check_out_date { get; set; }
 
-        public int quantity { get; set; }
-
         public int guests_adults { get; set; }
 
         public int guests_children { get; set; }

@@ -22,7 +22,7 @@ namespace Infrastructure.Persistence
                                Where(op => op.room_id == roomId &&
                                            op.date >= check_in_date
                                            && op.date < check_out_date)
-                               .ExecuteUpdateAsync(op => op.SetProperty(op => op.IsAvailable, false));
+                               .ExecuteUpdateAsync(op => op.SetProperty(op => op.IsAvailable, true));
             return execute_update_result;
         }
     }

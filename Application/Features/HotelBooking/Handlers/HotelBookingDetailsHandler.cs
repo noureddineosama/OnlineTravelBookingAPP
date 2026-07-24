@@ -6,6 +6,7 @@ using Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore.Storage.Json;
 using Microsoft.Extensions.Caching.Memory;
+using Stripe;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -16,12 +17,15 @@ namespace Application.Features.HotelBooking.Handlers
     {
         private readonly IUnitOfWork unitOfWork;
         private readonly ICachService<hotel_booking> cacheService;
+        private readonly ICalculateNightPrice calculateNightPrice;
 
         public HotelBookingDetailsHandler(IUnitOfWork unitOfWork,
-                                          ICachService<hotel_booking> cacheService)
+                                          ICachService<hotel_booking> cacheService,
+                                          ICalculateNightPrice calculateNightPrice)
         {
             this.unitOfWork = unitOfWork;
             this.cacheService = cacheService;
+            this.calculateNightPrice = calculateNightPrice;
         }
         public async Task<GenericResult<HotelBookingDetailsResponseDTO>> Handle(HotelBookingDetailsQuery request, CancellationToken cancellationToken)
         {
@@ -31,11 +35,14 @@ namespace Application.Features.HotelBooking.Handlers
 
             await cacheService.GetAsync("existing-booking", cancellationToken);
 
-            var existing_booking = await instace_Of_hotel_booking.GetByIdAsync(predicate: op => op.id == request.id);
+            var existing_booking = await instace_Of_hotel_booking.GetByIdAsync(predicate: op => op.id == request.id,
+                                                                               cancellationToken, op => op.room, book => book.booking, hote => hote.room.hotel);
             if (existing_booking == null)
                 return await Result.FailureAsync<HotelBookingDetailsResponseDTO>("Booking not found.");
 
             await cacheService.SetAsync("existing-booking", existing_booking, cancellationToken);
+
+            //. 3 includes must be done in this response
 
             return await Result.SuccessAsync<HotelBookingDetailsResponseDTO>(new HotelBookingDetailsResponseDTO
             {
@@ -48,8 +55,8 @@ namespace Application.Features.HotelBooking.Handlers
                 PricePerNight = existing_booking.price_per_night,
                 RoomName = existing_booking.room.name,
                 Status = existing_booking.booking.status.ToString(),
-                TotalPrice = existing_booking.booking.total_price
-            });
+                TotalPrice = existing_booking.TotalPrice
+            }, "Data recieved successfully. ");
         }
     }
 }

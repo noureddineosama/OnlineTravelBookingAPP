@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260718201216_AddUniqueConstraintToTourSchedule")]
-    partial class AddUniqueConstraintToTourSchedule
+    [Migration("20260722203736_TheLastCreateOrUpdatesInModel")]
+    partial class TheLastCreateOrUpdatesInModel
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -69,9 +69,6 @@ namespace Infrastructure.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(10)");
 
-                    b.Property<int?>("coupon_id")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -97,12 +94,13 @@ namespace Infrastructure.Migrations
                         .HasColumnType("varchar(15)")
                         .HasDefaultValue("unpaid");
 
-                    b.Property<int>("status")
+                    b.Property<string>("status")
+                        .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(10)
                         .IsUnicode(false)
-                        .HasColumnType("int")
-                        .HasDefaultValue(1);
+                        .HasColumnType("varchar(10)")
+                        .HasDefaultValue("Pending");
 
                     b.Property<decimal>("subtotal")
                         .HasColumnType("decimal(10, 2)");
@@ -118,8 +116,6 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("id")
                         .HasName("PK__bookings__3213E83F6EE64705");
-
-                    b.HasIndex("coupon_id");
 
                     b.HasIndex(new[] { "user_id", "status" }, "IX_bookings_user_status");
 
@@ -417,54 +413,6 @@ namespace Infrastructure.Migrations
                     b.HasIndex("car_id");
 
                     b.ToTable("car_pricing_tiers");
-                });
-
-            modelBuilder.Entity("Domain.Entities.coupon", b =>
-                {
-                    b.Property<int>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
-
-                    b.Property<string>("code")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("discount_type")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(10)");
-
-                    b.Property<decimal>("discount_value")
-                        .HasColumnType("decimal(10, 2)");
-
-                    b.Property<DateTime>("end_date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("is_active")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<int?>("max_usage")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("start_date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("usage_count")
-                        .HasColumnType("int");
-
-                    b.HasKey("id")
-                        .HasName("PK__coupons__3213E83FA0A5561E");
-
-                    b.HasIndex(new[] { "code" }, "UQ_coupons_code")
-                        .IsUnique();
-
-                    b.ToTable("coupons");
                 });
 
             modelBuilder.Entity("Domain.Entities.favorite", b =>
@@ -771,6 +719,9 @@ namespace Infrastructure.Migrations
                         .HasColumnType("bigint");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("id"));
+
+                    b.Property<decimal?>("TotalPrice")
+                        .HasColumnType("decimal(10, 2)");
 
                     b.Property<long>("booking_id")
                         .HasColumnType("bigint");
@@ -1190,8 +1141,8 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("id"));
 
-                    b.Property<int>("available_units")
-                        .HasColumnType("int");
+                    b.Property<bool>("IsAvailable")
+                        .HasColumnType("bit");
 
                     b.Property<DateOnly>("date")
                         .HasColumnType("date");
@@ -1544,18 +1495,11 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.booking", b =>
                 {
-                    b.HasOne("Domain.Entities.coupon", "coupon")
-                        .WithMany("bookings")
-                        .HasForeignKey("coupon_id")
-                        .HasConstraintName("FK_bookings_coupon");
-
                     b.HasOne("Domain.Entities.passenger", "passenger")
                         .WithMany("bookings")
                         .HasForeignKey("user_id")
                         .IsRequired()
                         .HasConstraintName("FK_bookings_user");
-
-                    b.Navigation("coupon");
 
                     b.Navigation("passenger");
                 });
@@ -1989,11 +1933,6 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.car_extra", b =>
                 {
                     b.Navigation("car_booking_extras");
-                });
-
-            modelBuilder.Entity("Domain.Entities.coupon", b =>
-                {
-                    b.Navigation("bookings");
                 });
 
             modelBuilder.Entity("Domain.Entities.flight", b =>

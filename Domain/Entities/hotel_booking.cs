@@ -30,6 +30,9 @@ public partial class hotel_booking
     [Column(TypeName = "decimal(10, 2)")]
     public decimal price_per_night { get; set; }
 
+    [Column(TypeName = "decimal(10, 2)")]
+    public decimal? TotalPrice { get; set; }
+
     [ForeignKey("booking_id")]
     [InverseProperty("hotel_booking")]
     public virtual booking booking { get; set; }

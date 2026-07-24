@@ -56,14 +56,8 @@ public partial class booking : AuditableEntity
     [Unicode(false)]
     public string payment_status { get; set; }
 
-    public int? coupon_id { get; set; }
-
     [InverseProperty("booking")]
     public virtual car_booking car_booking { get; set; }
-
-    [ForeignKey("coupon_id")]
-    [InverseProperty("bookings")]
-    public virtual coupon coupon { get; set; }
 
     [InverseProperty("booking")]
     public virtual flight_booking flight_booking { get; set; }

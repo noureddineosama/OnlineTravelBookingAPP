@@ -50,14 +50,21 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
+                    b.Property<string>("cancellation_reason_details")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("cancellation_reason_type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("cancelled_at")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("category")
                         .IsRequired()
                         .HasMaxLength(10)
                         .IsUnicode(false)
                         .HasColumnType("varchar(10)");
-
-                    b.Property<int?>("coupon_id")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
@@ -84,12 +91,13 @@ namespace Infrastructure.Migrations
                         .HasColumnType("varchar(15)")
                         .HasDefaultValue("unpaid");
 
-                    b.Property<int>("status")
+                    b.Property<string>("status")
+                        .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(10)
                         .IsUnicode(false)
-                        .HasColumnType("int")
-                        .HasDefaultValue(2);
+                        .HasColumnType("varchar(10)")
+                        .HasDefaultValue("Pending");
 
                     b.Property<decimal>("subtotal")
                         .HasColumnType("decimal(10, 2)");
@@ -105,8 +113,6 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("id")
                         .HasName("PK__bookings__3213E83F6EE64705");
-
-                    b.HasIndex("coupon_id");
 
                     b.HasIndex(new[] { "user_id", "status" }, "IX_bookings_user_status");
 
@@ -404,54 +410,6 @@ namespace Infrastructure.Migrations
                     b.HasIndex("car_id");
 
                     b.ToTable("car_pricing_tiers");
-                });
-
-            modelBuilder.Entity("Domain.Entities.coupon", b =>
-                {
-                    b.Property<int>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
-
-                    b.Property<string>("code")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("discount_type")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(10)");
-
-                    b.Property<decimal>("discount_value")
-                        .HasColumnType("decimal(10, 2)");
-
-                    b.Property<DateTime>("end_date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("is_active")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<int?>("max_usage")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("start_date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("usage_count")
-                        .HasColumnType("int");
-
-                    b.HasKey("id")
-                        .HasName("PK__coupons__3213E83FA0A5561E");
-
-                    b.HasIndex(new[] { "code" }, "UQ_coupons_code")
-                        .IsUnique();
-
-                    b.ToTable("coupons");
                 });
 
             modelBuilder.Entity("Domain.Entities.favorite", b =>
@@ -759,6 +717,9 @@ namespace Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("id"));
 
+                    b.Property<decimal?>("TotalPrice")
+                        .HasColumnType("decimal(10, 2)");
+
                     b.Property<long>("booking_id")
                         .HasColumnType("bigint");
 
@@ -911,7 +872,7 @@ namespace Infrastructure.Migrations
                     b.Property<string>("refreshToken")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("refresh_token_expiry")
+                    b.Property<DateTime?>("refresh_token_expiry")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("role_id")
@@ -1272,10 +1233,29 @@ namespace Infrastructure.Migrations
                     b.Property<long>("UpdatedBy")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("cancellation_reason_details")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("cancellation_reason_type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("cancelled_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("cancelled_by")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTime>("created_at")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("(sysutcdatetime())");
+
+                    b.Property<DateTime?>("deleted_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("deleted_by")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("difficulty")
                         .HasMaxLength(15)
@@ -1287,6 +1267,9 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("full_description")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("is_deleted")
+                        .HasColumnType("bit");
 
                     b.Property<int?>("location_id")
                         .HasColumnType("int");
@@ -1300,13 +1283,10 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<string>("status")
-                        .IsRequired()
+                    b.Property<int>("status")
                         .ValueGeneratedOnAdd()
-                        .HasMaxLength(10)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(10)")
-                        .HasDefaultValue("draft");
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<string>("summary")
                         .HasMaxLength(500)
@@ -1474,11 +1454,21 @@ namespace Infrastructure.Migrations
                     b.Property<int>("available_slots")
                         .HasColumnType("int");
 
+                    b.Property<string>("cancellation_reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("cancelled_at")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("capacity")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("end_date")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("is_cancelled")
+                        .HasColumnType("bit");
 
                     b.Property<long>("price_tier_id")
                         .HasColumnType("bigint");
@@ -1494,25 +1484,19 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("price_tier_id");
 
-                    b.HasIndex(new[] { "tour_id", "start_date" }, "IX_tour_schedules_tour_start");
+                    b.HasIndex(new[] { "tour_id", "start_date" }, "IX_tour_schedules_tour_start")
+                        .IsUnique();
 
                     b.ToTable("tour_schedules");
                 });
 
             modelBuilder.Entity("Domain.Entities.booking", b =>
                 {
-                    b.HasOne("Domain.Entities.coupon", "coupon")
-                        .WithMany("bookings")
-                        .HasForeignKey("coupon_id")
-                        .HasConstraintName("FK_bookings_coupon");
-
                     b.HasOne("Domain.Entities.passenger", "passenger")
                         .WithMany("bookings")
                         .HasForeignKey("user_id")
                         .IsRequired()
                         .HasConstraintName("FK_bookings_user");
-
-                    b.Navigation("coupon");
 
                     b.Navigation("passenger");
                 });
@@ -1946,11 +1930,6 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.car_extra", b =>
                 {
                     b.Navigation("car_booking_extras");
-                });
-
-            modelBuilder.Entity("Domain.Entities.coupon", b =>
-                {
-                    b.Navigation("bookings");
                 });
 
             modelBuilder.Entity("Domain.Entities.flight", b =>
