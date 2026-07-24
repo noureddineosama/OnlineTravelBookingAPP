@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class Initial2 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -232,7 +232,14 @@ namespace Infrastructure.Migrations
                     duration_days = table.Column<int>(type: "int", nullable: true),
                     location_id = table.Column<int>(type: "int", nullable: true),
                     difficulty = table.Column<string>(type: "varchar(15)", unicode: false, maxLength: 15, nullable: true),
-                    status = table.Column<string>(type: "varchar(10)", unicode: false, maxLength: 10, nullable: false, defaultValue: "draft"),
+                    status = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    is_deleted = table.Column<bool>(type: "bit", nullable: false),
+                    deleted_at = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    deleted_by = table.Column<long>(type: "bigint", nullable: true),
+                    cancelled_at = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    cancelled_by = table.Column<long>(type: "bigint", nullable: true),
+                    cancellation_reason_type = table.Column<int>(type: "int", nullable: true),
+                    cancellation_reason_details = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "(sysutcdatetime())"),
                     CreatedBy = table.Column<long>(type: "bigint", nullable: false),
                     UpdatedBy = table.Column<long>(type: "bigint", nullable: false),
@@ -264,7 +271,7 @@ namespace Infrastructure.Migrations
                     location_id = table.Column<int>(type: "int", nullable: true),
                     is_email_verified = table.Column<bool>(type: "bit", nullable: false),
                     refreshToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    refresh_token_expiry = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    refresh_token_expiry = table.Column<DateTime>(type: "datetime2", nullable: true),
                     status = table.Column<string>(type: "varchar(20)", unicode: false, maxLength: 20, nullable: false, defaultValue: "unverified"),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "(sysutcdatetime())"),
                     CreatedBy = table.Column<long>(type: "bigint", nullable: false),
@@ -459,8 +466,11 @@ namespace Infrastructure.Migrations
                     booking_number = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
                     user_id = table.Column<long>(type: "bigint", nullable: false),
                     category = table.Column<string>(type: "varchar(10)", unicode: false, maxLength: 10, nullable: false),
-                    status = table.Column<int>(type: "int", unicode: false, maxLength: 10, nullable: false, defaultValue: 2),
+                    status = table.Column<int>(type: "int", unicode: false, maxLength: 10, nullable: false),
                     IsCancelled = table.Column<bool>(type: "bit", nullable: true),
+                    cancelled_at = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    cancellation_reason_type = table.Column<int>(type: "int", nullable: true),
+                    cancellation_reason_details = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     subtotal = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
                     discount_amount = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
                     total_price = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
@@ -518,7 +528,7 @@ namespace Infrastructure.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     room_id = table.Column<long>(type: "bigint", nullable: false),
                     date = table.Column<DateOnly>(type: "date", nullable: false),
-                    available_units = table.Column<int>(type: "int", nullable: false),
+                    IsAvailable = table.Column<bool>(type: "bit", nullable: false),
                     price_override = table.Column<decimal>(type: "decimal(10,2)", nullable: true)
                 },
                 constraints: table =>
@@ -585,7 +595,10 @@ namespace Infrastructure.Migrations
                     start_date = table.Column<DateTime>(type: "datetime2", nullable: false),
                     end_date = table.Column<DateTime>(type: "datetime2", nullable: true),
                     capacity = table.Column<int>(type: "int", nullable: false),
-                    available_slots = table.Column<int>(type: "int", nullable: false)
+                    available_slots = table.Column<int>(type: "int", nullable: false),
+                    is_cancelled = table.Column<bool>(type: "bit", nullable: false),
+                    cancelled_at = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    cancellation_reason = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1110,7 +1123,8 @@ namespace Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_tour_schedules_tour_start",
                 table: "tour_schedules",
-                columns: new[] { "tour_id", "start_date" });
+                columns: new[] { "tour_id", "start_date" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_tours_location_id",

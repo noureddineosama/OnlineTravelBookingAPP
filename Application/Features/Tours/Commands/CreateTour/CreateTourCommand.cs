@@ -1,10 +1,12 @@
+using Application.Common.Caching;
 using Application.Common.Interfaces;
 using Application.Common.Models;
+using Application.Features.Tours.Cache;
+using Application.Features.Tours.DTOs;
 using AutoMapper;
 using Domain.Entities;
 using FluentValidation;
 using MediatR;
-using Application.Features.Tours.DTOs;
 
 namespace Application.Features.Tours.Commands.CreateTour;
 
@@ -39,13 +41,15 @@ public sealed class CreateTourCommandValidator : AbstractValidator<CreateTourCom
 
 internal sealed class CreateTourCommandHandler : IRequestHandler<CreateTourCommand, ApiResponse<CreateTourResponse>>
 {
-    private readonly IUnitOfWork _uow;
-    private readonly IMapper _mapper;
+    private readonly IUnitOfWork    _uow;
+    private readonly IMapper        _mapper;
+    private readonly ICacheService  _cache;
 
-    public CreateTourCommandHandler(IUnitOfWork uow, IMapper mapper)
+    public CreateTourCommandHandler(IUnitOfWork uow, IMapper mapper, ICacheService cache)
     {
-        _uow = uow;
+        _uow    = uow;
         _mapper = mapper;
+        _cache  = cache;
     }
 
     public async Task<ApiResponse<CreateTourResponse>> Handle(CreateTourCommand request, CancellationToken cancellationToken)
@@ -93,6 +97,9 @@ internal sealed class CreateTourCommandHandler : IRequestHandler<CreateTourComma
             scheduleId = schedule.id;
             priceTierId = priceTier.id;
         }
+
+        // Invalidate the tour list cache so the new tour appears immediately.
+        await _cache.RemoveByPrefixAsync(TourCacheKeys.ListPrefix, cancellationToken);
 
         return ApiResponse<CreateTourResponse>.Ok(new CreateTourResponse(entity.id, scheduleId, priceTierId));
     }

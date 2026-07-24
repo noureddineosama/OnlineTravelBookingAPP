@@ -1,9 +1,11 @@
 ﻿using Application.Common.Interfaces;
 using Application.Common.Models;
 using Application.Common.Pagination;
+using Application.Features.Flights.Caching;
 using Application.Features.Flights.DTOs;
 using AutoMapper;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Application.Features.Flights.Queries.GetAllFlights;
 
@@ -23,12 +25,20 @@ public sealed class GetAllFlightsQueryHandler
     : IRequestHandler<GetAllFlightsQuery, ApiResponse<PagedResult<FlightResponse>>>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IFlightCacheService _cache;
     private readonly IMapper _mapper;
+    private readonly ILogger<GetAllFlightsQueryHandler> _logger;
 
-    public GetAllFlightsQueryHandler(IApplicationDbContext context, IMapper mapper)
+    public GetAllFlightsQueryHandler(
+        IApplicationDbContext context,
+        IFlightCacheService cache,
+        IMapper mapper,
+        ILogger<GetAllFlightsQueryHandler> logger)
     {
         _context = context;
+        _cache = cache;
         _mapper = mapper;
+        _logger = logger;
     }
 
     /// <summary>
@@ -41,6 +51,30 @@ public sealed class GetAllFlightsQueryHandler
         GetAllFlightsQuery request,
         CancellationToken cancellationToken)
     {
+        var cacheKey = FlightCacheKeys.FlightSearch(
+            request.Page,
+            request.PageSize,
+            request.OriginAirportCode,
+            request.DestinationAirportCode,
+            request.DepartureDateUtc,
+            request.CabinClass,
+            request.PassengersCount);
+
+        if (_cache.TryGet<PagedResult<FlightResponse>>(cacheKey, out var cachedResult) &&
+            cachedResult is not null)
+        {
+            _logger.LogDebug(
+                "Flight search cache hit for Page {Page}, PageSize {PageSize}",
+                request.Page,
+                request.PageSize);
+            return ApiResponse<PagedResult<FlightResponse>>.Ok(cachedResult);
+        }
+
+        _logger.LogDebug(
+            "Flight search cache miss for Page {Page}, PageSize {PageSize}",
+            request.Page,
+            request.PageSize);
+
         var query = _context.flights.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(request.OriginAirportCode))
@@ -83,8 +117,16 @@ public sealed class GetAllFlightsQueryHandler
             .OrderBy(f => f.departure_at_utc)
             .ToPagedResultAsync(request, cancellationToken);
 
-        return ApiResponse<PagedResult<FlightResponse>>.Ok(
-            paged.MapTo(items =>
-                (IReadOnlyList<FlightResponse>)_mapper.Map<List<FlightResponse>>(items)));
+        var response = paged.MapTo(items =>
+            (IReadOnlyList<FlightResponse>)_mapper.Map<List<FlightResponse>>(items));
+
+        _cache.Set(cacheKey, response, TimeSpan.FromMinutes(2));
+
+        _logger.LogInformation(
+            "Flight search returned {ResultCount} of {TotalCount} flights",
+            response.Items.Count,
+            response.TotalCount);
+
+        return ApiResponse<PagedResult<FlightResponse>>.Ok(response);
     }
 }

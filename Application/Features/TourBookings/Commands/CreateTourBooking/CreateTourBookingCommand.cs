@@ -1,7 +1,10 @@
+using Application.Common.Caching;
 using Application.Common.Exceptions;
 using Application.Common.Interfaces;
 using Application.Common.Models;
+using Application.Features.TourBookings.Cache;
 using Application.Features.TourBookings.DTOs;
+using Application.Features.TourSchedules.Cache;
 using Domain.Entities;
 using Domain.Enums;
 using FluentValidation;
@@ -46,11 +49,13 @@ public sealed class CreateTourBookingCommandValidator : AbstractValidator<Create
 public sealed class CreateTourBookingCommandHandler
     : IRequestHandler<CreateTourBookingCommand, ApiResponse<TourBookingResponse>>
 {
-    private readonly IUnitOfWork _uow;
+    private readonly IUnitOfWork   _uow;
+    private readonly ICacheService _cache;
 
-    public CreateTourBookingCommandHandler(IUnitOfWork uow)
+    public CreateTourBookingCommandHandler(IUnitOfWork uow, ICacheService cache)
     {
-        _uow = uow;
+        _uow   = uow;
+        _cache = cache;
     }
 
     public async Task<ApiResponse<TourBookingResponse>> Handle(
@@ -177,6 +182,10 @@ public sealed class CreateTourBookingCommandHandler
             PaymentStatus     = parentBooking.payment_status,
             CreatedAt         = parentBooking.created_at
         };
+
+        // Invalidate booking list for this user and the schedule availability cache.
+        await _cache.RemoveByPrefixAsync(TourBookingCacheKeys.UserPrefix(request.UserId), cancellationToken);
+        await _cache.RemoveAsync(TourScheduleCacheKeys.ById(request.TourScheduleId), cancellationToken);
 
         return ApiResponse<TourBookingResponse>.Ok(response, "Tour booking created successfully.");
     }

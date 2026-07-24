@@ -23,13 +23,18 @@ public static class DependencyInjection
         // FluentValidation — auto-discovers all AbstractValidator<T> implementations
         services.AddValidatorsFromAssembly(assembly);
 
-        // Validation pipeline — runs validators before every handler (Fluent Validation Registering) 
+        // ── MediatR Pipeline Behaviors (order matters: Validation → Caching → Handler) ──
+        // 1. Validation: rejects invalid requests before they reach the cache or handler
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-        
-        
+
+        // 2. Caching: serves responses from ICacheService for ICacheableQuery requests
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));
+
+        // Note: IMemoryCache + ICacheService are registered by Infrastructure via
+        // builder.Services.AddApplicationCaching(builder.Configuration) in Program.cs.
+
         // AutoMapper — auto-discovers all Profile implementations
         services.AddAutoMapper(assembly);
-    
 
         return services;
     }

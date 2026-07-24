@@ -1,6 +1,7 @@
 using Application.Common.Interfaces;
 using Application.Common.Models;
 using Application.Common.Pagination;
+using Application.Features.Tours.Cache;
 using Application.Features.Tours.DTOs;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
@@ -12,11 +13,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.Tours.Queries.GetAllTours;
 
-public sealed record GetAllToursQuery : PagedQuery, IRequest<ApiResponse<PagedResult<TourDto>>>
+public sealed record GetAllToursQuery : PagedQuery, IRequest<ApiResponse<PagedResult<TourDto>>>, ICacheableQuery
 {
-    public TourStatus? Status { get; init; }
-    public string? Difficulty { get; init; }
-    public string? SearchTerm { get; init; }
+    public TourStatus? Status     { get; init; }
+    public string?     Difficulty { get; init; }
+    public string?     SearchTerm { get; init; }
+
+    // ── ICacheableQuery ──────────────────────────────────────────────────────
+    /// <inheritdoc />
+    public string CacheKey =>
+        TourCacheKeys.List(Page, PageSize, Status?.ToString(), Difficulty, SearchTerm);
+
+    /// <inheritdoc />
+    /// Returns <c>null</c> — expiration is driven by <c>CacheSettings.TourListMinutes</c> in appsettings.json.
+    public TimeSpan? SlidingExpiration => null;
 }
 
 // ── Validation ───────────────────────────────────────────────────────────────

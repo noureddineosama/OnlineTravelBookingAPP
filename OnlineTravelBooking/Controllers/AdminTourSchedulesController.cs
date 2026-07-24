@@ -1,8 +1,10 @@
+using Application.Common.RateLimiting;
 using Application.Features.TourSchedules.Commands.AdminCancelTourSchedule;
 using Application.Features.TourSchedules.Requests;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace OnlineTravelBooking.Controllers;
 
@@ -22,6 +24,7 @@ public sealed class AdminTourSchedulesController : ControllerBase
     /// Add a new schedule to an existing tour. Validates against duplicates.
     /// </summary>
     [HttpPost("/api/admin/tours/{tourId:long}/schedules")]
+    [EnableRateLimiting(RateLimitingPolicies.TourWrite)]
     public async Task<IActionResult> Create(long tourId, [FromBody] CreateTourScheduleRequest request)
     {
         var result = await _mediator.Send(new Application.Features.TourSchedules.Commands.CreateTourSchedule.CreateTourScheduleCommand(
@@ -39,6 +42,7 @@ public sealed class AdminTourSchedulesController : ControllerBase
     /// Cancel a tour schedule and cascade cancellation to all active bookings.
     /// </summary>
     [HttpPost("{scheduleId:long}/cancel")]
+    [EnableRateLimiting(RateLimitingPolicies.TourWrite)]
     public async Task<IActionResult> Cancel(long scheduleId, [FromBody] AdminCancelTourScheduleRequest request)
     {
         var result = await _mediator.Send(new AdminCancelTourScheduleCommand(scheduleId, request.Reason));

@@ -1,5 +1,6 @@
 using Application.Common.Interfaces;
 using Application.Common.Models;
+using Application.Features.Tours.Cache;
 using Application.Features.Tours.DTOs;
 using AutoMapper;
 using Domain.Entities;
@@ -8,7 +9,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.Tours.Queries.GetTourById;
 
-public sealed record GetTourByIdQuery(long Id) : IRequest<ApiResponse<TourDto>>;
+/// <summary>Get a single active tour by its ID. Result is cached (see Cache:TourDetailMinutes in appsettings).</summary>
+public sealed record GetTourByIdQuery(long Id) : IRequest<ApiResponse<TourDto>>, ICacheableQuery
+{
+    /// <inheritdoc />
+    public string    CacheKey          => TourCacheKeys.ById(Id);
+
+    /// <inheritdoc />
+    /// Returns <c>null</c> — expiration is driven by <c>CacheSettings.TourDetailMinutes</c> in appsettings.json.
+    public TimeSpan? SlidingExpiration => null;
+}
 
 internal sealed class GetTourByIdQueryHandler : IRequestHandler<GetTourByIdQuery, ApiResponse<TourDto>>
 {
