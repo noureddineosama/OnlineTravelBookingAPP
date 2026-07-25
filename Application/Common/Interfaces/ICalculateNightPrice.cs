@@ -10,7 +10,6 @@ namespace Application.Common.Interfaces
         Task<decimal> TotalBookingPrice(decimal price_per_night,
                                                            DateOnly check_in_date,
                                                            DateOnly check_out_date,
-                                                           int quantity,
                                                            CancellationToken cancellationToken);
     }
 }

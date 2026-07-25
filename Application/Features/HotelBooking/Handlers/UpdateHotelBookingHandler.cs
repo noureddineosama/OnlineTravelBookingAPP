@@ -6,6 +6,7 @@ using Application.Features.HotelBooking.DTOs;
 using AutoMapper;
 using Domain.Entities;
 using MediatR;
+using Stripe.V2.Core;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -18,16 +19,25 @@ namespace Application.Features.HotelBooking.Handlers
         private readonly ICalculateNumberOfNights nights;
         private readonly ICheckAvailabilityRoom checkAvailability;
         private readonly IMapper mapper;
+        private readonly ICalculateNightPrice calPrice;
+        private readonly ICurrentIUserService currentIUserService;
+        private readonly ICacheInvalidationService cacheInvalidationService;
 
         public UpdateHotelBookingHandler(IUnitOfWork unitOfWork,  
                                          ICalculateNumberOfNights  nights,
                                          ICheckAvailabilityRoom checkAvailability,
-                                         IMapper mapper)
+                                         IMapper mapper,  
+                                         ICalculateNightPrice calPrice,
+                                         ICurrentIUserService currentIUserService,
+                                         ICacheInvalidationService cacheInvalidationService)
         {
             this.unitOfWork = unitOfWork;
             this.nights = nights;
             this.checkAvailability = checkAvailability;
             this.mapper = mapper;
+            this.calPrice = calPrice;
+            this.currentIUserService = currentIUserService;
+            this.cacheInvalidationService = cacheInvalidationService;
         }
 
         async Task<GenericResult<UpdateHotelBookingResponseDTO>> IRequestHandler<UpdateHotelBookingCommand, GenericResult<UpdateHotelBookingResponseDTO>>.Handle(UpdateHotelBookingCommand request, CancellationToken cancellationToken)
@@ -37,18 +47,32 @@ namespace Application.Features.HotelBooking.Handlers
                 throw new ArgumentNullException("Something invalid Occurred");
 
             //. Getting hotel booking with tracking process
-            var existing_hotel_booking = await hotel_booking_instance.GetByIdAsync(op => op.id == request.id );
+            var existing_hotel_booking = await hotel_booking_instance.GetByIdAsync(op => op.id == request.id && 
+                                                                                        op.booking.status == "Pending" && 
+                                                                                        op.booking.IsCancelled == false && 
+                                                                                        op.booking.IsDeleted == false ,
+                                                                                        cancellationToken ,
+                                                                                        op => op.booking,
+                                                                                        op => op.room,
+                                                                                        op => op.room.room_availabilities
+                                                                                    );
             if (existing_hotel_booking == null)
                 return await Result.FailureAsync<UpdateHotelBookingResponseDTO>("Booking not found ");
 
-            //. updating data in memory (or Mapping )
-            var hotel_booking_mapped = mapper.Map(request.requestDTO, existing_hotel_booking);
+            if (await checkAvailability.ValidateDatesAsync(request.requestDTO.check_in_date , request.requestDTO.check_out_date, existing_hotel_booking
+                                                                                                                                .room.room_availabilities
+                                                                                                                                .Where(op => op.date >= request.requestDTO.check_in_date && 
+                                                                                                                                             op.date < request.requestDTO.check_out_date).ToList(), cancellationToken) == false)
+                return await Result.FailureAsync<UpdateHotelBookingResponseDTO>("This booking can't be updated, This booking is not available");
 
-            //. Mapping data to another DTO 
-            var checkRoomAvailability = mapper.Map<CheckRoomAvailabilityRequestDTO>(hotel_booking_mapped);
+            //. Calcuating total Price for updating for updating Hotel Booking 
 
-            if (await checkAvailability.ValidateDatesAsync(checkRoomAvailability, hotel_booking_mapped, cancellationToken) == false)
-                return await Result.FailureAsync<UpdateHotelBookingResponseDTO>("This booking can't be updated. ");
+            var hotel_Booking_Total_Price = await calPrice.TotalBookingPrice(existing_hotel_booking.room.price_per_night,
+                                                request.requestDTO.check_in_date,
+                                                request.requestDTO.check_out_date,cancellationToken);
+            if (hotel_Booking_Total_Price == 0)
+                return await Result.FailureAsync<UpdateHotelBookingResponseDTO>("Something invalid occurred. ");
+
 
             //.Create room available records 
             var room_availability_instance = unitOfWork.Repository<room_availability>();
@@ -63,28 +87,33 @@ namespace Application.Features.HotelBooking.Handlers
                 {
                     date = day,
                     IsAvailable = false, //. due to this booking will be booked now 
-                    price_override = hotel_booking_mapped.room.price_per_night,
-                    room_id = hotel_booking_mapped.room_id
+                    price_override = existing_hotel_booking.room.price_per_night,
+                    room_id = existing_hotel_booking.room_id
                 });
             }
             //. adding new records to the availabilities date for the room
             await room_availability_instance.AddBulkDataAsync(room_availabilities,cancellationToken);
 
+            existing_hotel_booking.guests_adults = request.requestDTO.guests_adults;
+            existing_hotel_booking.guests_children = request.requestDTO.guests_children;
+            existing_hotel_booking.check_in_date = request.requestDTO.check_in_date;
+            existing_hotel_booking.check_out_date = request.requestDTO.check_out_date;
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
+            cacheInvalidationService.Invalidate(currentIUserService.UserId, cancellationToken);
+
             return await Result.SuccessAsync<UpdateHotelBookingResponseDTO>(new UpdateHotelBookingResponseDTO
             {
-                Adults = hotel_booking_mapped.guests_adults,
-                Children = hotel_booking_mapped.guests_children,
-                CheckInDate = hotel_booking_mapped.check_in_date,
-                CheckOutDate = hotel_booking_mapped.check_out_date,
-                BookingStatus = hotel_booking_mapped.booking.status.ToString(),
-                HotelBookingId = hotel_booking_mapped.id,
-                NumberOfNights = nights.NumberOfNights(hotel_booking_mapped, cancellationToken),
-                PricePerNight = hotel_booking_mapped.price_per_night,
-                Quantity = hotel_booking_mapped.quantity,
-                SubTotal = hotel_booking_mapped.booking.subtotal,
+                Adults = existing_hotel_booking.guests_adults,
+                Children = existing_hotel_booking.guests_children,
+                CheckInDate = existing_hotel_booking.check_in_date,
+                CheckOutDate = existing_hotel_booking.check_out_date,
+                BookingStatus = existing_hotel_booking.booking.status.ToString(),
+                HotelBookingId = existing_hotel_booking.id,
+                NumberOfNights = nights.NumberOfNights(existing_hotel_booking, cancellationToken),
+                PricePerNight = existing_hotel_booking.room.price_per_night,
+                SubTotal = hotel_Booking_Total_Price,
                 Message = "Booking had been updated successfully"
             });
         }

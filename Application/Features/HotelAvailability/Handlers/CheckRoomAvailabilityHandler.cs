@@ -36,14 +36,14 @@ namespace Application.Features.HotelAvailability.Handlers
             if (room_instance == null)
                 throw new ArgumentNullException(nameof(instance));
 
-            var result = await instance.GetByIdAsync(predicate: op => op.room.id == request.requestDTO.room_id && 
-                                                            op.booking.status == "Active" && op.booking.IsDeleted == false&& 
-                                                            op.booking.IsCancelled == false, cancellationToken);
-            if(result == null)
-                return await Result.FailureAsync<CheckRoomAvailabilityResponseDTO>(nameof(result));
-
-            if (!await checkAvailability.ValidateDatesAsync(request.requestDTO, result, cancellationToken))
-                return await Result.FailureAsync<CheckRoomAvailabilityResponseDTO>("Room is not available now.");
+            var existing_room = await room_instance.GetByIdAsync(op => op.id == request.requestDTO.room_id &&
+                                                                        op.status == "Active" &&
+                                                                        op.IsDeleted == false, cancellationToken);
+            if(existing_room is null ) return await Result.FailureAsync<CheckRoomAvailabilityResponseDTO>("Room not found. ");
+            if (existing_room.room_availabilities.Any()) {
+                if (await checkAvailability.ValidateDatesAsync(request.requestDTO.check_in_date, request.requestDTO.check_out_date,existing_room.room_availabilities.ToList(), cancellationToken) == false)
+                    return await Result.FailureAsync<CheckRoomAvailabilityResponseDTO>("Room is not available now.");
+            }
 
             return await Result.SuccessAsync<CheckRoomAvailabilityResponseDTO>(new CheckRoomAvailabilityResponseDTO
             {

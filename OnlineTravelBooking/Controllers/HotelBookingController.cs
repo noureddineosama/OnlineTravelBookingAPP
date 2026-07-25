@@ -45,10 +45,10 @@ namespace OnlineTravelBooking.Controllers
             return Ok(result);
         }
 
-        [HttpPatch("{id}")]
+        [HttpPatch("{id}/cancel")]
         [ProducesResponseType(typeof(GenericResult<CancelHotelBookingResponseDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<GenericResult<CancelHotelBookingResponseDTO>>> UpdateBooking(long id,
+        public async Task<ActionResult<GenericResult<CancelHotelBookingResponseDTO>>> ChangeStatusToBeCancelledAsync(long id,
                                                                                                   CancellationToken cancellationToken)
         {
             var result = await mediator.Send(new CancelHotelBookingQuery(id), cancellationToken);
@@ -70,11 +70,11 @@ namespace OnlineTravelBooking.Controllers
         }
 
         [HttpGet("my-booking")]
-        [ProducesResponseType(typeof(GenericResult<List<MyBookingsResponseDTO>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(GenericResult<List<MyHotelBookingsResponseDTO>>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<GenericResult<List<MyBookingsResponseDTO>>>> MyBookingsDetailsASync(CancellationToken cancellationToken)
+        public async Task<ActionResult<GenericResult<List<MyHotelBookingsResponseDTO>>>> MyBookingsDetailsASync(CancellationToken cancellationToken)
         {
-            var result = await mediator.Send(new MyBookingsResponseDTO(),cancellationToken);
+            var result = await mediator.Send(new MyHotelBookingQuery(),cancellationToken);
             if (result == null)
                 return BadRequest(result);
             return Ok(result);

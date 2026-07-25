@@ -44,6 +44,10 @@ public interface IRepository<T> where T : class
                                     params Expression<Func<T, object?>>[]? includes);
     Task<T> GetByIdAsync(Expression<Func<T, bool>> predicate 
                         , CancellationToken cancellationToken = default);
+    Task<T> GetByIdAsync(
+    Expression<Func<T, bool>> predicate,
+    CancellationToken cancellationToken = default,
+    params Expression<Func<T, object>>[] includes);
     Task<int> CountAsync(Expression<Func<T, bool>> predicate, 
                          CancellationToken cancellationToken);
 }

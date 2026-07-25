@@ -25,10 +25,6 @@ namespace Application.Features.HotelBooking.Handlers
                 .GreaterThan(x => x.requestDTO.check_in_date)
                 .WithMessage("Check-out date must be after check-in date.");
 
-            RuleFor(x => x.requestDTO.quantity)
-                .GreaterThan(0)
-                .WithMessage("quantity must be greater than zero.");
-
             RuleFor(x => x.requestDTO.guests_adults)
                 .GreaterThan(0)
                 .WithMessage("At least one adult is required.");

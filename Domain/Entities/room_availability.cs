@@ -18,7 +18,7 @@ public partial class room_availability
 
     public DateOnly date { get; set; }
 
-    public bool IsAvailable { get; set; }
+    public bool IsAvailable { get; set; } = true;
 
     [Column(TypeName = "decimal(10, 2)")]
     public decimal? price_override { get; set; }

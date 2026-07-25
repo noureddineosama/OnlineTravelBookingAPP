@@ -7,5 +7,5 @@ using System.Text;
 
 namespace Application.Features.HotelBooking.Queries
 {
-    public sealed record MyBookingsResponseQuery : IRequest<GenericResult<List<MyBookingsResponseDTO>>>;
+    public sealed record MyHotelBookingQuery : IRequest<GenericResult<List<MyHotelBookingsResponseDTO>>>;
 }

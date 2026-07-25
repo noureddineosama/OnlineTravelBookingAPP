@@ -9,6 +9,7 @@ namespace Application.Common.Interfaces
     {
       Task<T?> GetAsync(string key, CancellationToken cancellationToken);
       Task SetAsync(string key, T data, CancellationToken cancellationToken = default);
-      Task RemoveASync(string key, CancellationToken cancellationToken);
+      Task SetUserIdScopedAsync(string key, long userId, T data, CancellationToken cancellationToken = default);
+      Task RemoveAsync(string key, CancellationToken cancellationToken);
     }
 }
