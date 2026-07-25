@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Youssef Mahmoud Abdel-Maksoud - CV</title>
+<style>
+    @page {
+        size: A4;
+        margin: 12mm 14mm 12mm 14mm;
+    }
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+    body {
+        font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+        color: #2D3748;
+        background-color: #FFFFFF;
+        font-size: 9.5pt;
+        line-height: 1.38;
+    }
+    .header {
+        text-align: center;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #2B6CB0;
+    }
+    .name {
+        font-size: 18pt;
+        font-weight: 700;
+        color: #1A202C;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+    .contact-info {
+        font-size: 9pt;
+        color: #4A5568;
+    }
+    .contact-info a {
+        color: #2B6CB0;
+        text-decoration: none;
+    }
+    .section {
+        margin-bottom: 12px;
+    }
+    .section-title {
+        font-size: 11pt;
+        font-weight: 700;
+        color: #2B6CB0;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        border-bottom: 1px solid #E2E8F0;
+        padding-bottom: 2px;
+        margin-bottom: 8px;
+    }
+    .summary-text {
+        color: #2D3748;
+        text-align: justify;
+    }
+    .skills-grid {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        row-gap: 4px;
+        column-gap: 10px;
+    }
+    .skill-cat {
+        font-weight: 700;
+        color: #1A202C;
+    }
+    .item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 2px;
+    }
+    .item-title {
+        font-weight: 700;
+        font-size: 10pt;
+        color: #1A202C;
+    }
+    .item-subtitle {
+        font-style: italic;
+        color: #4A5568;
+    }
+    .item-date {
+        font-weight: 600;
+        font-size: 8.8pt;
+        color: #718096;
+    }
+    .bullet-list {
+        list-style-type: disc;
+        margin-left: 18px;
+        margin-top: 4px;
+    }
+    .bullet-list li {
+        margin-bottom: 3.5px;
+        color: #2D3748;
+    }
+    .bullet-list li strong {
+        color: #1A202C;
+    }
+    .exp-item {
+        margin-bottom: 10px;
+    }
+    .project-item {
+        margin-bottom: 12px;
+    }
+    .project-desc {
+        font-style: italic;
+        color: #4A5568;
+        font-size: 9pt;
+        margin-bottom: 3px;
+    }
+    .edu-item {
+        margin-bottom: 8px;
+    }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="name">Youssef Mahmoud Mohamed Abdel-Maksoud</div>
+    <div class="contact-info">
+        Cairo, Egypt &nbsp;|&nbsp; +20 1118363890 &nbsp;|&nbsp; <a href="mailto:josephmahmoud49@gmail.com">josephmahmoud49@gmail.com</a><br>
+        GitHub: <a href="https://github.com/YoussefmahmouD-art">github.com/YoussefmahmouD-art</a> &nbsp;|&nbsp; LinkedIn: <a href="https://linkedin.com/in/youssef-mahmoud-179023338">linkedin.com/in/youssef-mahmoud-179023338</a>
+    </div>
+</div>
+
+<div class="section">
+    <div class="section-title">Professional Summary</div>
+    <p class="summary-text">
+        Results-driven <strong>.NET Developer</strong> with expertise in building scalable enterprise web APIs, microservices, and high-availability financial systems. Proficient in C#, ASP.NET Core, EF Core, SQL Server, Clean Architecture, CQRS, and messaging queues. Strong background in production support for government-grade systems, enforcing compliance, secure authentication, and optimized data workflows.
+    </p>
+</div>
+
+<div class="section">
+    <div class="section-title">Technical Skills</div>
+    <div class="skills-grid">
+        <div class="skill-cat">Languages & Core:</div>
+        <div>C#, .NET 8/9/10, ASP.NET Core Web API, ASP.NET Core MVC, LINQ</div>
+        <div class="skill-cat">Architecture & Patterns:</div>
+        <div>Clean Architecture, Vertical Slice Architecture, CQRS (MediatR), DDD, Repository & Unit of Work, SOLID</div>
+        <div class="skill-cat">Databases & Caching:</div>
+        <div>SQL Server, EF Core 10, Redis, Oracle, MySQL, Schema Optimization</div>
+        <div class="skill-cat">Security & Auth:</div>
+        <div>JWT Authentication, Refresh Token Rotation, RBAC, Claims-Based Access Control, BCrypt</div>
+        <div class="skill-cat">Integrations & Messaging:</div>
+        <div>Stripe API & Webhooks, RabbitMQ (Event-Driven), RESTful APIs</div>
+        <div class="skill-cat">Quality & Testing:</div>
+        <div>xUnit, Moq, FluentAssertions, FluentValidation Pipeline Behaviors</div>
+        <div class="skill-cat">Tools & DevOps:</div>
+        <div>Git, GitHub, Docker, Visual Studio, Postman, Serilog, JIRA</div>
+    </div>
+</div>
+
+<div class="section">
+    <div class="section-title">Professional Experience</div>
+    
+    <div class="exp-item">
+        <div class="item-header">
+            <div><span class="item-title">Technical Support Engineer</span> &nbsp;|&nbsp; <span class="item-subtitle">E-Finance Company – Egypt</span></div>
+            <div class="item-date">2023 – Present</div>
+        </div>
+        <ul class="bullet-list">
+            <li>Deliver tier-3 technical support for mission-critical government financial systems, maintaining high availability and strict service continuity.</li>
+            <li>Troubleshoot complex database queries, API failures, and production incidents in real time alongside dev & infrastructure teams.</li>
+            <li>Support secure access controls, system compliance, and performance diagnostics in enterprise-scale environments.</li>
+        </ul>
+    </div>
+
+    <div class="exp-item">
+        <div class="item-header">
+            <div><span class="item-title">Software Engineering Intern (.NET)</span> &nbsp;|&nbsp; <span class="item-subtitle">Huma Volve</span></div>
+            <div class="item-date">June 2025 – August 2025</div>
+        </div>
+        <ul class="bullet-list">
+            <li>Engineered scalable RESTful web APIs and integrated backend components using C# and ASP.NET Core.</li>
+            <li>Designed and optimized relational database schemas in SQL Server, executing complex queries for optimal response times.</li>
+            <li>Participated in daily Agile/Scrum standups, code reviews, and sprint planning following team coding standards.</li>
+        </ul>
+    </div>
+</div>
+
+<div class="section">
+    <div class="section-title">Key Projects</div>
+    
+    <div class="project-item">
+        <div class="item-header">
+            <div class="item-title">Online Travel Booking API</div>
+            <div class="item-date">.NET 10, EF Core, CQRS, MediatR, Stripe, Redis, SQL Server</div>
+        </div>
+        <div class="project-desc">Enterprise backend API for a comprehensive multi-domain travel and tourism booking platform.</div>
+        <ul class="bullet-list">
+            <li><strong>Clean Architecture & CQRS:</strong> Architected a Modular Monolith using Vertical Slice Architecture with MediatR, completely decoupling business logic from external dependencies.</li>
+            <li><strong>Multi-Domain Travel Engine:</strong> Built booking engines for Tours (tiered pricing & capacity tracking), Hotels (real-time room availability & dynamic pricing), Flights, and Car Rentals.</li>
+            <li><strong>Payments & Security:</strong> Integrated Stripe Payment Intents & async webhooks; built JWT authentication with Refresh Token Rotation and RBAC.</li>
+            <li><strong>Performance & Resilience:</strong> Implemented FluentValidation MediatR pipeline behaviors, global exception middleware, and N+1-free EF Core projections.</li>
+        </ul>
+    </div>
+
+    <div class="project-item">
+        <div class="item-header">
+            <div class="item-title">Doctor Booking Platform</div>
+            <div class="item-date">.NET 10, Clean Architecture, CQRS, MediatR, JWT, xUnit, SQL Server</div>
+        </div>
+        <div class="project-desc">Production-ready medical appointment scheduling platform automating doctor availability and patient bookings.</div>
+        <ul class="bullet-list">
+            <li><strong>Architecture & Software Design:</strong> Implemented 4-Layer Clean Architecture & CQRS for maintainable, testable feature boundaries.</li>
+            <li><strong>Slot & Booking Management:</strong> Built dynamic doctor availability slot generation, appointment reservation workflows, and real-time patient-doctor messaging.</li>
+            <li><strong>Governance & Testing:</strong> Developed central admin governance (system logs & announcements) and achieved high test coverage via xUnit, Moq, and FluentAssertions.</li>
+        </ul>
+    </div>
+</div>
+
+<div class="section">
+    <div class="section-title">Education & Training</div>
+    
+    <div class="edu-item">
+        <div class="item-header">
+            <div><span class="item-title">Bachelor of Computer Science (BSc)</span> &nbsp;|&nbsp; <span class="item-subtitle">Higher Technological Institute (HTI)</span></div>
+            <div class="item-date">Class of 2022</div>
+        </div>
+        <div style="font-size: 9pt; color: #4A5568;">GPA: 3.10 (Very Good) &nbsp;|&nbsp; Graduation Project: Excellent (A+)</div>
+    </div>
+
+    <div class="edu-item">
+        <div class="item-header">
+            <div><span class="item-title">Full Stack .NET Track</span> &nbsp;|&nbsp; <span class="item-subtitle">Information Technology Institute (ITI) – Tanta Branch</span></div>
+            <div class="item-date">Feb 2023 – Aug 2023</div>
+        </div>
+        <div style="font-size: 9pt; color: #4A5568;">Intensive 6-month hands-on professional software engineering bootcamp.</div>
+    </div>
+
+    <div class="edu-item">
+        <div class="item-header">
+            <div><span class="item-title">English Professional Communication</span> &nbsp;|&nbsp; <span class="item-subtitle">British Council</span></div>
+            <div class="item-date">Certified</div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
