@@ -10,35 +10,35 @@ using System.Text;
 
 namespace Application.Features.HotelBooking.Handlers
 {
-    public sealed class MyBookingsHandler : IRequestHandler<MyBookingsResponseQuery, GenericResult<List<MyBookingsResponseDTO>>>
+    public sealed class MyHotelBookingsHandler : IRequestHandler<MyHotelBookingQuery, GenericResult<List<MyHotelBookingsResponseDTO>>>
     {
         private readonly IUnitOfWork unitOfWork;
         private readonly ICurrentIUserService currentIUser;
-        private readonly ICachService<List<MyBookingsResponseDTO>> cachService;
+        private readonly ICachService<List<MyHotelBookingsResponseDTO>> cachService;
 
-        public MyBookingsHandler(IUnitOfWork unitOfWork,
+        public MyHotelBookingsHandler(IUnitOfWork unitOfWork,
                                 ICurrentIUserService currentIUser, 
-                                ICachService<List<MyBookingsResponseDTO>> cachService)
+                                ICachService<List<MyHotelBookingsResponseDTO>> cachService)
         {
             this.unitOfWork = unitOfWork;
             this.currentIUser = currentIUser;
             this.cachService = cachService;
         }
-        public async Task<GenericResult<List<MyBookingsResponseDTO>>> Handle(MyBookingsResponseQuery request, CancellationToken cancellationToken)
+        public async Task<GenericResult<List<MyHotelBookingsResponseDTO>>> Handle(MyHotelBookingQuery request, CancellationToken cancellationToken)
         {
             var hotel_booking_instance = unitOfWork.Repository<hotel_booking>();
             if (hotel_booking_instance == null)
                 throw new ArgumentNullException("Something invalid occurred!!");
 
-            var cach_result = await cachService.GetAsync("My-bookings", cancellationToken);
+            var cach_result = await cachService.GetAsync($"My-bookings- {currentIUser.UserId}", cancellationToken);
 
             if (cach_result != null)
                 return await Result.SuccessAsync(cach_result, "Data recieved successfully");
 
-            var My_Bookings = await hotel_booking_instance.GetListSelectorAsync<MyBookingsResponseDTO>(
+            var My_Bookings = await hotel_booking_instance.GetListSelectorAsync<MyHotelBookingsResponseDTO>(
 
                                 predicate: op => op.booking.user_id == currentIUser.UserId,
-                                selector: op => new MyBookingsResponseDTO
+                                selector: op => new MyHotelBookingsResponseDTO
                                 {
                                     CheckInDate = op.check_in_date,
                                     CheckOutDate = op.check_out_date,
@@ -52,9 +52,9 @@ namespace Application.Features.HotelBooking.Handlers
                                 includes: 
                                  op => op.booking); //. not necessary 
 
-            await cachService.SetAsync("My-bookings", My_Bookings, cancellationToken);
+            await cachService.SetUserIdScopedAsync($"my-bookings- {currentIUser.UserId}",currentIUser.UserId, My_Bookings, cancellationToken);
 
-            return await Result.SuccessAsync<List<MyBookingsResponseDTO>>(My_Bookings);
+            return await Result.SuccessAsync<List<MyHotelBookingsResponseDTO>>(My_Bookings, "Data recieved successfully. ");
         }
     }
 }

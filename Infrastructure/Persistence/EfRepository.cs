@@ -176,6 +176,20 @@ public sealed class EfRepository<T> : IRepository<T> where T : class
     public async Task<T> GetByIdAsync(Expression<Func<T, bool>> predicate, 
                                       CancellationToken cancellationToken = default) =>
         await _context.Set<T>().AsQueryable().FirstOrDefaultAsync(predicate); //. tracked 
+    public async Task<T> GetByIdAsync(
+     Expression<Func<T, bool>> predicate,
+     CancellationToken cancellationToken = default,
+     params Expression<Func<T, object>>[] includes)
+    {
+        IQueryable<T> query = _context.Set<T>();
+
+        foreach (var include in includes)
+        {
+            query = query.Include(include);
+        }
+
+        return await query.FirstOrDefaultAsync(predicate, cancellationToken);
+    }
 
     public async Task<int> CountAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken)
     {

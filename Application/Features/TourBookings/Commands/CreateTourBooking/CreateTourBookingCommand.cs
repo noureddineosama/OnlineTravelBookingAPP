@@ -119,16 +119,17 @@ public sealed class CreateTourBookingCommandHandler
         // 6. Generate booking number
         var bookingNumber = "TOUR-" + Guid.NewGuid().ToString("N")[..8].ToUpper();
 
+
         // 7. Create parent booking
         var parentBooking = new booking
         {
             booking_number  = bookingNumber,
             user_id         = request.UserId,
             category        = "tour",
-            status          = BookingStatus.Confirmed.ToString(),
+            status          = BookingStatus.Confirmed.ToString(), 
             subtotal        = subtotal,
-            discount_amount = 0m,
             total_price     = totalPrice,
+            discount_amount = 0m,
             currency        = priceTier.currency,
             payment_status  = "pending",
             created_at      = DateTime.UtcNow

@@ -44,12 +44,8 @@ namespace Application.Features.HotelBooking.Handlers
             var hotel_booking_instance = unitOfWork.Repository<hotel_booking>();
             if(hotel_booking_instance == null)throw new ArgumentNullException(nameof(hotel_booking_instance));
 
-            await cachService.GetAsync("existing-hotel-booking-cancel", cancellationToken);
-
-            var existing_hotel_booking = await hotel_booking_instance.GetByIdAsync(predicate: op => op.id == request.id &&
-                                                                                              op.booking.status == "Active" &&
-                                                                                              op.booking.IsDeleted == false &&
-                                                                                              op.booking.IsCancelled == false, cancellationToken);
+            var existing_hotel_booking = await hotel_booking_instance.GetByIdAsync(predicate: op => op.id == request.id, cancellationToken,
+                                                                                              op => op.booking);
             if (existing_hotel_booking is null)
                 return await Result.FailureAsync<CancelHotelBookingResponseDTO>("Booking not found to cancel. ");
 
@@ -62,13 +58,6 @@ namespace Application.Features.HotelBooking.Handlers
 
             if (execute_update_result_room_Available == default)
                 return await Result.FailureAsync<CancelHotelBookingResponseDTO>("Validation failed. ");
-
-            existing_hotel_booking.booking.status = BookingStatus.Cancelled.ToString();
-            existing_hotel_booking.booking.IsCancelled = true;
-            existing_hotel_booking.booking.updated_at = DateTime.UtcNow;
-            existing_hotel_booking.booking.UpdatedBy = currentIUser.UserId;
-
-            await cachService.SetAsync("existing-hotel-booking-cancel", existing_hotel_booking, cancellationToken);
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
 

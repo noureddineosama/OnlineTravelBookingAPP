@@ -1,5 +1,6 @@
 ﻿using Application.Common.Interfaces;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Primitives;
 using Stripe;
 using System;
 using System.Collections.Generic;
@@ -10,10 +11,12 @@ namespace Infrastructure.Services
     public class CachService<T> : ICachService<T>
     {
         private readonly IMemoryCache cach;
+        private readonly ICacheInvalidationService cacheInvalidation;
 
-        public CachService(IMemoryCache cach)
+        public CachService(IMemoryCache cach, ICacheInvalidationService  cacheInvalidation)
         {
             this.cach = cach;
+            this.cacheInvalidation = cacheInvalidation;
         }
         public Task<T?> GetAsync(string key, CancellationToken cancellationToken)
         {
@@ -34,7 +37,19 @@ namespace Infrastructure.Services
             return Task.CompletedTask;
         }
 
-        public async Task RemoveASync(string key, CancellationToken cancellationToken = default)
+        public Task SetUserIdScopedAsync(string key,long userId ,T data, CancellationToken cancellationToken = default)
+        {
+            var options = new MemoryCacheEntryOptions()
+                .AddExpirationToken(
+                new CancellationChangeToken(
+                cacheInvalidation.GetToken(userId, cancellationToken)));
+
+           cach.Set(key,
+                 data, options);
+            return Task.CompletedTask;
+        }
+
+        public async Task RemoveAsync(string key, CancellationToken cancellationToken = default)
         {
             cach.Remove(key);
         }

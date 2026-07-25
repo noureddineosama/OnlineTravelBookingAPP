@@ -26,7 +26,6 @@ public partial class AppDbContext : DbContext, IApplicationDbContext
     public virtual DbSet<car_extra> car_extras { get; set; }
     public virtual DbSet<car_image> car_images { get; set; }
     public virtual DbSet<car_pricing_tier> car_pricing_tiers { get; set; }
-    public virtual DbSet<coupon> coupons { get; set; }
     public virtual DbSet<favorite> favorites { get; set; }
     public virtual DbSet<flight> flights { get; set; }
     public virtual DbSet<flight_booking> flight_bookings { get; set; }
@@ -147,13 +146,6 @@ public partial class AppDbContext : DbContext, IApplicationDbContext
             entity.HasKey(e => e.id).HasName("PK__car_pric__3213E83F05E65D4C");
             entity.HasOne(d => d.car).WithMany(p => p.car_pricing_tiers)
                 .HasConstraintName("FK_car_pricing_tiers_car");
-        });
-
-        // ── coupon ────────────────────────────────────────────
-        modelBuilder.Entity<coupon>(entity =>
-        {
-            entity.HasKey(e => e.id).HasName("PK__coupons__3213E83FA0A5561E");
-            entity.Property(e => e.is_active).HasDefaultValue(true);
         });
 
         // ── favorite ──────────────────────────────────────────

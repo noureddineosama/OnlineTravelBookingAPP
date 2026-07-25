@@ -20,7 +20,7 @@ namespace Application.Features.HotelBooking.DTOs
 
         public decimal PricePerNight { get; set; }
 
-        public decimal TotalPrice { get; set; }
+        public decimal? TotalPrice { get; set; }
 
         public string Status { get; set; }
     }

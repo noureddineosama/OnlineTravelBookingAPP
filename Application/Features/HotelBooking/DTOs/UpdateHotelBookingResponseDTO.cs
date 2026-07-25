@@ -14,8 +14,6 @@ namespace Application.Features.HotelBooking.DTOs
 
         public int NumberOfNights { get; set; }
 
-        public int Quantity { get; set; }
-
         public int Adults { get; set; }
 
         public int Children { get; set; }

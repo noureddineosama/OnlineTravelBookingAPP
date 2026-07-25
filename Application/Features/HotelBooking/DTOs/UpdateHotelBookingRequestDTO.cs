@@ -13,7 +13,5 @@ namespace Application.Features.HotelBooking.DTOs
         public int guests_adults { get; set; }
 
         public int guests_children { get; set; }
-
-        public int quantity { get; set; }
     }
 }

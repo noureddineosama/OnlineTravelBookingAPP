@@ -53,7 +53,7 @@ namespace Application.Features.Rooms.Handlers
                 Name = room_mapped.name,
                 PricePerNight = room_mapped.price_per_night,
                 Status = room_mapped.status
-            });
+            }, "Room created successfully");
         }
     }
 }

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Application.Features.HotelBooking.DTOs
 {
-    public class MyBookingsResponseDTO
+    public class MyHotelBookingsResponseDTO
     {
         public long BookingId { get; set; }
 

@@ -11,7 +11,5 @@ namespace Application.Features.HotelAvailability.DTOs
         public DateOnly check_in_date { get; set; }
 
         public DateOnly check_out_date { get; set; }
-
-        public int quantity { get; set; }
     }
 }
