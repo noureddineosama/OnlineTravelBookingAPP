@@ -1,4 +1,4 @@
-﻿using Application.Common.Interfaces;
+using Application.Common.Interfaces;
 using Application.Common.Patterns;
 using Application.Features.Booking.DTOs;
 using Application.Features.Booking.Quries;
@@ -37,7 +37,7 @@ namespace Application.Features.Booking.Handlers
 
             var paged_result = await bookings_instance
                 .GetPaginationAsync(predicate: book => book.user_id == currentIUser.UserId &&
-                                                          book.status == "Pending" &&
+                                                          book.status == BookingStatus.Pending &&
                                                         book.IsDeleted == false &&
                                                         book.IsCancelled == false ,
                                     selector: op => new MyBookingsResponseDTO

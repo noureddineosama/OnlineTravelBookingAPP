@@ -1,4 +1,4 @@
-﻿using Application.Common.Patterns;
+using Application.Common.Patterns;
 using Application.Features.HotelAvailability.DTOs;
 using Application.Features.HotelAvailability.Queries;
 using Application.Features.Hotels.Commands;
@@ -14,7 +14,6 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using OnlineTravelBooking.DTOs;
 using System.Reflection.Metadata;
 
 namespace OnlineTravelBooking.Controllers

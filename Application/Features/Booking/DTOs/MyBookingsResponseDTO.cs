@@ -1,8 +1,4 @@
-﻿using Application.Common.Patterns;
-using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Domain.Enums;
 
 namespace Application.Features.Booking.DTOs
 {
@@ -18,7 +14,7 @@ namespace Application.Features.Booking.DTOs
 
         public string Currency { get; set; }
 
-        public string Status { get; set; }
+        public BookingStatus Status { get; set; }
 
         public DateTime CreatedAt { get; set; }
     }

@@ -85,7 +85,7 @@ namespace Application.Features.CarBookings.Handlers
             {
                 BookingId       = parentBooking.id,
                 BookingNumber   = parentBooking.booking_number,
-                Status          = parentBooking.status?.ToString() ?? string.Empty,
+                Status          = parentBooking.status.ToString(),
                 CarId           = car?.id ?? 0,
                 CarModel        = car?.model ?? string.Empty,
                 CarYear         = car?.year,

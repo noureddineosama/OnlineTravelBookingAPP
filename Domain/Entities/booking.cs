@@ -1,5 +1,3 @@
-#nullable disable
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Domain.Common;
@@ -28,14 +26,14 @@ public partial class booking : AuditableEntity
     [Required]
     [StringLength(10)]
     [Unicode(false)]
-    public string? status { get; set; }
+    public BookingStatus status { get; set; }
     public bool? IsCancelled { get; set; } = false;
 
     // Cancellation metadata
     public DateTime? cancelled_at { get; set; }
     public CancellationReasonType? cancellation_reason_type { get; set; }
     [StringLength(500)]
-    public string cancellation_reason_details { get; set; }
+    public string? cancellation_reason_details { get; set; } = string.Empty;
 
     [Column(TypeName = "decimal(10, 2)")]
     public decimal subtotal { get; set; } //. is the same like totalPrice 
@@ -55,6 +53,12 @@ public partial class booking : AuditableEntity
     [StringLength(15)]
     [Unicode(false)]
     public string payment_status { get; set; }
+
+    public int? coupon_id { get; set; }
+
+    [ForeignKey("coupon_id")]
+    [InverseProperty("bookings")]
+    public virtual coupon? coupon { get; set; }
 
     [InverseProperty("booking")]
     public virtual car_booking car_booking { get; set; }

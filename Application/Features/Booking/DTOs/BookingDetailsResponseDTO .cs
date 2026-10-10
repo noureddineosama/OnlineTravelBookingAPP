@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Sockets;
-using System.Text;
+using Domain.Enums;
+using System;
 
 namespace Application.Features.Booking.DTOs
 {
@@ -17,7 +15,7 @@ namespace Application.Features.Booking.DTOs
 
         public string Currency { get; set; }
 
-        public string Status { get; set; }
+        public BookingStatus Status { get; set; }
 
         public DateTime CreatedAt { get; set; }
 

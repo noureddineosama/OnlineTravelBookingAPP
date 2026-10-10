@@ -1,10 +1,11 @@
-﻿using Application.Common.Interfaces;
+using Application.Common.Interfaces;
 using Application.Common.Patterns;
 using Application.Features.HotelAvailability.DTOs;
 using Application.Features.HotelBooking.Commands;
 using Application.Features.HotelBooking.DTOs;
 using AutoMapper;
 using Domain.Entities;
+using Domain.Enums;
 using MediatR;
 using Stripe.V2.Core;
 using System;
@@ -48,7 +49,7 @@ namespace Application.Features.HotelBooking.Handlers
 
             //. Getting hotel booking with tracking process
             var existing_hotel_booking = await hotel_booking_instance.GetByIdAsync(op => op.id == request.id && 
-                                                                                        op.booking.status == "Pending" && 
+                                                                                        op.booking.status == BookingStatus.Pending && 
                                                                                         op.booking.IsCancelled == false && 
                                                                                         op.booking.IsDeleted == false ,
                                                                                         cancellationToken ,

@@ -56,7 +56,7 @@ public sealed class HandleStripeWebhookCommandHandler
         {
             payment.status = "succeeded";
             payment.booking.payment_status = "paid";
-            payment.booking.status = BookingStatus.Confirmed.ToString();
+            payment.booking.status = BookingStatus.Confirmed;
             payment.booking.updated_at = DateTime.UtcNow;
         }
         else if (webhook.Status == "failed")

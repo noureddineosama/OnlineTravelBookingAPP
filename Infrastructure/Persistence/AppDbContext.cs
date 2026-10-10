@@ -59,9 +59,7 @@ public partial class AppDbContext : DbContext, IApplicationDbContext
             entity.Property(e => e.currency).HasDefaultValue("USD").IsFixedLength();
             entity.Property(e => e.payment_status).HasDefaultValue("unpaid");
             entity.Property(e => e.status)
-                .HasConversion(
-                    v => v != null ? (int)Enum.Parse<Domain.Enums.BookingStatus>(v, true) : 0,
-                    v => Enum.GetName(typeof(Domain.Enums.BookingStatus), v) ?? "Pending")
+                .HasConversion<int>()
                 .HasColumnType("int");
             entity.HasOne(d => d.coupon).WithMany(p => p.bookings)
                 .HasConstraintName("FK_bookings_coupon");
@@ -258,10 +256,6 @@ public partial class AppDbContext : DbContext, IApplicationDbContext
         {
             entity.HasKey(e => e.id).HasName("PK__roles__3213E83F247A45DA");
             entity.Property(e => e.created_at).HasDefaultValueSql("(sysutcdatetime())");
-            entity.HasData(
-                new role { id = 1, name = "Passenger", created_at = new System.DateTime(2026, 7, 7, 0, 0, 0, System.DateTimeKind.Utc) },
-                new role { id = 2, name = "Admin", created_at = new System.DateTime(2026, 7, 7, 0, 0, 0, System.DateTimeKind.Utc) }
-            );
         }); 
 
         // ── room ──────────────────────────────────────────────

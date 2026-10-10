@@ -67,9 +67,21 @@ internal sealed class UpdateTourCommandHandler : IRequestHandler<UpdateTourComma
         entity.summary = request.Summary;
         entity.full_description = request.FullDescription;
         entity.main_image_url = request.MainImageUrl;
-        entity.duration_days = request.DurationDays;
-        entity.location_id = request.LocationId;
-        entity.difficulty = request.Difficulty;
+        if (request.LocationId.HasValue && request.LocationId.Value > 0)
+        {
+            var locationExists = await _uow.Repository<location>()
+                .AnyAsync(l => l.id == request.LocationId.Value, cancellationToken);
+            if (!locationExists)
+            {
+                return ApiResponse<bool>.Fail(
+                    $"Location with ID '{request.LocationId.Value}' does not exist.", 400);
+            }
+            entity.location_id = request.LocationId.Value;
+        }
+        else
+        {
+            entity.location_id = null;
+        }
         entity.status = request.Status;
 
         _uow.Repository<tour>().Update(entity);

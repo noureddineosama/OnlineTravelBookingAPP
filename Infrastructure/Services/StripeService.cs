@@ -1,4 +1,4 @@
-﻿using Application.Common.Interfaces;
+using Application.Common.Interfaces;
 using Application.Common.Settings;
 using Microsoft.Extensions.Options;
 using Stripe;
@@ -24,7 +24,10 @@ public sealed class StripeService : IStripeService
         {
             Amount = amountInSmallestUnit,
             Currency = currency.ToLowerInvariant(),
-            PaymentMethodTypes = new List<string> { "card" },
+            AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
+            {
+                Enabled = true
+            },
             Metadata = new Dictionary<string, string>
             {
                 ["booking_number"] = bookingNumber

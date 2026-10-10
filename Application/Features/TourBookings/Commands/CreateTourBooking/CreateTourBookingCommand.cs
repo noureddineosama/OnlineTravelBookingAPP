@@ -89,7 +89,7 @@ public sealed class CreateTourBookingCommandHandler
             .Where(b => b.user_id == request.UserId && 
                         b.category == "tour" &&
                         b.tour_booking.tour_schedule_id == request.TourScheduleId &&
-                        b.status != BookingStatus.Cancelled.ToString() && 
+                        b.status != BookingStatus.Cancelled && 
                         b.IsCancelled != true)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -126,7 +126,7 @@ public sealed class CreateTourBookingCommandHandler
             booking_number  = bookingNumber,
             user_id         = request.UserId,
             category        = "tour",
-            status          = BookingStatus.Confirmed.ToString(), 
+            status          = BookingStatus.Confirmed, 
             subtotal        = subtotal,
             total_price     = totalPrice,
             discount_amount = 0m,
@@ -163,7 +163,7 @@ public sealed class CreateTourBookingCommandHandler
         {
             BookingId         = parentBooking.id,
             BookingNumber     = parentBooking.booking_number,
-            Status            = parentBooking.status?.ToString(),
+            Status            = parentBooking.status.ToString(),
             TourTitle         = schedule.tour.title,
             TourSlug          = schedule.tour.slug,
             TourMainImageUrl  = schedule.tour.main_image_url,

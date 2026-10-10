@@ -107,7 +107,7 @@ public sealed class PaymentsController : ControllerBase
         payment.status = "paid";
 
         payment.booking.payment_status = "paid";
-        payment.booking.status = BookingStatus.Confirmed.ToString ();
+        payment.booking.status = BookingStatus.Confirmed;
 
         await _context.SaveChangesAsync(cancellationToken);
     }
@@ -133,7 +133,7 @@ public sealed class PaymentsController : ControllerBase
         payment.status = "failed";
 
         payment.booking.payment_status = "failed";
-        payment.booking.status = BookingStatus.Cancelled.ToString();
+        payment.booking.status = BookingStatus.Cancelled;
 
         await _context.SaveChangesAsync(cancellationToken);
     }

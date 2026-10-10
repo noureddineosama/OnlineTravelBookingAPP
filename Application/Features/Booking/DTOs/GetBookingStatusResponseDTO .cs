@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using Domain.Enums;
 
 namespace Application.Features.Booking.DTOs
 {
@@ -8,7 +6,7 @@ namespace Application.Features.Booking.DTOs
     {
         public long BookingId { get; set; }
 
-        public string Status { get; set; }
+        public BookingStatus Status { get; set; }
 
         public DateTime? LastUpdated { get; set; }
     }
