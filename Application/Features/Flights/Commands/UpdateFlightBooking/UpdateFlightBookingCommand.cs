@@ -4,6 +4,7 @@ using Application.Features.FlightBookings.DTOs;
 using Application.Features.Flights.Caching;
 using AutoMapper;
 using Domain.Entities;
+using Domain.Enums;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -127,8 +128,8 @@ public sealed class UpdateFlightBookingCommandHandler
         }
 
         if (flightBooking.booking.IsCancelled == true ||
-            string.Equals(flightBooking.booking.status, "Cancelled", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(flightBooking.booking.status, "Completed", StringComparison.OrdinalIgnoreCase))
+            flightBooking.booking.status == BookingStatus.Cancelled ||
+            flightBooking.booking.status == BookingStatus.Completed)
         {
             return ApiResponse<FlightBookingResponse>.Fail(
                 "A cancelled or completed flight booking cannot be updated.",

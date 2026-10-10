@@ -1,5 +1,5 @@
-using Microsoft.OpenApi.Any;
-using Microsoft.OpenApi.Models;
+using System.Text.Json.Nodes;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace OnlineTravelBooking.Swagger;
@@ -12,14 +12,17 @@ namespace OnlineTravelBooking.Swagger;
 /// </summary>
 public sealed class StringEnumSchemaFilter : ISchemaFilter
 {
-    public void Apply(OpenApiSchema schema, SchemaFilterContext context)
+    public void Apply(IOpenApiSchema schema, SchemaFilterContext context)
     {
         if (!context.Type.IsEnum) return;
 
-        schema.Enum   = Enum.GetNames(context.Type)
-                            .Select(name => (IOpenApiAny)new OpenApiString(name))
-                            .ToList();
-        schema.Type   = "string";
-        schema.Format = null;
+        if (schema is OpenApiSchema openApiSchema)
+        {
+            openApiSchema.Enum = Enum.GetNames(context.Type)
+                                    .Select(name => (JsonNode)JsonValue.Create(name)!)
+                                    .ToList();
+            openApiSchema.Type = JsonSchemaType.String;
+            openApiSchema.Format = null;
+        }
     }
 }

@@ -40,7 +40,7 @@ public sealed class CreatePaymentIntentCommandHandler
         if (booking is null)
             return ApiResponse<PaymentIntentResponse>.Fail("Booking not found.", 404);
 
-        if (booking.status != BookingStatus.Pending.ToString())
+        if (booking.status != BookingStatus.Pending)
             return ApiResponse<PaymentIntentResponse>.Fail("Only pending bookings can be paid.", 409);
 
         if (string.Equals(booking.payment_status, "paid", StringComparison.OrdinalIgnoreCase))

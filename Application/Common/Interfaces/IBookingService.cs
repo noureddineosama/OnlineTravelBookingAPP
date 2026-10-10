@@ -1,4 +1,4 @@
-﻿using Application.Common.Services;
+using Application.Common.Services;
 using Domain.Entities;
 using Domain.Enums;
 using System;
@@ -18,7 +18,7 @@ namespace Application.Common.Interfaces
                                   CancellationToken cancellationToken);
 
        Task UdpateBookingStatusAsync(long bookingId,
-                                     string newBookingStatus,
+                                     BookingStatus newBookingStatus,
                                      CancellationToken cancelltionToken);
 
        Task UpdateBookingPriceAsync(long bookingId,

@@ -55,6 +55,22 @@ internal sealed class CreateTourCommandHandler : IRequestHandler<CreateTourComma
     public async Task<ApiResponse<CreateTourResponse>> Handle(CreateTourCommand request, CancellationToken cancellationToken)
     {
         var entity = _mapper.Map<tour>(request);
+
+        if (request.LocationId.HasValue && request.LocationId.Value > 0)
+        {
+            var locationExists = await _uow.Repository<location>()
+                .AnyAsync(l => l.id == request.LocationId.Value, cancellationToken);
+            if (!locationExists)
+            {
+                return ApiResponse<CreateTourResponse>.Fail(
+                    $"Location with ID '{request.LocationId.Value}' does not exist.", 400);
+            }
+            entity.location_id = request.LocationId.Value;
+        }
+        else
+        {
+            entity.location_id = null;
+        }
         
         // Generate a simple unique slug based on title
         var baseSlug = entity.title.ToLower().Replace(" ", "-").Replace("'", "").Replace("\"", "");
@@ -66,7 +82,7 @@ internal sealed class CreateTourCommandHandler : IRequestHandler<CreateTourComma
         long? scheduleId = null;
         long? priceTierId = null;
 
-        if (request.PriceTier != null && request.Schedule != null)
+        if (request.PriceTier != null)
         {
             var priceTier = new tour_price_tier
             {
@@ -80,22 +96,24 @@ internal sealed class CreateTourCommandHandler : IRequestHandler<CreateTourComma
 
             await _uow.Repository<tour_price_tier>().AddAsync(priceTier, cancellationToken);
             await _uow.SaveChangesAsync(cancellationToken);
-
-            var schedule = new tour_schedule
-            {
-                tour_id = entity.id,
-                price_tier_id = priceTier.id,
-                start_date = request.Schedule.StartDate,
-                end_date = request.Schedule.EndDate,
-                capacity = request.Schedule.AvailableSlots,
-                available_slots = request.Schedule.AvailableSlots
-            };
-
-            await _uow.Repository<tour_schedule>().AddAsync(schedule, cancellationToken);
-            await _uow.SaveChangesAsync(cancellationToken);
-
-            scheduleId = schedule.id;
             priceTierId = priceTier.id;
+
+            if (request.Schedule != null)
+            {
+                var schedule = new tour_schedule
+                {
+                    tour_id = entity.id,
+                    price_tier_id = priceTier.id,
+                    start_date = request.Schedule.StartDate,
+                    end_date = request.Schedule.EndDate,
+                    capacity = request.Schedule.AvailableSlots,
+                    available_slots = request.Schedule.AvailableSlots
+                };
+
+                await _uow.Repository<tour_schedule>().AddAsync(schedule, cancellationToken);
+                await _uow.SaveChangesAsync(cancellationToken);
+                scheduleId = schedule.id;
+            }
         }
 
         // Invalidate the tour list cache so the new tour appears immediately.

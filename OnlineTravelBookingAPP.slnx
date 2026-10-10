@@ -2,5 +2,6 @@
   <Project Path="Domain/Domain.csproj" Id="afe8e048-7b3a-4aa5-b904-c26005f9cf3b" />
   <Project Path="Application/Application.csproj" Id="47baa534-2b74-4a99-b15a-fa2f80776361" />
   <Project Path="Infrastructure/Infrastructure.csproj" Id="a1b2c3d4-e5f6-7890-abcd-ef1234567890" />
+  <Project Path="OnlineTravelBooking.Tests/OnlineTravelBooking.Tests.csproj" />
   <Project Path="OnlineTravelBooking/OnlineTravelBooking.csproj" />
 </Solution>

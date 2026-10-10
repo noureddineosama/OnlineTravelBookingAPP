@@ -7,11 +7,12 @@ using Application;
 using Application.Common.Interfaces;
 using Infrastructure;
 using Infrastructure.Services;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using OnlineTravelBooking.Middleware;
 using OnlineTravelBooking.Swagger;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Caching.Hybrid;
+using Sentry;
 using Sentry.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -94,19 +95,9 @@ builder.Services.AddSwaggerGen(options =>
         Description  = "Enter: Bearer {your-token}"
     });
 
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
     {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id   = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
+        [new OpenApiSecuritySchemeReference("Bearer", document)] = new List<string>()
     });
 });
 
@@ -142,3 +133,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }

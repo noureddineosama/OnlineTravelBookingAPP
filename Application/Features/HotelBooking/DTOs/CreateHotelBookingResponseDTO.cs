@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using Domain.Enums;
+using System;
 
 namespace Application.Features.HotelBooking.DTOs
 {
@@ -22,6 +21,6 @@ namespace Application.Features.HotelBooking.DTOs
 
         public decimal? TotalPrice { get; set; }
 
-        public string Status { get; set; }
+        public BookingStatus Status { get; set; }
     }
 }

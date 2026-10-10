@@ -55,7 +55,7 @@ public sealed class CancelTourBookingCommandHandler
             throw new NotFoundException("Tour booking", request.BookingId);
 
         // 2. Check if already cancelled
-        if (parentBooking.status == BookingStatus.Cancelled.ToString())
+        if (parentBooking.status == BookingStatus.Cancelled)
             throw new ConflictException("This booking is already cancelled.");
 
         // 3. Load the associated tour_booking with schedule
@@ -67,7 +67,7 @@ public sealed class CancelTourBookingCommandHandler
             throw new NotFoundException("Tour booking details", request.BookingId);
 
         // 4. Cancel the booking
-        parentBooking.status      = BookingStatus.Cancelled.ToString();
+        parentBooking.status      = BookingStatus.Cancelled;
         parentBooking.IsCancelled = true;
         parentBooking.updated_at  = DateTime.UtcNow;
 

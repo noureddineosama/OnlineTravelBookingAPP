@@ -3,7 +3,6 @@ using Application.Common.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using FluentValidation;
 using MediatR;
-using Application.Profiles;
 
 namespace Application;
 
@@ -34,7 +33,7 @@ public static class DependencyInjection
         // builder.Services.AddApplicationCaching(builder.Configuration) in Program.cs.
 
         // AutoMapper — auto-discovers all Profile implementations
-        services.AddAutoMapper(assembly);
+        services.AddAutoMapper(cfg => cfg.AddMaps(assembly));
 
         return services;
     }

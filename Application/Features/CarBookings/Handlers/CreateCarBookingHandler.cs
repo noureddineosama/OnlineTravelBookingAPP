@@ -80,6 +80,19 @@ namespace Application.Features.CarBookings.Handlers
                 return await Result.FailureAsync<CarBookingResponse>(
                     $"No pricing tier found for {rentalHours} hours rental.");
 
+            // Validate pickup and dropoff locations
+            var pickupLocation = await _unitOfWork.Repository<location>()
+                .GetByIdAsync(request.requestDTO.pickup_location_id, cancellationToken);
+            if (pickupLocation == null)
+                return await Result.FailureAsync<CarBookingResponse>(
+                    $"Pickup location with ID '{request.requestDTO.pickup_location_id}' was not found.");
+
+            var dropoffLocation = await _unitOfWork.Repository<location>()
+                .GetByIdAsync(request.requestDTO.dropoff_location_id, cancellationToken);
+            if (dropoffLocation == null)
+                return await Result.FailureAsync<CarBookingResponse>(
+                    $"Dropoff location with ID '{request.requestDTO.dropoff_location_id}' was not found.");
+
             // Calculate subtotal
             var subtotal = rentalHours * pricingTier.price_per_hour;
 
@@ -113,7 +126,7 @@ namespace Application.Features.CarBookings.Handlers
                 booking_number = BookingNumber.GeneratBookingNumber(),
                 user_id = _currentIUser.UserId,
                 category = "car",
-                status = Domain.Enums.BookingStatus.Confirmed.ToString(),
+                status = Domain.Enums.BookingStatus.Confirmed,
                 subtotal = subtotal,
                 discount_amount = 0m,
                 total_price = totalPrice,
@@ -159,11 +172,6 @@ namespace Application.Features.CarBookings.Handlers
                 }
             }
             await _unitOfWork.SaveChangesAsync(cancellationToken);
-            // Load locations for response
-            var pickupLocation = await _unitOfWork.Repository<location>()
-                .GetByIdAsync(request.requestDTO.pickup_location_id, cancellationToken);
-            var dropoffLocation = await _unitOfWork.Repository<location>()
-                .GetByIdAsync(request.requestDTO.dropoff_location_id, cancellationToken);
 
             var responseExtras = new List<CarExtraResponse>();
             if (request.requestDTO.extras != null && request.requestDTO.extras.Count > 0)
@@ -188,7 +196,7 @@ namespace Application.Features.CarBookings.Handlers
             {
                 BookingId         = parentBooking.id,
                 BookingNumber     = parentBooking.booking_number,
-                Status            = parentBooking.status?.ToString() ?? string.Empty,
+                Status            = parentBooking.status.ToString(),
                 CarId             = car.id,
                 CarModel          = car.model,
                 CarYear           = car.year,

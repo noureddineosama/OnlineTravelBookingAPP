@@ -54,7 +54,7 @@ public sealed class GetTourBookingByIdQueryHandler
         if (booking is null)
             throw new NotFoundException("Tour booking", request.BookingId);
 
-        if ((booking.status == Domain.Enums.BookingStatus.Cancelled.ToString() || booking.IsCancelled == true) && 
+        if ((booking.status == Domain.Enums.BookingStatus.Cancelled || booking.IsCancelled == true) && 
             booking.cancellation_reason_type != Domain.Enums.CancellationReasonType.AdminCancelled)
             throw new NotFoundException("Tour booking", request.BookingId);
 

@@ -1,4 +1,4 @@
-﻿using Application.Common.Interfaces;
+using Application.Common.Interfaces;
 using Application.Common.Services;
 using Domain.Entities;
 using Domain.Enums;
@@ -40,7 +40,7 @@ namespace Infrastructure.Services
                 payment_status = "pending",
                 subtotal = subtotal,
                 total_price = totalPrice,
-                status = BookingStatus.Pending.ToString()
+                status = BookingStatus.Pending
             };
 
             if (result is null)
@@ -55,7 +55,7 @@ namespace Infrastructure.Services
         }
 
         public async Task UdpateBookingStatusAsync(long bookingId, 
-                                                   string newBookingStatus,
+                                                   BookingStatus newBookingStatus,
                                                    CancellationToken cancelltionToken)
         {
             var booking_instance = unitOfWork.Repository<booking>();
@@ -66,7 +66,7 @@ namespace Infrastructure.Services
                                                         op => op.id == bookingId &&
                                                         op.IsCancelled == false &&
                                                         op.IsDeleted == false &&
-                                                        op.status != "Cancelled", cancelltionToken);
+                                                        op.status != BookingStatus.Cancelled, cancelltionToken);
             if (booking is null)
                 throw new ArgumentNullException("Booking not found. ");
 
@@ -88,7 +88,7 @@ namespace Infrastructure.Services
                                                         op => op.id == bookingId &&
                                                         op.IsCancelled == false &&
                                                         op.IsDeleted == false &&
-                                                        op.status != "Cancelled", cancellationToken);
+                                                        op.status != BookingStatus.Cancelled, cancellationToken);
             if (booking is null)
                 throw new ArgumentNullException("Booking not found. ");
 
@@ -111,11 +111,11 @@ namespace Infrastructure.Services
                                                         op => op.id == bookingId &&
                                                         op.IsCancelled == false &&
                                                         op.IsDeleted == false &&
-                                                        op.status != "Cancelled", cancellationToken);
+                                                        op.status != BookingStatus.Cancelled, cancellationToken);
             if (booking is null)
                 throw new ArgumentNullException("Booking not found. ");
 
-            booking.status = BookingStatus.Cancelled.ToString();
+            booking.status = BookingStatus.Cancelled;
             booking.cancellation_reason_details = details ?? default;
             booking.IsCancelled = true;
             booking.cancellation_reason_type = reasonType;

@@ -1,4 +1,4 @@
-﻿using Application.Common.Interfaces;
+using Application.Common.Interfaces;
 using Application.Common.Patterns;
 using Application.Features.Booking.Commands;
 using Application.Features.Booking.DTOs;
@@ -30,10 +30,10 @@ namespace Application.Features.Booking.Handlers
             var existing_booking = await booking_instance.GetByIdAsync(predicate: op => op.id == request.bookingId &&
                                                                                    op.IsDeleted == false &&
                                                                                    op.IsCancelled == false &&
-                                                                                   op.status != "Cancelled", cancellationToken);
+                                                                                   op.status != BookingStatus.Cancelled, cancellationToken);
             if (existing_booking is null) return await Result.FailureAsync<CancelBookingResponseDTO>("Booking not found. ");
 
-            existing_booking.status = BookingStatus.Cancelled.ToString();
+            existing_booking.status = BookingStatus.Cancelled;
             existing_booking.IsCancelled = true;
             existing_booking.cancelled_at = DateTime.UtcNow;
             existing_booking.updated_at = DateTime.UtcNow;
@@ -48,7 +48,7 @@ namespace Application.Features.Booking.Handlers
                 BookingId = existing_booking.id,
                 CancelledAt = DateTime.Now,
                 RefundAmount = existing_booking.total_price,
-                Status = existing_booking.status
+                Status = existing_booking.status.ToString()
             });
         }
     }

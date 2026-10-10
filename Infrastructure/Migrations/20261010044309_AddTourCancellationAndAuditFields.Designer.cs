@@ -4,6 +4,7 @@ using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261010044309_AddTourCancellationAndAuditFields")]
+    partial class AddTourCancellationAndAuditFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -868,6 +871,53 @@ namespace Infrastructure.Migrations
                         .HasName("PK__location__3213E83F32EDE253");
 
                     b.ToTable("locations");
+
+                    b.HasData(
+                        new
+                        {
+                            id = 1,
+                            address_line = "Tahrir Square",
+                            city = "Cairo",
+                            country = "Egypt",
+                            latitude = 30.0444m,
+                            longitude = 31.2357m
+                        },
+                        new
+                        {
+                            id = 2,
+                            address_line = "Champs-Élysées",
+                            city = "Paris",
+                            country = "France",
+                            latitude = 48.8566m,
+                            longitude = 2.3522m
+                        },
+                        new
+                        {
+                            id = 3,
+                            address_line = "Manhattan",
+                            city = "New York",
+                            country = "United States",
+                            latitude = 40.7128m,
+                            longitude = -74.0060m
+                        },
+                        new
+                        {
+                            id = 4,
+                            address_line = "Shinjuku",
+                            city = "Tokyo",
+                            country = "Japan",
+                            latitude = 35.6762m,
+                            longitude = 139.6503m
+                        },
+                        new
+                        {
+                            id = 5,
+                            address_line = "Westminster",
+                            city = "London",
+                            country = "United Kingdom",
+                            latitude = 51.5074m,
+                            longitude = -0.1278m
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.passenger", b =>
@@ -1093,6 +1143,20 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("roles");
+
+                    b.HasData(
+                        new
+                        {
+                            id = 1,
+                            created_at = new DateTime(2026, 7, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                            name = "Passenger"
+                        },
+                        new
+                        {
+                            id = 2,
+                            created_at = new DateTime(2026, 7, 7, 0, 0, 0, 0, DateTimeKind.Utc),
+                            name = "Admin"
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.room", b =>
